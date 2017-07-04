@@ -1,0 +1,12 @@
+*.Rproj.user
+*.Rhistory
+*.RData
+*.Ruserdata
+*.vcf
+/data/
+/docs/
+/megadaph.mtdna/data/
+/megadaph.mtdna/tmpdat/
+/megadaph.mtdna/data-raw/
+/megadaph.mtdna/headers/
+.Rproj.user
