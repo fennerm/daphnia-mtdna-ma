@@ -98,6 +98,17 @@ piles_to_mut_wt <- function(piles, mut_consensus) {
     mut_wt_matrices
 }
 
+#' @export
+destrand <- function(pile) {
+    idx1 <- seq(1, ncol(pile)-1, by=2)
+    idx2 <- idx1+1
+    destranded <- mapply(function(x1, x2) {
+        pile[, x1] + pile[, x2]
+    }, idx1, idx2)
+    colnames(destranded) <- c("A", "C", "G", "T", "-", "+")
+    destranded
+}
+
 ## Given:
 ##  pile - A data.table; allele counts at each genome position
 ##  consensus - Character vector; A multisample consensus genome sequence
@@ -211,17 +222,40 @@ get_mut_af <- function(pile, mut_consensus) {
     mut_af
 }
 
+#' @export
+stranded_indices <- function(idx) {
+    str_idx <- list(c(1, 2), c(3, 4), c(5, 6), c(7, 8), c(9, 10), c(11, 12))
+    matrix(unlist(str_idx[idx]), ncol=2, byrow=TRUE)
+}
 
+#' @export
+get_minor_index <- function(pile) {
+    idx <- apply(pile, 1, function(row) {
+        sort.int(row, index.return = TRUE, decreasing=TRUE)$ix[2]
+    })
+    idx
+}
 ## Given:
 ##  pile - A data.table or numeric vector; allele counts
 ## Return:
 ##  Minor allele counts at each position in pile.
 
 #' @export
-get_minor_counts <- function(pile) {
-    apply(pile, 1, function(row) {
-        sort(row)[length(row) - 1]
-    })
+get_minor_counts <- function(pile, stranded=FALSE) {
+    if (stranded) {
+        bp <- nrow(pile)
+        ds <- destrand(pile)
+        minor_idx <- get_minor_index(ds)
+        stranded_idx <- stranded_indices(minor_idx)
+        counts <- lapply(1:bp, function(i) {
+            pile[i, stranded_idx[[i]]]
+        })
+    } else {
+        counts <- apply(pile, 1, function(row) {
+            sort.int(row)[length(row) - 1]
+        })
+    }
+    counts
 }
 
 ## Given:
@@ -253,53 +287,54 @@ convert_to_mut_cov_counts <- function(pile, mut_consensus) {
     cbind(mut_counts, depths)
 }
 
+#' @export
+create_pileup <- function(bam, min_base_quality = 30,
+                          distinguish_strands = FALSE) {
+    pileup_param <- Rsamtools::PileupParam(
+        max_depth = 1000000,
+        distinguish_strands = distinguish_strands,
+        distinguish_nucleotides = TRUE,
+        ignore_query_Ns = TRUE,
+        min_nucleotide_depth = 0,
+        include_deletions = TRUE,
+        include_insertions = TRUE,
+        min_base_quality = min_base_quality)
+
+    pile <- data.table::setDT(Rsamtools::pileup(bam,
+                                                pileupParam = pileup_param))
+
+    if (distinguish_strands) {
+        pile_wide <- data.table::dcast(pile,
+                                       seqnames+pos~nucleotide+strand,
+                                       value.var = "count")
+    } else {
+        pile_wide <- data.table::dcast(pile,
+                                          seqnames+pos ~ nucleotide,
+                                          value.var = "count")
+    }
+    pile_wide <- pile_wide[, 3:length(pile_wide)]
+
+    for (i in names(pile_wide)) {
+        pile_wide[is.na(get(i)), (i) := 0]
+    }
+    pile_wide
+}
+
+
 ## Given:
 ## og, rot - character vector; filepaths to OG and ROT BAM files
 ## min_base_quality - numeric; minimum Phred base quality for base to be
 ##                    included in table
-
 #' @export
 create_spliced_count_table <- function(og, rot, min_base_quality=30,
                                        distinguish_strands=FALSE) {
     species <- get_species(og)
     # Parameters for creating pileup from bam files.
-    pileup_param <- Rsamtools::PileupParam(max_depth=1000000,
-                                distinguish_strands=distinguish_strands,
-                                distinguish_nucleotides = TRUE,
-                                ignore_query_Ns = TRUE,
-                                min_nucleotide_depth = 0,
-                                include_deletions = TRUE,
-                                include_insertions = TRUE,
-                                min_base_quality = min_base_quality)
-
-    # Create base count pilep and convert to a data.table
-    og_pile <- data.table::setDT(Rsamtools::pileup(og, pileupParam = pileup_param))
-    rot_pile <- data.table::setDT(Rsamtools::pileup(rot, pileupParam = pileup_param))
-
-    # Convert from long to wide format
-    if (distinguish_strands) {
-        og_pile_wide <- data.table::dcast(og_pile,
-                                          seqnames+pos~nucleotide+strand,
-                                          value.var="count")
-        rot_pile_wide <- data.table::dcast(rot_pile,
-                                           seqnames+pos~nucleotide+strand,
-                                           value.var="count")
-    } else {
-        og_pile_wide <- data.table::dcast(
-            og_pile, seqnames+pos ~ nucleotide, value.var="count")
-        rot_pile_wide <- data.table::dcast(
-            rot_pile, seqnames+pos ~ nucleotide, value.var="count")
-    }
-    # Exclude position and c'some fields
-    og_pile_wide <- og_pile_wide[, 3:length(og_pile_wide)]
-    rot_pile_wide <- rot_pile_wide[, 3:length(rot_pile_wide)]
+    og_pile <- create_pileup(og, min_base_quality, distinguish_strands)
+    rot_pile <- create_pileup(rot, min_base_quality, distinguish_strands)
 
     # Splice OG and ROT tables
-    pile_wide <- splice_mtdna_data(og_pile_wide, rot_pile_wide, species)
-
-    # Remove NAs
-    for (j in seq_len(ncol(pile_wide)))
-        data.table::set(pile_wide,which(is.na(pile_wide[[j]])),j,0)
+    pile_wide <- splice_mtdna_data(og_pile, rot_pile, species)
 
     pile_wide
 }

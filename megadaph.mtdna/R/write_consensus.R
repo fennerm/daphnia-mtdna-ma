@@ -11,4 +11,5 @@ write_consensus_fastas <- function(og_bams, rot_bams, isolate_names) {
         filename <- paste0(isolate_names[i], ".fa")
         create_consensus_fasta(piles, filename)
     }
+
 }

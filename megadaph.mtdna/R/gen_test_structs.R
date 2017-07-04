@@ -26,7 +26,6 @@ gen_test_pile <- function(r=1000, stranded=FALSE, range=c(1, 1000),
         n <- 1
     }
 
-
     major <- sample(range[1]:range[2], r, replace = TRUE)
     minor <- rbinom(5*r, size = major, prob = seq_err)
     pile <- matrix(c(major, minor), ncol = 6)
@@ -39,6 +38,7 @@ gen_test_pile <- function(r=1000, stranded=FALSE, range=c(1, 1000),
     if (stranded) {
         colnames(pile) <- c("A_+", "A_-", "C_+", "C_-", "G_+", "G_-", "T_+",
                             "T_-", "-_+", "-_-", "+_+", "+_-")
+
     } else if (!stranded) {
         colnames(pile) <- c("A", "C", "G", "T", "-", "=")
     }
