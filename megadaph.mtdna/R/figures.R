@@ -5,34 +5,38 @@ gg_color_hue <- function(n) {
     hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
+#' @export
+#' @import ggplot2
 barplot_with_ci <- function(names, data, ci1, ci2) {
     df <- data.frame(names=names, data=data, ci1=ci1, ci2=ci2)
-    dodge <- ggplot2::position_dodge(width = 0.9)
-    plot <- ggplot2::ggplot(data = df,
-                            ggplot2::aes(x = names, y = data, fill = names))
-    plot <- plot + ggplot2::geom_bar(stat = "identity", position = dodge)
-    plot <- plot + ggplot2::geom_errorbar(position=dodge, width=0.25,
-                                 ggplot2::aes(ymin=ci1, ymax=ci2))
+    dodge <- position_dodge(width = 0.9)
+    plot <- ggplot(data = df,
+                            aes(x = names, y = data, fill = names))
+    plot <- plot + geom_bar(stat = "identity", position = dodge)
+    plot <- plot + geom_errorbar(position=dodge, width=0.25,
+                                 aes(ymin=ci1, ymax=ci2))
     plot
 }
 
 #' @export
+#' @import ggplot2
 point_with_ci <- function(df) {
-    dodge <- ggplot2::position_dodge(width = 0.9)
-    plot <- ggplot2::ggplot(data = df,
-                            ggplot2::aes(x = sample, y = data))
-    plot <- plot + ggplot2::geom_point(stat = "identity", position = dodge)
-    plot <- plot + ggplot2::geom_errorbar(position=dodge, width=0.25,
-                                          ggplot2::aes(ymin=ci1, ymax=ci2))
+    dodge <- position_dodge(width = 0.9)
+    plot <- ggplot(data = df,
+                            aes(x = sample, y = data))
+    plot <- plot + geom_point(stat = "identity", position = dodge)
+    plot <- plot + geom_errorbar(position=dodge, width=0.25,
+                                          aes(ymin=ci1, ymax=ci2))
     plot <- plot + theme_shared()
     plot
 }
 
 
 #' @export
+#' @import ggplot2
+#' @importFrom rworldmap getMap
 extraction_map <- function() {
-    require(rworldmap)
-    newmap <- rworldmap::getMap(resolution = "low")
+    newmap <- getMap(resolution = "low")
     plot(newmap, xlim = c(-130, 40), ylim = c(30, 65), asp = 2,
          lwd=1.55, col="white", bg="#96c1e1",border="#6C6C71")
     box(lwd=10, col="black")
@@ -48,6 +52,8 @@ extraction_map <- function() {
 }
 
 #' @export
+#' @import RColorBrewer
+#' @import ggplot2
 snv_barplot <- function(var_table) {
     require(RColorBrewer)
     snv_var_table <- var_table[which(var_table$class == "snv"),]
@@ -72,11 +78,11 @@ snv_barplot <- function(var_table) {
                          stringsAsFactors = FALSE)
     snv_df <- snv_df[with(snv_df, order(-n)), ]
     snv_df$id <- reorder(snv_df$id, rev(snv_df$n))
-    ggplot2::ggplot(snv_df, ggplot2::aes(x=id, y=n)) +
-        ggplot2::geom_bar(stat="Density",fill=gg_color_hue(3)[3]) +
-        ggplot2::ylab("") +
+    ggplot(snv_df, aes(x=id, y=n)) +
+        geom_bar(stat="Density",fill=gg_color_hue(3)[3]) +
+        ylab("") +
         theme_shared() +
-        ggplot2::labs(fill="")
+        labs(fill="")
 }
 
 
@@ -88,137 +94,105 @@ snv_barplot <- function(var_table) {
 # }))
 
 #' @export
+#' @import ggplot2
 custom_boxplot <- function(bootstrap_data, xlab, ylab, xval,
                            yscale="unscaled", fill=NULL) {
     # fill <- "#538cc6"
-    p <- ggplot2::ggplot(bootstrap_data, ggplot2::aes(group))
+    p <- ggplot(bootstrap_data, ggplot2::aes(group))
     if (is.null(fill)) {
-        p <- p + ggplot2::geom_boxplot(
-            ggplot2::aes(x=group, ymin=ci1, lower=q25, middle=q50,
+        p <- p + geom_boxplot(
+            aes(x=group, ymin=ci1, lower=q25, middle=q50,
                          upper=q75, ymax=ci2), stat="identity", size=0.6)
     } else {
-        p <- p + ggplot2::geom_boxplot(ggplot2::aes(x=group, ymin=ci1,
+        p <- p + geom_boxplot(aes(x=group, ymin=ci1,
                                                     lower=q25, middle=q50,
                                                     upper=q75, ymax=ci2,
                                                     fill=fill),
                               stat="identity", size=0.6)
-        p <- p + ggplot2::scale_fill_discrete("")
+        p <- p + scale_fill_discrete("")
     }
 
-    p <- p + ggplot2::scale_x_discrete(labels=xval)
-    p <- p + ggplot2::xlab("")
+    p <- p + scale_x_discrete(labels=xval)
+    p <- p + xlab("")
     if (yscale=="log10") {
-        p <- p + ggplot2::scale_y_log10()
+        p <- p + scale_y_log10()
     }
 
     p <- p + theme_shared()
-    p <- p + ggplot2::labs(x = xlab, y = ylab)
+    p <- p + labs(x = xlab, y = ylab)
     p
 }
 
 
 #' @export
+#' @import ggplot2
+#' @importFrom dplyr filter
 ins_del_stacked_bar <- function(var_table) {
     indel_var_table <- var_table[which(var_table$class %in%
                                            c("insertion", "deletion")),]
     ninsertions <- length(which(indel_var_table$class == "insertion"))
     ndeletions <- length(which(indel_var_table$class == "deletion"))
-    ins_lengths <- nchar(dplyr::filter(indel_var_table, class=="insertion")$alt) - 1
-    del_lengths <- nchar(dplyr::filter(indel_var_table, class=="deletion")$ref) - 1
+    ins_lengths <- nchar(filter(indel_var_table, class=="insertion")$alt) - 1
+    del_lengths <- nchar(filter(indel_var_table, class=="deletion")$ref) - 1
     id <- c(rep("Deletion", length(del_lengths)),
             rep("Insertion", length(ins_lengths)))
     lengths <- c(sort(del_lengths, decreasing=TRUE),
                  sort(ins_lengths, decreasing=TRUE))
     df <- data.frame(id=factor(id), lengths=lengths)
-    ggplot2::ggplot(df, ggplot2::aes(x=id, y=lengths, fill=id,
+    ggplot(df, ggplot2::aes(x=id, y=lengths, fill=id,
                                      label=lengths)) +
-        ggplot2::geom_bar(stat="identity", color="white") +
+        geom_bar(stat="identity", color="white") +
         # geom_text(size = 7, color="white", position = position_stack(vjust = 0.5)) +
         # theme(axis.text.x=element_blank()) +
-        ggplot2::guides(fill=FALSE) +
-        ggplot2::ylab("Cumulative Length (bp)") +
-        ggplot2::xlab("") +
-        ggplot2::scale_fill_manual(values=c(gg_color_hue(3)[1],
+        guides(fill=FALSE) +
+        ylab("Cumulative Length (bp)") +
+        xlab("") +
+        scale_fill_manual(values=c(gg_color_hue(3)[1],
                                             gg_color_hue(3)[2]))+
-        ggplot2::scale_y_continuous(breaks=seq(0, max(c(sum(ins_lengths),
+        scale_y_continuous(breaks=seq(0, max(c(sum(ins_lengths),
                                                         sum(del_lengths))), 5))+
         theme_shared() +
-        ggplot2::theme(plot.margin=ggplot2::unit(c(0, 0, 0, 4), "cm")) +
-        ggplot2::coord_flip()
+        theme(plot.margin=ggplot2::unit(c(0, 0, 0, 4), "cm")) +
+        coord_flip()
 }
 
 
-
 #' @export
+#' @import ggplot2
 gg_pie <- function(d) {
     dcounts <- table(as.factor(d))
     df <- as.data.frame(dcounts)
-    p <- ggplot2::ggplot(df, ggplot2::aes(x="", y=Freq, fill=Var1))+
-        ggplot2::geom_bar(width=0.5, stat = "identity") +
+    p <- ggplot(df, ggplot2::aes(x="", y=Freq, fill=Var1))+
+        geom_bar(width=0.5, stat = "identity") +
     # p <- p + coord_polar("y", start=0)
-        ggplot2::ylab("Count") +
-        ggplot2::scale_y_continuous(breaks = seq(0, 150, by = 20)) +
-        ggplot2::scale_x_discrete(breaks = NULL) +
-        ggplot2::scale_fill_discrete(labels=c("Del", "Ins", "SNV")) +
-        ggplot2::guides(fill=ggplot2::guide_legend(title=NULL)) +
+        ylab("Count") +
+        scale_y_continuous(breaks = seq(0, 150, by = 20)) +
+        scale_x_discrete(breaks = NULL) +
+        scale_fill_discrete(labels=c("Del", "Ins", "SNV")) +
+        guides(fill=guide_legend(title=NULL)) +
         theme_shared() +
-        ggplot2::theme(axis.text.x=ggplot2::element_blank(),
-                       title = ggplot2::element_blank(),
-                       panel.border = ggplot2::element_blank(),
+        theme(axis.text.x=element_blank(),
+                       title = element_blank(),
+                       panel.border = element_blank(),
                        legend.position="bottom")
 }
 
 #' @export
+#' @import ggplot2
 theme_shared <- function() {
-    ggplot2::theme_bw(18) +
-        ggplot2::theme(
-            panel.grid.major.x = ggplot2::element_blank()
+    theme_bw(18) +
+        theme(
+            panel.grid.major.x = element_blank()
         )
 }
 
-
 #' @export
-lollipop_plots <- function(var_table, mag_genbank, pul_genbank) {
-    require(trackViewer)
-    require(genoPlotR)
-    for (gen in c(mag_genbank, pul_genbank)) {
-        genes <- read_dna_seg_from_genbank(gen)
-        if (gen==mag_genbank) {
-            species <- "magna"
-        } else {
-            species <- "pulex"
-        }
-        vart <- filter(var_table, species==species)
-        snp <- vart$pos
-        gr <- GenomicRanges::GRanges(
-            "mtDNA", IRanges::IRanges(snp, width=1), height=vart$af)
-        feat <- GRanges::GRanges("mtDNA", devtools::IRanges(genes$start,
-                                         width=genes$end-genes$start,
-                                         names=genes$gene))
-
-
-        p <- ggplot2::ggplot(vart) +
-            ggplot2::geom_bar(data=vart, mapping=ggplot2::aes(x=pos, y=af),
-                     stat="identity", width=20) +
-            ggplot2::geom_rect(data=as.data.frame(genes),
-                               mapping=ggplot2::aes(xmin=start,
-                      xmax=end,
-                      ymin=-0.05, ymax=0), inherit.aes=F, fill=gg_color_hue(1)[1])
-        eval(p)
-        print(p)
-
-    }
-
-
-}
-
-
-#' @export
+#' @import ggplot2
 af_histogram <- function(line_info, var_table) {
-    ggplot2::ggplot(var_table, ggplot2::aes(af)) +
-        ggplot2::geom_histogram(breaks=seq(0, 1, by=0.02), position="dodge") +
-        ggplot2::scale_x_continuous(breaks = seq(0, 1, by=0.1)) +
-        ggplot2::xlab("Mutant Allele Frequency") +
+    ggplot(var_table, ggplot2::aes(af)) +
+        geom_histogram(breaks=seq(0, 1, by=0.02), position="dodge") +
+        scale_x_continuous(breaks = seq(0, 1, by=0.1)) +
+        xlab("Mutant Allele Frequency") +
         theme_shared() +
-        ggplot2::ylab("Density")
+        ylab("Density")
 }

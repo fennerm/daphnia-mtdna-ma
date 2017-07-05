@@ -14,6 +14,7 @@ min_maj_indices <- function(pile) {
 #         }
 # }
 
+#' @export
 pile_to_maj_min <- function(piles) {
     ds <- lapply(piles, destrand)
     min_maj <- lapply(1:length(ds), function(i) {
@@ -48,7 +49,9 @@ pile_to_maj_min <- function(piles) {
     min_maj_mats
 }
 
+
 if (!interactive()) {
+    library(parallel)
     library(megadaph.mtdna)
     args = commandArgs(trailingOnly = TRUE)
     file_list <- list_bams(args[1])
@@ -61,7 +64,7 @@ if (!interactive()) {
     } else {
         ncore <- n
     }
-    piles <- parallel::mclapply(file_list, create_pileup,
+    piles <- mclapply(file_list, create_pileup,
                                 mc.cores = ncore)
     saveRDS(piles, "nuc_piles.Rds")
     isolates <- get_isolate(file_list)
@@ -73,11 +76,11 @@ if (!interactive()) {
     } else {
         ncore <- n
     }
-    cl <- parallel::makeCluster(ncore, outfile = "cluster.log")
-    parallel::clusterEvalQ(cl, library(megadaph.mtdna))
-    parallel::clusterExport(cl, c("min_maj_indices",
+    cl <- makeCluster(ncore, outfile = "cluster.log")
+    clusterEvalQ(cl, library(megadaph.mtdna))
+    clusterExport(cl, c("min_maj_indices",
                                   "pile_to_maj_min"))
-    mut_wt_mat <- parallel::parLapply(cl, split_by_isolate, pile_to_maj_min)
-    parallel::stopCluster(cl)
+    mut_wt_mat <- parLapply(cl, split_by_isolate, pile_to_maj_min)
+    stopCluster(cl)
     saveRDS(mut_wt_mat, "nuc_mut_wt_mats.Rds")
 }

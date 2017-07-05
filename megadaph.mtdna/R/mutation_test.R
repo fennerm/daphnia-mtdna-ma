@@ -12,6 +12,7 @@
 #   A vector of the maximal allele frequencies obtained in the permutations
 
 #' @export
+#' @importFrom matrixStats colMaxs
 simulate_max <- function(r, row_totals, col_totals) {
     prob <- row_totals/sum(row_totals)
     # Permute column 1 counts with probability proportional to row
@@ -103,6 +104,7 @@ predictive_power <- function(seq_err, mut_wt) {
     plot(diff_mean, type="l")
     plot(diff_constant, type="l")
 }
+
 ## Repeatedly simulate p-values for a set of observed mutant/wild type matrices.
 ## Function runs until interrupted. Small p-values (< 0.01) are simulated with
 ## increasing precision and saved in Rds files.
@@ -114,17 +116,18 @@ predictive_power <- function(seq_err, mut_wt) {
 ##   No return. Results are saved in RDS files in current directory.
 
 #' @export
+#' @importFrom parallel makeCluster clusterEvalQ parLapply
 simulate_p_values <- function(mut_wt_matrices, threads, start_reps=50000) {
-    cl <- parallel::makeCluster(threads)
-    parallel::clusterEvalQ(cl, library(matrixStats))
-    p <- unlist(parallel::parLapply(cl,
+    cl <- makeCluster(threads)
+    clusterEvalQ(cl, library(matrixStats))
+    p <- unlist(parLapply(cl,
                                     mut_wt_matrices,
                                     extreme_max_test,
                                     50000))
     max_reps <- start_reps
     while(TRUE) {
         small_p_idx <- which(p < 0.01)
-        sim_p <- unlist(parallel::parLapply(cl, mut_wt_matrices[small_p_idx],
+        sim_p <- unlist(parLapply(cl, mut_wt_matrices[small_p_idx],
                           extreme_max_test, reps=max_reps))
         p[small_p_idx] <- sim_p
         saveRDS(p, paste0("p_", as.character(max_reps), ".Rds"))
@@ -189,7 +192,7 @@ effect_of_diff_seq_err <- function(nsamples=8) {
                                              coverage=c(1000, 1000))
         p <- sapply(ctabs, corrado_test)
         p[which(p > 1)] <- 1
-        # q <- qvalue::qvalue(p, fdr.level = 0.01)$qvalues
+        # q <- qvalue(p, fdr.level = 0.01)$qvalues
         false_dis <- length(which(p < 0.05))
         false_dis
     })
@@ -251,6 +254,7 @@ corrado_prob <- function(j, i, nballs, log_pik, log_1_pik) {
 }
 
 #' @export
+#' @importFrom matrixStats colLogSumExps
 build_choose_matrix <- function(nballs) {
     dim <- nballs+1
     choose_mat <- matrix(, ncol=dim, nrow=dim)
@@ -259,7 +263,7 @@ build_choose_matrix <- function(nballs) {
         shifted <- c(choose_mat[i+1, 2:dim], 0)
         row_mat <- matrix(c(shifted[1:nballs],choose_mat[i+1, 1:nballs]),
                           ncol=nballs, byrow=TRUE)
-        new_row <- matrixStats::colLogSumExps(row_mat)
+        new_row <- colLogSumExps(row_mat)
         choose_mat[i, ] <- c(new_row, 0)
     }
     choose_mat
@@ -335,6 +339,7 @@ build_stochastic_matrices <- function(prob, nballs) {
 # }
 
 #' @export
+#' @importFrom matrixStats colLogSumExps
 logmatrix_mult <- function(mat1, mat2) {
     m <- nrow(mat1)
     n <- ncol(mat2)
@@ -412,14 +417,14 @@ corrado_test <- function(ctab) {
 # threads <- as.numeric(args[2])
 # sq <- 1:length(mut_wt_matrices)
 # partitions <- split(sq, cut(sq, 40, labels=FALSE))
-# cl <- parallel::makeCluster(threads, outfile="cluster.log")
-# parallel::clusterExport(cl, c("logmatrix_mult", "independent_assumption_test",
+# cl <- makeCluster(threads, outfile="cluster.log")
+# clusterExport(cl, c("logmatrix_mult", "independent_assumption_test",
 #                     "normalize", "cull", "build_stochastic_matrix",
 #                     "build_choose_matrix", "probability_proportion",
 #                     "log_sum_exp", "corrado_test.R", "mut_wt_matrices",
 #                     "partitions"))
-# p <- unlist(parallel::parLapply(cl, partitions, function(is) {
+# p <- unlist(parLapply(cl, partitions, function(is) {
 #     unlist(lapply(mut_wt_matrices[is], corrado_test))
 # }))
 # saveRDS(p, "corrado_p.Rds")
-# parallel::stopCluster(cl)
+# stopCluster(cl)

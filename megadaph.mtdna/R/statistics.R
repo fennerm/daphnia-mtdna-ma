@@ -36,6 +36,7 @@ het_vs_hom <- function(var_table, line_info) {
                    fill=fill)
 }
 #' @export
+#' @importFrom Hmisc capitalize
 mut_rate_by <- function(var_table, line_info, by, quant=TRUE) {
     groups <- unique(line_info[, by])
     mu_table <- t(sapply(groups, function(g) {
@@ -53,7 +54,7 @@ mut_rate_by <- function(var_table, line_info, by, quant=TRUE) {
         }
     }))
     if (quant) {
-        mu_table <- cbind(as.data.frame(Hmisc::capitalize(groups),
+        mu_table <- cbind(as.data.frame(capitalize(groups),
                                         stringsAsFactors=FALSE),
                           mu_table)
         colnames(mu_table) <- c("group", "mutation_rate", "ci1", "q25",
@@ -81,12 +82,13 @@ sample_mu <- function(line_info, var_table) {
 }
 
 #' @export
+#' @importFrom dplyr filter
 confounding_factors <- function(line_info, sample_mut_rates, merged_table) {
     leveneTest(sample_mut_rates~as.factor(line_info$genotype))
     leveneTest(sample_mut_rates~as.factor(line_info$isolate))
 
-    pulex_table <- dplyr::filter(merged_table, species=="pulex")
-    magna_table <- dplyr::filter(merged_table, species=="magna")
+    pulex_table <- filter(merged_table, species=="pulex")
+    magna_table <- filter(merged_table, species=="magna")
     plot(pulex_table$pos~log(pulex_table$af), xlim=c(-8, -2))
     plot(magna_table$pos~log(magna_table$af), xlim=c(-8, -2))
     plot(density(pulex_table$af, n=10000, from=0, to=1), xlim=c(0, 0.02), ylim=c(0, 50))
@@ -285,12 +287,13 @@ by_effect <- function(var_table, by) {
 }
 
 #' @export
+#' @importFrom coin independence_test
 by_mutation_effect <- function(var_table) {
-    coin::independence_test(var_table$af~as.factor(var_table$effect))
-    coin::independence_test(var_table$af~as.factor(var_table$gene))
+    independence_test(var_table$af~as.factor(var_table$effect))
+    independence_test(var_table$af~as.factor(var_table$gene))
     synon <- as.factor(var_table$effect=="synonymous_variant")
-    coin::independence_test(var_table$af~synon)
-    coin::independence_test(var_table$p_value~synon)
+    independence_test(var_table$af~synon)
+    independence_test(var_table$p_value~synon)
 }
 
 

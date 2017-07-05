@@ -208,7 +208,7 @@ binom_tests <- function(mut_cov_count, seq_err) {
 ## Return TRUE if two p-values are less than 0.05.
 is_unique <- function(p_matrix_row) {
     sorted <- sort(p_matrix_row)
-     (sorted[1] < 0.05) && (sorted[2] > 0.05)
+    (sorted[1] < 0.05) && (sorted[2] > 0.05)
 }
 
 ## Given:
@@ -372,16 +372,17 @@ construct_tables <- function(og_bams, rot_bams, seq_err, subsample=NULL) {
                         sb, unique, coverage_proportion,
                         stringsAsFactors=FALSE)
     colnames(test_table) <- c("species", "genotype", "isolate", "sample", "pos",
-                             "coverage", "ref", "alt", "class", "af", "af_diff",
-                             "strand_bias", "unique", "coverage_proportion")
+                              "coverage", "ref", "alt", "class", "af", "af_diff",
+                              "strand_bias", "unique", "coverage_proportion")
     list(piles, mut_wt_matrices, test_table)
 }
 
 #' @export
+#' @importFrom qvalue qvalue
 mult_comparisons_correct <- function(test_tables, fdr_level=0.05) {
     merged_table <<- do.call(rbind, test_tables)
     # filtered_table <- merged_table[which(!merged_table$low_coverage),]
-    fdr <- qvalue::qvalue(merged_table$p_value, fdr.level=fdr_level)
+    fdr <- qvalue(merged_table$p_value, fdr.level=fdr_level)
     significant <- fdr$significant
     q_value <- fdr$qvalues
     fdr_table <- cbind(merged_table, q_value, significant)
@@ -418,12 +419,12 @@ calc_coverages <- function(test_tables) {
 
 #' @export
 call_and_filter <- function(og_bam_list, rot_bam_list, seq_err_list,
-                          subsample=NULL) {
+                            subsample=NULL) {
     nsamples <- length(og_bam_list)
 
     tabs <<- lapply(1:nsamples, function(i) {
         construct_tables(og_bam_list[[i]], rot_bam_list[[i]],
-                              seq_err_list[[i]], subsample)
+                         seq_err_list[[i]], subsample)
     })
     piles <<- lapply(tabs, "[[", 1)
     mut_wt_matrices <<- lapply(tabs, "[[", 2)

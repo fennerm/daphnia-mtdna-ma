@@ -4,6 +4,7 @@
 ## Set of functions for creating and manipulating allele count pileups.
 
 #' @export
+#' @import data.table
 subsample_pileup <- function(pile, coverage_cap) {
     subsampled_rows <- apply(pile, 1, function(row) {
         row <- unlist(row)
@@ -18,8 +19,8 @@ subsample_pileup <- function(pile, coverage_cap) {
             sapply(1:6, function(i) length(which(samp==i)))
         }
     })
-    subsampled_pile <- data.table::setDT(data.frame(t(subsampled_rows)))
-    data.table::setnames(subsampled_pile, colnames(pile))
+    subsampled_pile <- setDT(data.frame(t(subsampled_rows)))
+    setnames(subsampled_pile, colnames(pile))
     subsampled_pile
 }
 
@@ -288,9 +289,12 @@ convert_to_mut_cov_counts <- function(pile, mut_consensus) {
 }
 
 #' @export
+#' @importFrom Rsamtools PileupParam
+#' @import data.table
+#' @importFrom bigmemory as.big.matrix
 create_pileup <- function(bam, min_base_quality = 30,
                           distinguish_strands = FALSE) {
-    pileup_param <- Rsamtools::PileupParam(
+    pileup_param <- PileupParam(
         max_depth = 1000000,
         distinguish_strands = distinguish_strands,
         distinguish_nucleotides = TRUE,
@@ -300,15 +304,15 @@ create_pileup <- function(bam, min_base_quality = 30,
         include_insertions = TRUE,
         min_base_quality = min_base_quality)
 
-    pile <- data.table::setDT(Rsamtools::pileup(bam,
+    pile <- setDT(pileup(bam,
                                                 pileupParam = pileup_param))
 
     if (distinguish_strands) {
-        pile_wide <- data.table::dcast(pile,
+        pile_wide <- dcast(pile,
                                        seqnames+pos~nucleotide+strand,
                                        value.var = "count")
     } else {
-        pile_wide <- data.table::dcast(pile,
+        pile_wide <- dcast(pile,
                                           seqnames+pos ~ nucleotide,
                                           value.var = "count")
     }
@@ -316,7 +320,7 @@ create_pileup <- function(bam, min_base_quality = 30,
 
     for (j in seq_len(ncol(pile_wide)))
         set(pile_wide,which(is.na(pile_wide[[j]])),j,0)
-    pile_wide <- bigmemory::as.big.matrix(pile_wide, type="integer")
+    pile_wide <- as.big.matrix(pile_wide, type="integer")
     pile_wide
 }
 

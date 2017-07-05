@@ -131,24 +131,26 @@ log_likelihood <- function(param) {
 }
 
 #' @export
+#' @importFrom maxLik maxNM
 n_fixed_mle <- function(N, d, gen, bp) {
     d <<- d
     vp <<- generate_vprime(N=N, gen=gen)
 
     fixed <- c("N", "bp", "gen")
 
-    maxLik::maxNM(log_likelihood,
+    maxNM(log_likelihood,
                   start=c(f0=0, VE=1, N=N, bp=bp, gen=gen),
                   fixed=fixed)
 }
 
 #' @export
+#' @importFrom parallel clusterEvalQ clusterExport makeCluster parLapply
 mut_mle <- function(d, gen, bp, N_max, threads) {
     if (threads > 1) {
-        cl <- parallel::makeCluster(threads)
-    	parallel::clusterEvalQ(cl, library(maxLik))
-    	parallel::clusterEvalQ(cl, library(truncnorm))
-    	parallel::clusterExport(cl, c("generate_tmatrix",
+        cl <- makeCluster(threads)
+    	clusterEvalQ(cl, library(maxLik))
+    	clusterEvalQ(cl, library(truncnorm))
+    	clusterExport(cl, c("generate_tmatrix",
     	                    "generate_vprime",
     	                    "likelihood_penalty",
     	                    "log_likelihood",
@@ -157,7 +159,7 @@ mut_mle <- function(d, gen, bp, N_max, threads) {
     	                    "scale_vprime",
     	                    "transition_probability",
     	                    "wt_likelihood"))
-        parallel::parLapply(cl, 2:N_max, n_fixed_mle, d=d, gen=gen, bp=bp)
+        parLapply(cl, 2:N_max, n_fixed_mle, d=d, gen=gen, bp=bp)
     } else {
         lapply(2:N_max, n_fixed_mle, d=d, gen=gen, bp=bp)
     }
