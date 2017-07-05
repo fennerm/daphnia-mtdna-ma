@@ -7,9 +7,22 @@ min_maj_indices <- function(pile) {
     min_maj_ix
 }
 
+# pile_to_maj_min <- function(piles) {
+#     min_maj <- lapply(piles, function(p) {
+#         mat <- apply(p, 1, function(row) {
+#             sort.int(row, decreasing = TRUE)[1:2]
+#         }
+# }
+
 pile_to_maj_min <- function(piles) {
     ds <- lapply(piles, destrand)
     min_maj <- lapply(1:length(ds), function(i) {
+        counts <- apply(ds[[i]], 1, function(x) {
+            sorted <- sort.int(x, decreasing = TRUE, index.return = TRUE)$ix
+            ix <- stranded_indices(sorted[1:2])
+            piles[[i]]
+
+        })
         min_maj_ix <- min_maj_indices(ds[[i]])
 
         counts <- lapply(1:2, function(j) {
@@ -35,40 +48,6 @@ pile_to_maj_min <- function(piles) {
     min_maj_mats
 }
 
-# pile_to_maj_min <- function(piles) {
-#     ds <- lapply(piles, destrand)
-#     min_maj <- lapply(1:length(ds), function(i) {
-#         counts <- apply(ds[[i]], 1, function(x) {
-#             sorted <- sort.int(x, decreasing = TRUE, index.return = TRUE)$ix
-#             ix <- stranded_indices(sorted[1:2])
-#             piles[[i]]
-#
-#         })
-#         min_maj_ix <- min_maj_indices(ds[[i]])
-#
-#         counts <- lapply(1:2, function(j) {
-#             ix <- min_maj_ix[j,]
-#             bp <- length(ix)
-#             stranded_ix <- stranded_indices(ix)
-#             stranded_counts <- ulapply(1:bp, function(k) {
-#                 piles[[i]][k, stranded_ix[k,]]
-#             })
-#             stranded_counts <- matrix(stranded_counts, ncol = 2, byrow = TRUE)
-#             stranded_counts
-#         })
-#         min_maj <- do.call(cbind, counts)
-#         min_maj
-#     })
-#     bp <- nrow(min_maj[[1]])
-#     min_maj_mats <- lapply(1:bp, function(i) {
-#         ith_row <- ulapply(min_maj, function(m) m[i,])
-#         matrix(ith_row, ncol = 4, byrow = TRUE)
-#     })
-#
-#     cat("done with this pile \n")
-#     min_maj_mats
-# }
-
 if (!interactive()) {
     library(megadaph.mtdna)
     args = commandArgs(trailingOnly = TRUE)
@@ -83,7 +62,6 @@ if (!interactive()) {
         ncore <- n
     }
     piles <- parallel::mclapply(file_list, create_pileup,
-                                distinguish_strands = TRUE,
                                 mc.cores = ncore)
     saveRDS(piles, "nuc_piles.Rds")
     isolates <- get_isolate(file_list)
