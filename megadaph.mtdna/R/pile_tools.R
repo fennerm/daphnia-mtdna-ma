@@ -312,11 +312,8 @@ create_pileup <- function(bam, min_base_quality = 30,
                                           seqnames+pos ~ nucleotide,
                                           value.var = "count")
     }
-    pile_wide <- pile_wide[, 3:length(pile_wide)]
-
-    for (i in names(pile_wide)) {
-        pile_wide[is.na(get(i)), (i) := 0]
-    }
+    pile_wide <- as.matrix(pile_wide[, 3:length(pile_wide)])
+    pile_wide[is.na(pile_wide)] <- 0
     pile_wide
 }
 

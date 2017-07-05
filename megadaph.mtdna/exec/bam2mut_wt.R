@@ -8,7 +8,6 @@ min_maj_indices <- function(pile) {
 }
 
 pile_to_maj_min <- function(piles) {
-    npiles <- length(piles)
     ds <- lapply(piles, destrand)
     min_maj <- lapply(1:length(ds), function(i) {
         min_maj_ix <- min_maj_indices(ds[[i]])
@@ -29,7 +28,7 @@ pile_to_maj_min <- function(piles) {
     bp <- nrow(min_maj[[1]])
     min_maj_mats <- lapply(1:bp, function(i) {
         ith_row <- ulapply(min_maj, function(m) m[i,])
-        matrix(ith_row, ncol = 4, byrow=TRUE)
+        matrix(ith_row, ncol = 4, byrow = TRUE)
     })
 
     cat("done with this pile \n")
@@ -37,6 +36,7 @@ pile_to_maj_min <- function(piles) {
 }
 
 if (!interactive()) {
+    library(megadaph.mtdna)
     args = commandArgs(trailingOnly = TRUE)
     file_list <- list_bams(args[1])
 
