@@ -103,7 +103,7 @@ destrand <- function(pile) {
     idx1 <- seq(1, ncol(pile)-1, by=2)
     idx2 <- idx1+1
     destranded <- mapply(function(x1, x2) {
-        pile[, x1, with=FALSE] + pile[, x2, with=FALSE]
+        pile[, x1] + pile[, x2]
     }, idx1, idx2)
     colnames(destranded) <- c("A", "C", "G", "T", "-", "+")
     destranded
@@ -316,6 +316,7 @@ create_pileup <- function(bam, min_base_quality = 30,
 
     for (j in seq_len(ncol(pile_wide)))
         set(pile_wide,which(is.na(pile_wide[[j]])),j,0)
+    pile_wide <- bigmemory::as.big.matrix(pile_wide, type="integer")
     pile_wide
 }
 

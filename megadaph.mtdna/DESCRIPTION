@@ -19,6 +19,7 @@ Imports: qvalue,
     GenomicRanges,
     IRanges,
     rworldmap,
-    matrixStats
+    matrixStats,
+    bigmemory
 RoxygenNote: 6.0.1
 Suggests: testthat
