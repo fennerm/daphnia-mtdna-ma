@@ -16,7 +16,10 @@ min_maj_indices <- function(pile) {
 
 #' @export
 pile_to_maj_min <- function(piles) {
+    cat("Destrand start \n")
     ds <- lapply(piles, destrand)
+    cat("Destrand end \n")
+    cat("Convert to minor/major alleles start \n")
     min_maj <- lapply(1:length(ds), function(i) {
         counts <- apply(ds[[i]], 1, function(x) {
             sorted <- sort.int(x, decreasing = TRUE, index.return = TRUE)$ix
@@ -39,13 +42,14 @@ pile_to_maj_min <- function(piles) {
         min_maj <- do.call(cbind, counts)
         min_maj
     })
+    cat("Convert to minor/major alleles end \n")
     bp <- nrow(min_maj[[1]])
+    cat("Convert to matrices start \n")
     min_maj_mats <- lapply(1:bp, function(i) {
         ith_row <- ulapply(min_maj, function(m) m[i,])
         matrix(ith_row, ncol = 4, byrow = TRUE)
     })
-
-    cat("done with this pile \n")
+    cat("Convert to matrices end \n")
     min_maj_mats
 }
 
@@ -64,9 +68,13 @@ if (!interactive()) {
     } else {
         ncore <- n
     }
+    cat("Create pileups start \n")
     piles <- mclapply(file_list, create_pileup, distinguish_strands=TRUE,
                                 mc.cores = ncore)
+    cat("Create pileups end \n")
+    cat("Saving pileups")
     saveRDS(piles, "nuc_piles.Rds")
+    cat("\n")
     isolates <- get_isolate(file_list)
 
     split_by_isolate <- split(piles, isolates)
