@@ -3,6 +3,10 @@
 
 ## Set of functions for creating and manipulating allele count pileups.
 
+#' Subsample a count vector
+#' @param r An integer vector
+#' @param cap Integer; Vector will be subsampled such that its sum = cap
+#' @return An integer vector
 #' @export
 subsample <- function(r, cap) {
     r <- unlist(r)
@@ -19,32 +23,19 @@ subsample <- function(r, cap) {
     new_row
 }
 
+#' Subsample an allele count pileup
+#' @param pile A pileup
+#' @param cap Integer; Pileup will be subsampled such that its sum = cap
+#' @return A pileup
 #' @export
 #' @importFrom data.table setDT setnames
-subsample_pileup <- function(pile, coverage_cap) {
+subsample_pileup <- function(pile, cap) {
     subsampled_rows <- apply(pile, 1, subsample)
     subsampled_pile <- setDT(data.frame(t(subsampled_rows)))
     setnames(subsampled_pile, colnames(pile))
     subsampled_pile
 }
 
-## Given:
-##  pile - a named numeric vector or a data.table; allele counts
-## Return:
-##  The name of the allele with the highest abundance at that position, or a
-##  vector of major alleles for each position in the table.
-
-#' @export
-major_allele <- function(pile) {
-    apply(pile, 1, function(x) {
-        x <- unlist(x)
-        # Get column index of major allele
-        idx <- which.max(x)
-        # Get allele from column index
-        major_allele <- names(x)[idx]
-        major_allele
-    })
-}
 
 ## Given:
 ##  x - A vector
@@ -105,17 +96,44 @@ piles_to_mut_wt <- function(piles, mut_consensus) {
 
 #' @export
 #' @importFrom data.table setDT
-destrand <- function(pile) {
-    idx1 <- seq(1, ncol(pile)-1, by=2)
-    idx2 <- idx1+1
-    destranded <- mapply(function(x1, x2) {
-        pile[, x1, with=FALSE] + pile[, x2, with=FALSE]
-    }, idx1, idx2)
-    destranded <- setDT(destranded)
+destrand <- function(counts) {
+    idx1 <- seq(1, 11, by = 2)
+    idx2 <- idx1 + 1
+
+    if (is.numeric(counts)) {
+        destranded <- counts[idx1] + counts[idx2]
+    } else {
+        destranded <- mapply(function(x1, x2) {
+            counts[, x1, with=FALSE] + counts[, x2, with=FALSE]
+        }, idx1, idx2)
+        destranded <- setDT(destranded)
+    }
     names(destranded) <- c("A", "C", "G", "T", "-", "+")
     destranded
 }
 
+highest_freq <- function(v) {
+    n <- length(v)
+    v <- unlist(v)
+    if (n == 12) {
+        v <- destrand(v)
+    }
+
+    # Get column index of major allele
+    idx <- which.max(v)
+    # Get allele from column index
+    major_allele <- names(v)[idx]
+    major_allele
+}
+
+#' Get highest frequency allele for each position from pileup
+#' WARNING: Returns the first value if tied
+#' @param pile A pileup
+#' @return Character; Vector of major allele names
+#' @export
+major_allele <- function(pile) {
+    apply(pile, 1, highest_freq)
+}
 ## Given:
 ##  pile - A data.table; allele counts at each genome position
 ##  consensus - Character vector; A multisample consensus genome sequence
@@ -296,7 +314,8 @@ convert_to_mut_cov_counts <- function(pile, mut_consensus) {
 
 #' @export
 #' @importFrom Rsamtools PileupParam pileup
-#' @import data.table
+#' @importFrom data.table setDT
+#' @importFrom reshape2 dcast
 #' @importFrom bigmemory as.big.matrix
 ## We use data.table rather than bigmatrix in order to save as an R object
 create_pileup <- function(bam, min_base_quality = 30,
@@ -318,22 +337,17 @@ create_pileup <- function(bam, min_base_quality = 30,
     cat("Casting to wide format \n")
     if (distinguish_strands) {
         pile_wide <- dcast(pile,
-                                       seqnames+pos~nucleotide+strand,
-                                       value.var = "count")
+                           seqnames+pos~nucleotide+strand,
+                           value.var = "count",
+                           fill = 0L)
     } else {
         pile_wide <- dcast(pile,
-                                          seqnames+pos ~ nucleotide,
-                                          value.var = "count")
+                           seqnames+pos ~ nucleotide,
+                           value.var = "count",
+                           fill = 0L)
     }
     cat("Removing extra cols \n")
     pile_wide <- pile_wide[, 3:length(pile_wide)]
-
-    cat("Removing NAs \n")
-    for (i in names(pile_wide))
-        pile_wide[is.na(get(i)), (i):=0]
-    # for (j in seq_len(ncol(pile_wide)))
-    #
-    #     set(pile_wide,which(is.na(pile_wide[[j]])),j,0)
 
     pile_wide
 }
