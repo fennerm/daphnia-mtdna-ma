@@ -4,13 +4,14 @@
 ## Set of functions for creating and manipulating allele count pileups.
 
 subsample_row <- function(r, cap) {
+    r <- unlist(r)
     cov <- sum(r)
     if (cov > cap) {
-        sample_pop <- sapply(1:length(row), function(i) {
-            rep(i, row[i])
+        sample_pop <- ulapply(1:length(r), function(i) {
+            rep(i, r[i])
         })
         samp <- sample(sample_pop, size = cap)
-        sapply(1:6, function(i) length(which(samp == i)))
+        sapply(1:length(r), function(i) length(which(samp == i)))
     } else {
         r
     }
@@ -19,7 +20,6 @@ subsample_row <- function(r, cap) {
 #' @export
 #' @importFrom data.table setDT setnames
 subsample_pileup <- function(pile, coverage_cap) {
-
     subsampled_rows <- apply(pile, 1, subsample_row)
     subsampled_pile <- setDT(data.frame(t(subsampled_rows)))
     setnames(subsampled_pile, colnames(pile))
@@ -309,9 +309,10 @@ create_pileup <- function(bam, min_base_quality = 30,
         include_insertions = TRUE,
         min_base_quality = min_base_quality)
 
-    pile <- setDT(pileup(bam,
-                                                pileupParam = pileup_param))
+    cat("Rsamtools pileup \n")
+    pile <- setDT(pileup(bam, pileupParam = pileup_param))
 
+    cat("Casting to wide format \n")
     if (distinguish_strands) {
         pile_wide <- dcast(pile,
                                        seqnames+pos~nucleotide+strand,
@@ -321,8 +322,10 @@ create_pileup <- function(bam, min_base_quality = 30,
                                           seqnames+pos ~ nucleotide,
                                           value.var = "count")
     }
+    cat("Removing extra cols \n")
     pile_wide <- pile_wide[, 3:length(pile_wide)]
 
+    cat("Removing NAs \n")
     for (j in seq_len(ncol(pile_wide)))
         set(pile_wide,which(is.na(pile_wide[[j]])),j,0)
 
