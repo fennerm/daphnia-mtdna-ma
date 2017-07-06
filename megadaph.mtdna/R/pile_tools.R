@@ -326,8 +326,11 @@ create_pileup <- function(bam, min_base_quality = 30,
     pile_wide <- pile_wide[, 3:length(pile_wide)]
 
     cat("Removing NAs \n")
-    for (j in seq_len(ncol(pile_wide)))
-        set(pile_wide,which(is.na(pile_wide[[j]])),j,0)
+    for (i in names(pile_wide))
+        pile_wide[is.na(get(i)), (i):=0]
+    # for (j in seq_len(ncol(pile_wide)))
+    #
+    #     set(pile_wide,which(is.na(pile_wide[[j]])),j,0)
 
     pile_wide
 }
