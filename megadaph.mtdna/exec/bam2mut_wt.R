@@ -64,7 +64,7 @@ if (!interactive()) {
     } else {
         ncore <- n
     }
-    piles <- mclapply(file_list, create_pileup,
+    piles <- mclapply(file_list, create_pileup, distinguish_strands=TRUE,
                                 mc.cores = ncore)
     saveRDS(piles, "nuc_piles.Rds")
     isolates <- get_isolate(file_list)

@@ -289,7 +289,7 @@ convert_to_mut_cov_counts <- function(pile, mut_consensus) {
 }
 
 #' @export
-#' @importFrom Rsamtools PileupParam
+#' @importFrom Rsamtools PileupParam pileup
 #' @import data.table
 #' @importFrom bigmemory as.big.matrix
 create_pileup <- function(bam, min_base_quality = 30,

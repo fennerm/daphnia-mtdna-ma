@@ -1,0 +1,12 @@
+starting worker pid=12196 on localhost:11968 at 17:00:40.100
+
+Attaching package: ‘megadaph.mtdna’
+
+The following object is masked from ‘package:grDevices’:
+
+    pdf
+
+The following object is masked from ‘package:base’:
+
+    mode
+
