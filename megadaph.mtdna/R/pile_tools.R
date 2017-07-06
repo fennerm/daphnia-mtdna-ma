@@ -3,22 +3,24 @@
 
 ## Set of functions for creating and manipulating allele count pileups.
 
+subsample_row <- function(r, cap) {
+    cov <- sum(r)
+    if (cov > cap) {
+        sample_pop <- unlist(sapply(1:length(row), function(i) {
+            rep(i, row[i])
+        }))
+        samp <- sample(sample_pop, size = cap)
+        sapply(1:6, function(i) length(which(samp == i)))
+    } else {
+        r
+    }
+}
+
 #' @export
-#' @import data.table
+#' @importFrom data.table setDT setnames
 subsample_pileup <- function(pile, coverage_cap) {
-    subsampled_rows <- apply(pile, 1, function(row) {
-        row <- unlist(row)
-        row_cov <- sum(row)
-        if (row_cov < coverage_cap) {
-            row
-        } else {
-            sample_pop <- unlist(sapply(1:length(row), function(i) {
-                rep(i, row[i])
-            }))
-            samp <- sample(sample_pop, size=coverage_cap)
-            sapply(1:6, function(i) length(which(samp==i)))
-        }
-    })
+
+    subsampled_rows <- apply(pile, 1, subsample_row)
     subsampled_pile <- setDT(data.frame(t(subsampled_rows)))
     setnames(subsampled_pile, colnames(pile))
     subsampled_pile
@@ -100,13 +102,15 @@ piles_to_mut_wt <- function(piles, mut_consensus) {
 }
 
 #' @export
+#' @importFrom data.table setDT
 destrand <- function(pile) {
     idx1 <- seq(1, ncol(pile)-1, by=2)
     idx2 <- idx1+1
     destranded <- mapply(function(x1, x2) {
-        pile[, x1] + pile[, x2]
+        pile[, x1, with=FALSE] + pile[, x2, with=FALSE]
     }, idx1, idx2)
-    colnames(destranded) <- c("A", "C", "G", "T", "-", "+")
+    destranded <- setDT(destranded)
+    names(destranded) <- c("A", "C", "G", "T", "-", "+")
     destranded
 }
 
@@ -292,6 +296,7 @@ convert_to_mut_cov_counts <- function(pile, mut_consensus) {
 #' @importFrom Rsamtools PileupParam pileup
 #' @import data.table
 #' @importFrom bigmemory as.big.matrix
+## We use data.table rather than bigmatrix in order to save as an R object
 create_pileup <- function(bam, min_base_quality = 30,
                           distinguish_strands = FALSE) {
     pileup_param <- PileupParam(
@@ -320,7 +325,7 @@ create_pileup <- function(bam, min_base_quality = 30,
 
     for (j in seq_len(ncol(pile_wide)))
         set(pile_wide,which(is.na(pile_wide[[j]])),j,0)
-    pile_wide <- as.big.matrix(pile_wide, type="integer")
+
     pile_wide
 }
 

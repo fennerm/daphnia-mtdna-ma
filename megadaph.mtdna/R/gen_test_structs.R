@@ -15,8 +15,13 @@ strandify <- function(mat) {
     stranded_mat
 }
 
+gen_stranded_pile_row <- function() {
+    setDT()
+}
+
 #' @export
-gen_test_pile <- function(r=1000, stranded=FALSE, range=c(1, 1000),
+#' @importFrom data.table setDT setnames
+gen_pile <- function(r=1000, stranded=FALSE, range=c(1, 1000),
                           seq_err=0.002) {
     if (stranded) {
         col <- 12
@@ -35,15 +40,23 @@ gen_test_pile <- function(r=1000, stranded=FALSE, range=c(1, 1000),
         pile <- strandify(pile)
     }
 
+    pile <- setDT(as.data.frame(pile, stringsAsFactors = FALSE))
     if (stranded) {
-        colnames(pile) <- c("A_+", "A_-", "C_+", "C_-", "G_+", "G_-", "T_+",
-                            "T_-", "-_+", "-_-", "+_+", "+_-")
+        setnames(pile, c("A_+", "A_-", "C_+", "C_-", "G_+", "G_-", "T_+",
+                            "T_-", "-_+", "-_-", "+_+", "+_-"))
 
     } else if (!stranded) {
-        colnames(pile) <- c("A", "C", "G", "T", "-", "=")
+        setnames(pile, c("A", "C", "G", "T", "-", "+"))
     }
     pile
 }
 
+#' @export
+gen_pile_list <- function(n=8, r=1000, stranded=FALSE, range=c(1, 1000),
+                          seq_err=0.002) {
+    pile_list <- replicate(n, {
+        gen_pile(r = r, stranded = stranded, range = range, seq_err = seq_err)
+        }, simplify = FALSE)
+}
 #' #' @export
 #' gen_test_table <-
