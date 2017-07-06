@@ -6,9 +6,9 @@
 subsample_row <- function(r, cap) {
     cov <- sum(r)
     if (cov > cap) {
-        sample_pop <- unlist(sapply(1:length(row), function(i) {
+        sample_pop <- sapply(1:length(row), function(i) {
             rep(i, row[i])
-        }))
+        })
         samp <- sample(sample_pop, size = cap)
         sapply(1:6, function(i) length(which(samp == i)))
     } else {

@@ -15,13 +15,26 @@ strandify <- function(mat) {
     stranded_mat
 }
 
+#' @export
+#' @importFrom data.table setDT setnames
 gen_stranded_pile_row <- function() {
-    setDT()
+    r <- setDT(list(200, 100, 0, 0, 10, 15, 0, 0, 100, 50, 0, 0))
+    setnames(r, c("A_+", "A_-", "C_+", "C_-", "G_+", "G_-", "T_+",
+                  "T_-", "-_+", "-_-", "+_+", "+_-"))
+    r
 }
 
 #' @export
 #' @importFrom data.table setDT setnames
-gen_pile <- function(r=1000, stranded=FALSE, range=c(1, 1000),
+gen_unstranded_pile_row <- function() {
+    r <- setDT(list(300, 0, 25, 0, 150, 0))
+    setnames(r, c("A", "C", "G", "T", "-", "+"))
+    r
+}
+
+#' @export
+#' @importFrom data.table setDT setnames
+gen_pile <- function(r=100, stranded=FALSE, range=c(1, 1000),
                           seq_err=0.002) {
     if (stranded) {
         col <- 12
