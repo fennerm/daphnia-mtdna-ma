@@ -1,11 +1,11 @@
 library(megadaph.mtdna)
 context("Subsample row")
 
-s <- readRDS("tests/dat/stranded_pile_row.Rds")
-us <- readRDS("tests/dat/unstranded_pile_row.Rds")
+s <- readRDS("../dat/stranded_pile_row.Rds")
+us <- readRDS("../dat/unstranded_pile_row.Rds")
 
-s_sub <- subsample_row(s, 100)
-us_sub <- subsample_row(us, 100)
+s_sub <- subsample(s, 100)
+us_sub <- subsample(us, 100)
 
 test_that("Output length", {
     expect_equal(12, length(s_sub))

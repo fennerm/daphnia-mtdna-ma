@@ -3,24 +3,26 @@
 
 ## Set of functions for creating and manipulating allele count pileups.
 
-subsample_row <- function(r, cap) {
+#' @export
+subsample <- function(r, cap) {
     r <- unlist(r)
     cov <- sum(r)
     if (cov > cap) {
-        sample_pop <- ulapply(1:length(r), function(i) {
-            rep(i, r[i])
-        })
-        samp <- sample(sample_pop, size = cap)
-        sapply(1:length(r), function(i) length(which(samp == i)))
+        # Calculate the surplus and randomly subtract from the row
+        surplus <- cov - cap
+        prop <- r / sum(r)
+        smp <- rmultinom(1, surplus, prop)
+        new_row <- as.integer(r - smp)
     } else {
-        r
+        new_row <- r
     }
+    new_row
 }
 
 #' @export
 #' @importFrom data.table setDT setnames
 subsample_pileup <- function(pile, coverage_cap) {
-    subsampled_rows <- apply(pile, 1, subsample_row)
+    subsampled_rows <- apply(pile, 1, subsample)
     subsampled_pile <- setDT(data.frame(t(subsampled_rows)))
     setnames(subsampled_pile, colnames(pile))
     subsampled_pile
@@ -298,13 +300,14 @@ convert_to_mut_cov_counts <- function(pile, mut_consensus) {
 #' @importFrom bigmemory as.big.matrix
 ## We use data.table rather than bigmatrix in order to save as an R object
 create_pileup <- function(bam, min_base_quality = 30,
-                          distinguish_strands = FALSE) {
+                          distinguish_strands = FALSE,
+                          min_nucleotide_depth = 1) {
     pileup_param <- PileupParam(
         max_depth = 1000000,
         distinguish_strands = distinguish_strands,
         distinguish_nucleotides = TRUE,
         ignore_query_Ns = TRUE,
-        min_nucleotide_depth = 0,
+        min_nucleotide_depth = min_nucleotide_depth,
         include_deletions = TRUE,
         include_insertions = TRUE,
         min_base_quality = min_base_quality)

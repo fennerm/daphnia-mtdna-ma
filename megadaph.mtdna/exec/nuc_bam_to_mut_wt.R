@@ -70,7 +70,7 @@ if (!interactive()) {
     }
     cat("Create pileups start \n")
     piles <- mclapply(file_list, create_pileup, distinguish_strands = TRUE,
-                                mc.cores = ncore, mc.preschedule = FALSE)
+                      mc.cores = ncore, mc.preschedule = FALSE)
     cat("Create pileups end \n")
     cat("Saving pileups")
     saveRDS(piles, "nuc_piles.Rds")
