@@ -316,7 +316,6 @@ convert_to_mut_cov_counts <- function(pile, mut_consensus) {
 #' @importFrom Rsamtools PileupParam pileup
 #' @importFrom data.table setDT
 #' @importFrom reshape2 dcast
-#' @importFrom bigmemory as.big.matrix
 ## We use data.table rather than bigmatrix in order to save as an R object
 create_pileup <- function(bam, min_base_quality = 30,
                           distinguish_strands = FALSE,
@@ -332,8 +331,9 @@ create_pileup <- function(bam, min_base_quality = 30,
         min_base_quality = min_base_quality)
 
     cat("Rsamtools pileup \n")
-    pile <- setDT(pileup(bam, pileupParam = pileup_param))
+    pile <- pileup(bam, pileupParam = pileup_param)
 
+    ## Data.table dcast has a known bug which causes errors if pile is large.
     cat("Casting to wide format \n")
     if (distinguish_strands) {
         pile_wide <- dcast(pile,
@@ -346,8 +346,9 @@ create_pileup <- function(bam, min_base_quality = 30,
                            value.var = "count",
                            fill = 0L)
     }
+    pile_wide <- setDT(pile_wide)
     cat("Removing extra cols \n")
-    pile_wide <- pile_wide[, 3:length(pile_wide)]
+    pile_wide[, c("seqnames","pos") := NULL]
 
     pile_wide
 }

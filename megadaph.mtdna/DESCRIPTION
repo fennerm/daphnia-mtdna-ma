@@ -20,6 +20,6 @@ Imports: qvalue,
     IRanges,
     rworldmap,
     matrixStats,
-    bigmemory
+    reshape2
 RoxygenNote: 6.0.1
 Suggests: testthat
