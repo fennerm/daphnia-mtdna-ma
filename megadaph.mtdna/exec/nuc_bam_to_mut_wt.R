@@ -69,8 +69,9 @@ if (!interactive()) {
         ncore <- n
     }
     cat("Create pileups start \n")
-    piles <- mclapply(file_list, create_pileup, distinguish_strands = TRUE,
-                      mc.cores = ncore, mc.preschedule = FALSE)
+    cl <- makeCluster(ncore, outfile = "cluster.log")
+    clusterEvalQ(cl, library(megadaph.mtdna))
+    piles <- parLapply(cl, file_list, create_pileup, distinguish_strands = TRUE)
     cat("Create pileups end \n")
     cat("Saving pileups")
     saveRDS(piles, "nuc_piles.Rds")
