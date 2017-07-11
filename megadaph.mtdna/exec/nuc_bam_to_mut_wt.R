@@ -61,7 +61,7 @@ if (!interactive()) {
     file_list <- list_bams(args[1])
 
     # Create pileups using multithreading
-    max_cores <- args[2]
+    max_cores <- as.numeric(args[2])
     n <- length(file_list)
     if (n > max_cores) {
         ncore <- max_cores
@@ -72,6 +72,7 @@ if (!interactive()) {
     cl <- makeCluster(ncore, outfile = "cluster.log")
     clusterEvalQ(cl, library(megadaph.mtdna))
     piles <- parLapply(cl, file_list, create_pileup, distinguish_strands = TRUE)
+    stopCluster(cl)
     cat("Create pileups end \n")
     cat("Saving pileups")
     saveRDS(piles, "nuc_piles.Rds")

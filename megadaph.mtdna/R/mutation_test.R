@@ -27,6 +27,7 @@ simulate_max <- function(r, row_totals, col_totals) {
     max_prop
 }
 
+
 ## Custom fisher-like significance test which tests for extreme maximal values
 ## in a k x 2 contingency table. The maximal value is defined by the row which
 ## shows the largest proportion of '+' events where each row is of the form
@@ -93,17 +94,6 @@ validate_extreme_max_test <- function(reps, nsamples) {
     hist(ps, breaks=50)
 }
 
-predictive_power <- function(seq_err, mut_wt) {
-    sm1 <- unlist(lapply(mut_wt, function(x) (x[1,1]/(x[1,2]+x[1,1]))))
-    sm_rest <- unlist(lapply(mut_wt, function(x) mean(x[2:nrow(x), 1])/
-                          (mean(x[2:nrow(x), 2]) + mean(x[2:nrow(x),1]))))
-    diff_mean <- abs(sm1-sm_rest)
-    diff_mean <- diff_mean[which(diff_mean < 0.1)]
-    diff_constant <- abs(sm1-seq_err[1])
-    diff_constant <- diff_constant[which(diff_constant < 0.1)]
-    plot(diff_mean, type="l")
-    plot(diff_constant, type="l")
-}
 
 ## Repeatedly simulate p-values for a set of observed mutant/wild type matrices.
 ## Function runs until interrupted. Small p-values (< 0.01) are simulated with
@@ -136,43 +126,6 @@ simulate_p_values <- function(mut_wt_matrices, threads, start_reps=50000) {
     }
 }
 
-## Generate simulated mutant-wildtype contingency tables. Binomial mutation
-## frequency is constant for each table. This corresponds to the null hypothesis
-## of extreme_max_test.
-## Given:
-##  ntables - Integer; number of tables
-##  nsamples - Integer; Number of samples = number of rows in table
-##  prob - Numeric; Binomial probability of mutation
-##  coverage - Numeric; If a single number is given, all tables rows will have
-##             identical coverage. If range is given, table rows will have
-##             variable coverage randomly distributed with the interval
-## Return:
-##  A list of nsamples x 2 matrices
-
-#' @export
-simulate_contingency_tables <- function(ntables, nsamples, prob=NULL,
-                                        coverage=c(1000, 10000)) {
-    replicate(ntables, {
-
-        # Set prob if unset.
-        if (is.null(prob)) {
-            r <- runif(1)
-            prob <- matrix(rep(c(r, 1 - r), nsamples), ncol = 2, byrow = TRUE)
-        } else {
-            if (length(prob)==1) {
-                prob <- matrix(rep(c(prob, 1 - prob), nsamples), byrow=TRUE,
-                               ncol = 2)
-            } else {
-                prob <- matrix(c(prob, 1 - prob), ncol = 2)
-            }
-        }
-        matrix(unlist(lapply(1:nsamples, function(i) {
-            rmultinom(1, round(runif(1, coverage[1], coverage[2])),
-                prob = prob[i,])
-        })), ncol = 2, byrow = TRUE)
-
-    }, simplify = FALSE)
-}
 
 #' @export
 effect_of_diff_seq_err <- function(nsamples=8) {
@@ -277,7 +230,7 @@ build_stochastic_matrix <- function(k, prob, choose_mat) {
     pik <- probability_proportion(prob, k)
     log_pik <- log(pik)
     log_pik_inv <- log(1-pik)
-    if (k==1) {
+    if (k == 1) {
         stoch_mat <- choose_mat[1,] + (0:nballs)*log_pik +
             (nballs:0)*log_pik_inv
         stoch_mat <- matrix(stoch_mat, ncol=dim)
@@ -365,6 +318,15 @@ independent_assumption_test <- function(ctab) {
     p
 }
 
+compare_tests <- function() {
+    ctabs <- simulate_contingency_tables(10000, 8, 0.002,
+                                         coverage = c(100, 1000))
+    sim_p <- ulapply(ctabs, extreme_max_test)
+    corrado_p <- ulapply(ctabs, corrado_test)
+    levin_p <- ulapply(ctabs, levin_test)
+    plot(sim_p, corrado_p)
+    plot(sim_p, levin_p)
+}
 #' @export
 corrado_test <- function(ctab) {
     row_totals <- rowSums(ctab)
@@ -405,13 +367,70 @@ corrado_test <- function(ctab) {
         }
         rm(choose_mat)
         p <- -expm1(cum_product)
-        if (p <= 0) {
-            p <- 2.2e-16
-        }
     }
+    if (p <= 0) {
+        p <- 2.2e-16
+    } else if (p > 1) {
+        p <- 1
+    }
+
     p
 }
 
+# dtpois <- function(x, nballs, prob, lower, upper) {
+#     dtrunc(x, lambda = nballs*prob, spec="pois", a=lower, b=upper)
+# }
+
+dtpois <- function(nballs, prob, cutoff, lower, upper) {
+    d <- dtrunc(lower:upper, lambda = nballs*prob, spec = "pois",
+                a = lower, b = upper)
+    d[(cutoff + 1):(upper+1)] <- 0
+    d
+}
+#' @importFrom truncdist dtrunc
+plevin <- function(nballs, prob, cutoff) {
+    nbins <- length(prob)
+
+    conv <- dtpois(nballs, prob[1], cutoff[1], 0, nballs)
+    if (nbins >= 2) {
+        for (i in 2:nbins) {
+            dens <- c(dtpois(nballs, prob[i], cutoff[i], 0, nballs),
+                      rep(0, length(conv)-nballs+1))
+            conv <- convolve(conv, rev(dens), type = "open")
+        }
+    }
+    conv <- conv/sum(conv)
+    conv_p <- conv[nballs+1]
+
+    # conv_p <- sum(sapply(1:nbins, function(i) dtpois(nballs, prob[i], cutoff[i],
+    #                                                  0, cutoff[i])))
+
+    1-(sqrt(2 * pi * nballs)) *
+    # 1- (factorial(nballs)/((nballs^nballs)*exp(-nballs))) *
+        (prod(ppois(cutoff-1, nballs*prob))) *
+        conv_p
+        # sum(mapply(function(p, c) {
+        #     dtpois(nballs, nballs, p, 0, c)
+        # }, probs, cutoff))
+}
+
+levin_test <- function(ctab) {
+    row_totals <- rowSums(ctab)
+    col_totals <- colSums(ctab)
+    nsamples <- nrow(ctab)
+
+    # Observed mutant allele frequency
+    obs <- sort(ctab[,1] / row_totals)
+    prob <- row_totals/sum(row_totals)
+    obs_max <- max(obs)
+    cutoff <- ceiling(obs_max * row_totals)
+    nmuts <- col_totals[1]
+    if (nmuts == 0) {
+        1
+    } else {
+        plevin(nmuts, prob, cutoff)
+    }
+}
 # args = commandArgs(trailingOnly=TRUE)
 # mut_wt_matrices <- readRDS(as.character(args[1]))
 # threads <- as.numeric(args[2])
