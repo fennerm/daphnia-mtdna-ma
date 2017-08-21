@@ -1,41 +1,43 @@
 #!/usr/bin/env Rscript
 
-## Given the species of Daphnia and the position on the rotated reference seq
-## Return the position of this base on the original reference sequence.
-
+#' Convert indices in rotated fasta file into the pre-rotation indices.
+#' Under rotation, the second half of fasta sequence is moved to start.
+#' See rotate_ref.py
+#' @param pos Index in rotated fasta file
+#' @param seq_length The length of the fasta sequence
+#' @return The rotated index
 #' @export
-rot_to_og <- function(pos, spp) {
-    if (tolower(spp) == "pulex") {
-        if (pos < 7668) {
-            pos + 7666
-        } else if (pos > 7667 & pos < 15334) {
-            pos - 7667
-        }
-    } else if (tolower(spp) == "magna") {
-        if (pos < 7475) {
-            pos + 7474
-        } else if (pos > 7474 & pos < 14949) {
-            pos - 7474
+rot_to_og <- function(pos, seq_length) {
+    if ((pos > seq_length) || (pos < 0)) {
+        stop("Invalid position")
+    } else {
+        midpoint <- round(seq_length / 2)
+        odd_even <-  seq_length %% 2
+        if (pos < (midpoint + 1 - odd_even)) {
+            pos + midpoint
+        } else {
+            pos - midpoint + odd_even
         }
     }
 }
 
-## Given the species of Daphnia and the position on the original reference seq
-## Return the position of this base on the rotated sequence.
-
+#' Convert indices in original fasta file into rotated indices.
+#' Under rotation, the second half of fasta sequence is moved to start.
+#' @param pos Index in original fasta file
+#' @param seq_length The length of the fasta sequence
+#' @return The rotated index
 #' @export
-og_to_rot <- function(pos, spp) {
-    if (tolower(spp) == "pulex") {
-        if (pos < 7667) {
-            pos + 7667
-        } else if (pos > 7668 & pos < 15334) {
-            pos - 7666
-        }
-    } else if (tolower(spp) == "magna") {
-        if (pos < 7474) {
-            pos + 7475
-        } else if (pos > 7474 & pos < 14949) {
-            pos - 7474
+og_to_rot <- function(pos, seq_length) {
+    if ((pos > seq_length) || (pos < 0)) {
+        stop("Invalid position")
+    } else {
+        midpoint = round(seq_length / 2)
+        ## We need to adjust by 1 if the sequence length is odd
+        odd_even <-  seq_length %% 2
+        if (pos < (midpoint + 1)) {
+            pos + midpoint - odd_even
+        } else {
+            pos - midpoint
         }
     }
 }
