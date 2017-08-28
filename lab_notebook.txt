@@ -1,0 +1,49 @@
+Fenner Macrae Megadaph Lab Notebook
+===============================================================================
+# vim: textwidth=79
+
+This is continued from a non-digital lab notebook 12/3/16 - 8/22/17
+
+===============================================================================
+August 22nd, 2017
+===============================================================================
+
+-------------------------------------------------------------------------------
+Meeting with Sarah
+-------------------------------------------------------------------------------
+Discussed primer design for amplifying the control region in order to resolve
+the conflicting results which we're finding for the NOVOplasty assemblies. Plan
+is to amplify in all 9 D. magna starting controls. We should be able to tell by
+the fragment size whether the large repetitive mtDNA assemblies are correct.
+
+-------------------------------------------------------------------------------
+Primer Design
+-------------------------------------------------------------------------------
+-Used the NOVOPlasty assembly for IB as the reference 
+(fmacrae/daphnia_mitochondria_MA/illumina_magna_150bp/I/processed/\
+create_consensus/IB)
+- First trimmed the IB assembly down to only the ranges 11812:12738 and
+  555:1541 which should correspond roughly to the ND1 and ND2 genes
+respectively. 
+- Then moved ND1 region in front of the ND2 region and placed a run of Ns in 
+between.
+- Then used web interface of primer3 to choose primers (Max product size 400bp)
+(local: proj/research/daphnia_mtdna_ma/megadaph.mtdna/data-raw/primer_design/\
+primer3_out.html). 
+- Using jalview I Muscle aligned the consensus sequences of all isolates with
+the ND1 and ND2 sequence.
+- Found primers which look good:
+(local: proj/research/daphnia_mtdna_ma/megadaph.mtdna/data-raw/primer_design/\
+(primers.control_region.fasta)
+- Sarah Ok'd the primers.
+- While looking into known info about D. magna mtDNA structure we found a very
+interesting looking paper about D. galeata mtDNA diversity in Japan (2017). We 
+had to contact the authors directly to access the paper.
+- Also contacted Dieter about whether he has PacBio data for the D. magna 
+mtDNA.
+
+===============================================================================
+August 23rd, 2017
+===============================================================================
+- Created an R package fen.R.util (https://github.com/fennerm/fen.R.util) to    
+house code shared between other R packages.  

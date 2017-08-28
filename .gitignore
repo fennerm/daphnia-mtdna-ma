@@ -4,6 +4,7 @@
 *.Ruserdata
 *.vcf
 /docs/
+/data/
 /megadaph.mtdna/data/
 /megadaph.mtdna/tmpdat/
 /megadaph.mtdna/data-raw/
