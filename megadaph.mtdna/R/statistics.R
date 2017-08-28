@@ -20,11 +20,11 @@ het_vs_hom <- function(var_table, line_info) {
         het_af <- lapply(li_by_spp[[i]]$sample, function(x) {
             het[which(het$sample == x), "af"]
         })
-        hom_mut_rate <- quantile_mut_rate(hom_af, li_by_spp[[i]]$generations,
+        hom_mutation_rate <- quantile_mutation_rate(hom_af, li_by_spp[[i]]$generations,
                                           sum(li_by_spp[[i]]$bp))
-        het_mut_rate <- quantile_mut_rate(het_af, li_by_spp[[i]]$generations,
+        het_mutation_rate <- quantile_mutation_rate(het_af, li_by_spp[[i]]$generations,
                                           sum(li_by_spp[[i]]$bp))
-        list(prop_hom=prop_hom, hom_u = hom_mut_rate, het_u = het_mut_rate)
+        list(prop_hom=prop_hom, hom_u = hom_mutation_rate, het_u = het_mutation_rate)
     })
     fill <- c("Homoplasmic", "Heteroplasmic", "Homoplasmic", "Heteroplasmic")
     dat <- as.data.frame(rbind(by_spp[[1]]$hom_u, by_spp[[1]]$het_u,
@@ -37,7 +37,7 @@ het_vs_hom <- function(var_table, line_info) {
 }
 #' @export
 #' @importFrom Hmisc capitalize
-mut_rate_by <- function(var_table, line_info, by, quant=TRUE) {
+mutation_rate_by <- function(var_table, line_info, by, quant=TRUE) {
     groups <- unique(line_info[, by])
     mu_table <- t(sapply(groups, function(g) {
         var_table_by <- var_table[which(var_table[, by]==g),]
@@ -46,9 +46,9 @@ mut_rate_by <- function(var_table, line_info, by, quant=TRUE) {
         gen <- line_info_by$generations
         nsamples <- length(gen)
         nuc <- sum(line_info_by$bp)
-        mu <- mut_rate(unlist(af), mean(gen), nuc)
+        mu <- mutation_rate(unlist(af), mean(gen), nuc)
         if (quant) {
-            quantile_mut_rate(af, gen, nuc)
+            quantile_mutation_rate(af, gen, nuc)
         } else {
             mu
         }
@@ -69,23 +69,23 @@ mut_rate_by <- function(var_table, line_info, by, quant=TRUE) {
 
 #' @export
 sample_mu <- function(line_info, var_table) {
-    sample_mut_rates <- sapply(line_info$sample, function(sample) {
+    sample_mutation_rates <- sapply(line_info$sample, function(sample) {
         sample_afs <- var_table[which(var_table$sample == sample), "af"]
         sample_gen <- line_info[which(line_info$sample == sample),
                                 "generations"]
         sample_nuc <- line_info[which(line_info$sample == sample),
                                 "bp"]
-        mut_rate(sample_afs, sample_gen, sample_nuc)
+        mutation_rate(sample_afs, sample_gen, sample_nuc)
     })
-    barplot(sample_mut_rates, col=as.factor(line_info$genotype))
-    sample_mut_rates
+    barplot(sample_mutation_rates, col=as.factor(line_info$genotype))
+    sample_mutation_rates
 }
 
 #' @export
 #' @importFrom dplyr filter
-confounding_factors <- function(line_info, sample_mut_rates, merged_table) {
-    leveneTest(sample_mut_rates~as.factor(line_info$genotype))
-    leveneTest(sample_mut_rates~as.factor(line_info$isolate))
+confounding_factors <- function(line_info, sample_mutation_rates, merged_table) {
+    leveneTest(sample_mutation_rates~as.factor(line_info$genotype))
+    leveneTest(sample_mutation_rates~as.factor(line_info$isolate))
 
     pulex_table <- filter(merged_table, species=="pulex")
     magna_table <- filter(merged_table, species=="magna")
@@ -141,21 +141,21 @@ confounding_factors <- function(line_info, sample_mut_rates, merged_table) {
     points(nmat[2,], col="red")
     lines(nmat[2,], col="red")
 
-    line_info <- cbind(line_info, sample_mut_rates)
-    plot(density(line_info$sample_mut_rates))
-    shapiro.test(sample_mut_rates)
+    line_info <- cbind(line_info, sample_mutation_rates)
+    plot(density(line_info$sample_mutation_rates))
+    shapiro.test(sample_mutation_rates)
     cor.test(line_info$generations,
-             line_info$sample_mut_rates,
+             line_info$sample_mutation_rates,
              method="spearman")
     ## Non-significant after removal of pulex
     cor.test(line_info$generations[which(line_info$species=="magna")],
-             line_info$sample_mut_rates[which(line_info$species=="magna")],
+             line_info$sample_mutation_rates[which(line_info$species=="magna")],
              method="spearman")
-    non_zero <- line_info[which(line_info$sample_mut_rates != 0),]
-    plot(log(non_zero$generations), log(non_zero$sample_mut_rates),
+    non_zero <- line_info[which(line_info$sample_mutation_rates != 0),]
+    plot(log(non_zero$generations), log(non_zero$sample_mutation_rates),
          xlim=c(-1, 6), ylim=c(-20, -10))
-    abline(lm(log(non_zero$sample_mut_rates)~log(non_zero$generations)), col="red")
-    tab <- cbind(as.data.frame(log(sample_mut_rates)),
+    abline(lm(log(non_zero$sample_mutation_rates)~log(non_zero$generations)), col="red")
+    tab <- cbind(as.data.frame(log(sample_mutation_rates)),
                  log(line_info$generations),
                  line_info$genotype)
     tab <- tab[which(!is.infinite(tab[,1])),]
@@ -163,46 +163,46 @@ confounding_factors <- function(line_info, sample_mut_rates, merged_table) {
     scatterplot(tab[,1]~tab[,2] | tab[,3], smoother=FALSE,
                 xlab="log(generations)", ylab="log(Mutation Rate)")
     cor.test(line_info$sequencing_error,
-             line_info$sample_mut_rates,
+             line_info$sample_mutation_rates,
              method="spearman")
     cor.test(line_info$coverage,
-             line_info$sample_mut_rates,
+             line_info$sample_mutation_rates,
              method="spearman")
 }
 
 #' @export
 by_isolate <- function(var_table, line_info) {
     # BY POPULATION
-    isolate_mut_rates <- mut_rate_by(var_table, line_info, "isolate")
-    custom_boxplot(isolate_mut_rates, "Isolate", "Mutation Rate",
+    isolate_mutation_rates <- mutation_rate_by(var_table, line_info, "isolate")
+    custom_boxplot(isolate_mutation_rates, "Isolate", "Mutation Rate",
                    unique(line_info$isolate))
 
-    isolate_diffs <- boot_mut_rate_diff(var_table, line_info, "isolate", "genotype")
+    isolate_diffs <- boot_mutation_rate_diff_within(var_table, line_info, "isolate", "genotype")
 }
 
 #' @export
 by_population <- function(line_info, var_table) {
-    population_mut_rates <- mut_rate_by(var_table, line_info, "genotype")
-    custom_boxplot(population_mut_rates, "Genotype", "Mutation Rate",
+    population_mutation_rates <- mutation_rate_by(var_table, line_info, "genotype")
+    custom_boxplot(population_mutation_rates, "Genotype", "Mutation Rate",
                    unique(line_info$genotype))
-    population_diffs <- boot_mut_rate_diff(var_table, line_info, "genotype",
+    population_diffs <- boot_mutation_rate_diff_within(var_table, line_info, "genotype",
                                          "species")
 }
 
 #' @export
 by_species <- function(var_table, line_info) {
-    species_mut_rates <- mut_rate_by(var_table, line_info, "species")
-    species_diffs <- boot_mut_rate_diff(var_table, line_info, "species")
-    custom_boxplot(species_mut_rates, "Species", "Mutation Rate",
+    species_mutation_rates <- mutation_rate_by(var_table, line_info, "species")
+    species_diffs <- boot_mutation_rate_diff_within(var_table, line_info, "species")
+    custom_boxplot(species_mutation_rates, "Species", "Mutation Rate",
                    c("D. magna", "D. pulex"))
 }
 
 #' @export
 by_reproduction <- function(var_table, line_info) {
-    repro_mut_rates <- mut_rate_by(var_table, line_info, "reproduction")
-    custom_boxplot(repro_mut_rates, "Reproduction", "Mutation Rate",
+    repro_mutation_rates <- mutation_rate_by(var_table, line_info, "reproduction")
+    custom_boxplot(repro_mutation_rates, "Reproduction", "Mutation Rate",
                    c("Asexual", "Cyclical Parthenogenetic"))
-    repro_diffs <- boot_mut_rate_diff(var_table, line_info, "reproduction")
+    repro_diffs <- boot_mutation_rate_diff_within(var_table, line_info, "reproduction")
     repro_diffs
 }
 
@@ -230,13 +230,13 @@ by_indel_snv <- function(line_info, var_table) {
     indel_var_table <- var_table[which(var_table$class %in%
                                            c("insertion", "deletion")),]
     snv_var_table <- var_table[which(var_table$class == "snv"),]
-    snv_mu_by_species <- mut_rate_by(snv_var_table, line_info, "species")
-    indel_mu_by_species <- mut_rate_by(indel_var_table, line_info, "species")
+    snv_mu_by_species <- mutation_rate_by(snv_var_table, line_info, "species")
+    indel_mu_by_species <- mutation_rate_by(indel_var_table, line_info, "species")
     mut_class_df <- rbind(snv_mu_by_species, indel_mu_by_species)
     fill <- c("SNV", "SNV", "Indel", "Indel")
-    snv_boot_diff <- boot_mut_rate_diff(snv_var_table, line_info, "species")
+    snv_boot_diff <- boot_mutation_rate_diff_within(snv_var_table, line_info, "species")
     snv_p <- diff_p_value(snv_boot_diff)
-    indel_boot_diff <- boot_mut_rate_diff(indel_var_table, line_info, "species")
+    indel_boot_diff <- boot_mutation_rate_diff_within(indel_var_table, line_info, "species")
     indel_p <- diff_p_value(indel_boot_diff)
     custom_boxplot(mut_class_df, "Mutation Class", "Mutation Rate",
                    c("D. magna", "D. pulex"), fill=fill)
@@ -323,8 +323,8 @@ read_tables <- function() {
 
 #' @export
 species_mu <- function(line_info, var_table) {
-    species_mut_rates <- mut_rate_by(var_table, line_info, "species")
-    box <- custom_boxplot(species_mut_rates, "Species", "Mutation Rate",
+    species_mutation_rates <- mutation_rate_by(var_table, line_info, "species")
+    box <- custom_boxplot(species_mutation_rates, "Species", "Mutation Rate",
                    c("D. magna", "D. pulex"))
     box
 
@@ -332,8 +332,8 @@ species_mu <- function(line_info, var_table) {
 
 #' @export
 species_diffs <- function(line_info, var_table) {
-    species_diffs <- boot_mut_rate_diff(var_table, line_info, "species")
-    indel_diffs <- boot_mut_rate_diff(dplyr::filter(var_table, class != "snv"),
+    species_diffs <- boot_mutation_rate_diff_within(var_table, line_info, "species")
+    indel_diffs <- boot_mutation_rate_diff_within(dplyr::filter(var_table, class != "snv"),
                                       line_info, "species")
 
     c(species_diffs, indel_diffs)

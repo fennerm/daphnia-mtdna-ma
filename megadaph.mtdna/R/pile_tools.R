@@ -74,7 +74,6 @@ create_consensus_fasta <- function(pile, filename) {
     major_alleles <- lapply(pile, major_allele)
     major_alleles <- matrix(unlist(major_alleles), ncol = nsamples)
     consensus <- apply(major_alleles, 1, mode)
-    consensus <- consensus[which(consensus != "-")]
     consensus_string <- paste0(consensus, collapse = "")
     fileconn <- file(filename)
     writeLines(consensus_string, fileconn)

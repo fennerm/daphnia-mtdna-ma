@@ -319,13 +319,14 @@ independent_assumption_test <- function(ctab) {
 }
 
 compare_tests <- function() {
-    ctabs <- simulate_contingency_tables(10000, 8, 0.002,
+    ctabs <- simulate_contingency_tables(1000, 8, 0.002,
                                          coverage = c(100, 1000))
     sim_p <- ulapply(ctabs, extreme_max_test)
     corrado_p <- ulapply(ctabs, corrado_test)
     levin_p <- ulapply(ctabs, levin_test)
     plot(sim_p, corrado_p)
     plot(sim_p, levin_p)
+    plot(corrado_p, levin_p)
 }
 #' @export
 corrado_test <- function(ctab) {
@@ -381,34 +382,43 @@ corrado_test <- function(ctab) {
 #     dtrunc(x, lambda = nballs*prob, spec="pois", a=lower, b=upper)
 # }
 
+#' @importFrom truncdist dtrunc
 dtpois <- function(nballs, prob, cutoff, lower, upper) {
     d <- dtrunc(lower:upper, lambda = nballs*prob, spec = "pois",
                 a = lower, b = upper)
     d[(cutoff + 1):(upper+1)] <- 0
     d
 }
-#' @importFrom truncdist dtrunc
+
+#' importFrom distr Pois
 plevin <- function(nballs, prob, cutoff) {
     nbins <- length(prob)
 
-    conv <- dtpois(nballs, prob[1], cutoff[1], 0, nballs)
+    # conv <- dtpois(nballs, prob[1], cutoff[1], 0, nballs)
+    conv <- dtpois(nballs, prob[1], cutoff[1], 0, cutoff[1])
+    dens <- conv
     if (nbins >= 2) {
         for (i in 2:nbins) {
-            dens <- c(dtpois(nballs, prob[i], cutoff[i], 0, nballs),
-                      rep(0, length(conv)-nballs+1))
+            dens <- c(dtpois(nballs, prob[i], cutoff[i], 0, cutoff[i]),
+                      rep(0, length(conv) - length(dens)))
+            # dens <- c(dtpois(nballs, prob[i], cutoff[i], 0, nballs),
+            #           rep(0, length(conv) - nballs + 1))
             conv <- convolve(conv, rev(dens), type = "open")
         }
     }
     conv <- conv/sum(conv)
-    conv_p <- conv[nballs+1]
+    conv_p <- conv[nballs + 1]
+    if (conv_p < 0) {
+        conv_p <- 0
+    }
 
     # conv_p <- sum(sapply(1:nbins, function(i) dtpois(nballs, prob[i], cutoff[i],
     #                                                  0, cutoff[i])))
 
-    1-(sqrt(2 * pi * nballs)) *
-    # 1- (factorial(nballs)/((nballs^nballs)*exp(-nballs))) *
-        (prod(ppois(cutoff-1, nballs*prob))) *
-        conv_p
+    1 - (sqrt(2 * pi * nballs)) *
+    # 1 - (factorial(nballs)/((nballs^nballs)*exp(-nballs))) *
+        exp(sum(ppois(cutoff - 1, nballs*prob, log.p = TRUE)) +
+        log(conv_p))
         # sum(mapply(function(p, c) {
         #     dtpois(nballs, nballs, p, 0, c)
         # }, probs, cutoff))
