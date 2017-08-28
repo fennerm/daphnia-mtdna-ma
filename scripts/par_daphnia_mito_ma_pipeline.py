@@ -114,10 +114,12 @@ def determine_threads(files):
 	return p 
 
 
-## Align reads in working directory (wd) to reference index (ix) and write logs to logdir.
+## Align reads in working directory (wd) to reference index (ix) and write 
+## logs to logdir.
 def align(wd, odir, ix, logdir):
 	pairs = pair_files(wd)
 	print(pairs)
+	max_ins = 100000
 	
 	for p in pairs:
 		
@@ -126,8 +128,9 @@ def align(wd, odir, ix, logdir):
 		p0 = os.path.join(wd, p[0])
 		p1 = os.path.join(wd, p[1])
 		# Run Bowtie2
-		bowtie_out, bowtie_err = run_command(['bowtie2', bowtie2_preset, '-x', ix, 
-			'-p', threads, '-1', p0, '-2', p1, '-S', out_sam])
+		bowtie_out, bowtie_err = run_command(['bowtie2', bowtie2_preset, '-x', 
+			ix, '-X', max_ins, '-p', threads, '-1', p0, '-2', p1, 
+			'-S', out_sam])
 
 		## Write logfiles
 
@@ -593,7 +596,6 @@ if __name__ == "__main__":
 
 	#Whether to remove duplicates or just mark them
 	removeDups = 'True'
-
 
 	# Region to call variants in og and rotated references
 	region = os.path.join(homedir, "bed/"+spp+"_call_region.bed")
