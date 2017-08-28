@@ -3,6 +3,7 @@
 *.RData
 *.Ruserdata
 *.vcf
+*.pyc
 /docs/
 /data/
 /megadaph.mtdna/data/
