@@ -47,3 +47,10 @@ August 23rd, 2017
 ===============================================================================
 - Created an R package fen.R.util (https://github.com/fennerm/fen.R.util) to    
 house code shared between other R packages.  
+
+=============================================================================== 
+August 28th, 2017                                                               
+=============================================================================== 
+- Large reorganization of project github. Local and IBEST directories should    
+now be kept fairly well in sync using github. Data will still reside only on    
+IBEST. 
