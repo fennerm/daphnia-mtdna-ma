@@ -19,17 +19,17 @@ the fragment size whether the large repetitive mtDNA assemblies are correct.
 -------------------------------------------------------------------------------
 Primer Design
 -------------------------------------------------------------------------------
--Used the NOVOPlasty assembly for IB as the reference 
+-Used the NOVOPlasty assembly for IB as the reference
 (fmacrae/daphnia_mitochondria_MA/illumina_magna_150bp/I/processed/\
 create_consensus/IB)
 - First trimmed the IB assembly down to only the ranges 11812:12738 and
   555:1541 which should correspond roughly to the ND1 and ND2 genes
-respectively. 
-- Then moved ND1 region in front of the ND2 region and placed a run of Ns in 
+respectively.
+- Then moved ND1 region in front of the ND2 region and placed a run of Ns in
 between.
 - Then used web interface of primer3 to choose primers (Max product size 400bp)
 (local: proj/research/daphnia_mtdna_ma/megadaph.mtdna/data-raw/primer_design/\
-primer3_out.html). 
+primer3_out.html).
 - Using jalview I Muscle aligned the consensus sequences of all isolates with
 the ND1 and ND2 sequence.
 - Found primers which look good:
@@ -37,20 +37,36 @@ the ND1 and ND2 sequence.
 (primers.control_region.fasta)
 - Sarah Ok'd the primers.
 - While looking into known info about D. magna mtDNA structure we found a very
-interesting looking paper about D. galeata mtDNA diversity in Japan (2017). We 
+interesting looking paper about D. galeata mtDNA diversity in Japan (2017). We
 had to contact the authors directly to access the paper.
-- Also contacted Dieter about whether he has PacBio data for the D. magna 
+- Also contacted Dieter about whether he has PacBio data for the D. magna
 mtDNA.
 
 ===============================================================================
 August 23rd, 2017
 ===============================================================================
-- Created an R package fen.R.util (https://github.com/fennerm/fen.R.util) to    
-house code shared between other R packages.  
+- Created an R package fen.R.util (https://github.com/fennerm/fen.R.util) to
+house code shared between other R packages.
 
-=============================================================================== 
-August 28th, 2017                                                               
-=============================================================================== 
-- Large reorganization of project github. Local and IBEST directories should    
-now be kept fairly well in sync using github. Data will still reside only on    
-IBEST. 
+===============================================================================
+August 28th, 2017
+===============================================================================
+- Large reorganization of project github. Local and IBEST directories should
+now be kept fairly well in sync using github. Data will still reside only on
+IBEST.
+
+===============================================================================
+August 30th, 2017
+===============================================================================
+- Setup my personal python modules as a package (fmbiopy) for easier import and
+extensibility.
+    - Using pytest for package testing (https://docs.pytest.org/en/latest/)
+
+===============================================================================
+September 5th, 2017
+===============================================================================
+- Received a reference sequence for one of the European D. magna clones from
+Dieter Ebert's lab. It is 14969 bp, just 20 more than the Chinese reference.
+Edited the novoplasty_assemble.py script to use this reference, and bounded it
+between 14000-16000 bp. Started running it on the F isolates as a test run.
+
