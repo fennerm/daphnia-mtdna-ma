@@ -69,4 +69,29 @@ September 5th, 2017
 Dieter Ebert's lab. It is 14969 bp, just 20 more than the Chinese reference.
 Edited the novoplasty_assemble.py script to use this reference, and bounded it
 between 14000-16000 bp. Started running it on the F isolates as a test run.
+- Still getting too large/too small assemblies. Edited novoplasty_assemble.py
+to also use the given seed as a reference sequence.
+
+===============================================================================
+September 6th, 2017
+===============================================================================
+- Using the fasta sequence as a reference in NOVOplasty seems to make no
+difference. Next I'll try just aligning directly to this reference and see if
+that works well enough
+- Aligned downsampled FA10 reads to the European mtDNA sequence.
+- Rotated alignments still looking weird. Large drop in coverage at the split
+point then a large increase in coverage. All the reads which align across the
+split point are F2F1 oriented.
+- Talked to Sarah. We decided to go ahead with Sanger sequencing of the control
+regions, and ask Anna for advice.
+
+===============================================================================
+September 11th, 2017
+===============================================================================
+- Sarah checked my primers and decided to used alternatives due to bad GC
+content in the ones I suggested. Two sets were ordered. Need to check that we
+have everything else for the reaction in lab.
+
+
+
 
