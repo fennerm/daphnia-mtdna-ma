@@ -92,6 +92,67 @@ September 11th, 2017
 content in the ones I suggested. Two sets were ordered. Need to check that we
 have everything else for the reaction in lab.
 
+===============================================================================
+September 13th, 2017
+===============================================================================
+- Sarah said she'd ask about long-range Taq primers for sequencing of control
+region. Derek volunteered some.
+- Lab meeting: Introductions - my presentation slot set for Nov. 29th
+
+===============================================================================
+September 14th, 2017
+===============================================================================
+Complete DNA extraction and amplification protocol:
+
+-------------------------------------------------------------------------------
+DNA extraction protocol:
+-------------------------------------------------------------------------------
+- Isolate 5 German and 5 Israeli D. magna (IA10-6 and GB4-19)
+- Pipet off extra water
+- Crush up Daphnia.
+- Extract DNA using Zymo Quick-DNA Universal Kit - protocol saved locally to
+~/proj/research/daphnia_mtdna_ma/docs/protocols/\
+Zymo_Daphnia_DNA_Extraction_Protocol.pdf
+
+-------------------------------------------------------------------------------
+Nanodrop Readings:
+-------------------------------------------------------------------------------
+GB4-19
+------
+Abs:		0.351
+A-260:		0.225
+A-280:		0.148
+260/280:	1.52
+260/230:	0.64
 
 
+IA10-6
+------
+Abs:		0.252
+A-260:		0.225
+A-280:		0.148
+260/280:	1.52
+260/230:	0.64
 
+- KOD amplification requires 100 ng / reaction so we should have just about
+enough to test the primers
+
+-------------------------------------------------------------------------------
+Amplification protocol:
+-------------------------------------------------------------------------------
+Samples:
+(2 isolates + 2 positive controls + 1 no template negative controls)
+x 2 primers
+- Possibly vary elongation time
+- Positive controls = Primers that are known to amplify daphnia DNA
+- Use KOD hot start DNA polymerase and follow associated protocol. Saved
+  locally to:
+~/proj/research/daphnia_mtdna_ma/docs/protocols/kod_hot_start_polymerase.pdf
+
+-------------------------------------------------------------------------------
+Gel protocol:
+-------------------------------------------------------------------------------
+- Ladder - maybe 100 - 4000bp.
+- gel recipe - 2g in 20mL/ gel
+- Run at < 100V
+- 20 uL reactions - use 5 or 6uL for gel.
