@@ -100,7 +100,7 @@ region. Derek volunteered some.
 - Lab meeting: Introductions - my presentation slot set for Nov. 29th
 
 ===============================================================================
-September 14th, 2017
+September 14th-15th, 2017
 ===============================================================================
 Complete DNA extraction and amplification protocol:
 
@@ -119,6 +119,7 @@ Nanodrop Readings:
 -------------------------------------------------------------------------------
 GB4-19
 ------
+Conc.:		11.2 ng/uL (817.6 ng in 73 uL)
 Abs:		0.351
 A-260:		0.225
 A-280:		0.148
@@ -128,26 +129,66 @@ A-280:		0.148
 
 IA10-6
 ------
+Conc.:		9.8 ng/uL (715.4 ng in 73 uL)
 Abs:		0.252
 A-260:		0.225
 A-280:		0.148
 260/280:	1.52
 260/230:	0.64
 
-- KOD amplification requires 100 ng / reaction so we should have just about
-enough to test the primers
-
 -------------------------------------------------------------------------------
 Amplification protocol:
 -------------------------------------------------------------------------------
 Samples:
-(2 isolates + 2 positive controls + 1 no template negative controls)
+(2 isolates + 1 no template negative controls)
 x 2 primers
 - Possibly vary elongation time
 - Positive controls = Primers that are known to amplify daphnia DNA
 - Use KOD hot start DNA polymerase and follow associated protocol. Saved
   locally to:
 ~/proj/research/daphnia_mtdna_ma/docs/protocols/kod_hot_start_polymerase.pdf
+- Possible PCR product sizes: 4500bp - 7200bp
+
+- Possible things to vary if reaction goes wrong:
+	- ng of template gDNA
+	- Amount of MgSO4
+	- Different annealing temps
+	- Extension times - Try 140s
+	- # of Cycles
+
+
+Reference: KOD Hot Start Polymerase protocol
+
+PCR Attempt 1:
+--------------
+(2 samples + 1 negative control) x 2 primers
+
+Sample IDs:
+1 - G, primer 1
+2 - G, primer 2
+3 - I, primer 1
+4 - I, primer 2
+5 - control, primer 1
+6 - control, primer 2
+
+Mix:
+- 2.5uL	10X Standard Taq buffer
+- 1.5uL	25mM MgSO4
+- 2.5uL	dNTPs (2 mM each)
+- 15.5uL	Nanopure water
+- 0.75uL Fwd Primer (10 uM)
+- 0.75uL	Rev Primer (10 uM)
+- 1uL	Template (~20ng gDNA)
+- 0.5uL	KOD Hot Start Polymerase
+Total: 25uL
+
+Program:
+Activation		95C for 2 min
+(
+Denature		95C for 20s
+Annealing		53.5C for 10s
+Extension		70C for 180s
+) x 30 cycles
 
 -------------------------------------------------------------------------------
 Gel protocol:
