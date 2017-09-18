@@ -159,8 +159,8 @@ x 2 primers
 
 Reference: KOD Hot Start Polymerase protocol
 
-PCR Attempt 1:
---------------
+PCR
+---
 (2 samples + 1 negative control) x 2 primers
 
 Sample IDs:
@@ -193,8 +193,138 @@ Extension		70C for 180s
 -------------------------------------------------------------------------------
 Gel protocol:
 -------------------------------------------------------------------------------
-
-- Ladder - maybe 100 - 4000bp.
-- gel recipe - 2g in 20mL/ gel
-- Run at < 100V
+- Run at < 70V
 - 20 uL reactions - use 5 or 6uL for gel.
+
+Gel recipe
+----------
+1 g agarose in 100 mL 1X TBE
+
+Loading Samples
+---------------
+Ladder:
+	3uL Elution Buffer, 1uL EZ vision 3 dye, 2uL NEB 1kb ladder
+Samples:
+	2uL EZ vision 3 dye, 10uL PCR product
+
+Layout
+------
+From right to left (with grooved-side of gel facing you)
+Lane	Sample ID
+~~~~~~~~~~~~~~~~~
+R
+.
+.
+|		6
+|		5
+|		4
+|		3
+|		2
+|		1
+|		Ladder
+L
+
+Results
+-------
+Failed. Smearing of large fragments in all samples including negative controls.
+I think most likely failure point is extraction due to the low nanodrop
+readings. Will redo extraction on fresh animals, and try to be more careful
+about sterile technique. Also possible that extension times are too long. Will
+try and vary next time.
+
+Extraction and PCR
+===============================================================================
+September 17th-18th, 2017
+===============================================================================
+DNA extractions carried out on 5 Daphnia from IB3 and GB8.
+
+-------------------------------------------------------------------------------
+Nanodrop Readings:
+-------------------------------------------------------------------------------
+GB8
+------
+Conc.:		19.8
+Abs:		0.614
+A-260:		0.397
+A-280:		0.259
+260/280:	1.53
+260/230:	0.65
+
+
+IB10
+------
+Conc.:		53.5
+Abs:		1.747
+A-260:		1.069
+A-280:		0.722
+260/280:	1.48
+260/230:	0.61
+
+-------------------------------------------------------------------------------
+Amplification protocol:
+-------------------------------------------------------------------------------
+
+PCR
+---
+(2 samples + 1 extraction neg control) x 2 primers
+
+Sample IDs:
+1 - G, primer 1
+2 - G, primer 2
+3 - I, primer 1
+4 - I, primer 2
+5 - control, primer 1
+6 - control, primer 2
+
+Mix:
+- 2.5uL	10X Standard Taq buffer
+- 1.5uL	25mM MgCl2
+- 2.5uL	dNTPs (2 mM each)
+- 15.5uL	Nuclease Free water
+- 0.75uL Fwd Primer (10 uM)
+- 0.75uL	Rev Primer (10 uM)
+- 1uL	Template (~20ng gDNA)
+- 0.5uL	KOD Hot Start Polymerase
+Total: 25uL
+
+Program:
+Activation		95C for 2 min
+(
+Denature		95C for 20s
+Annealing		53.5C for 10s
+Extension		70C for 180s
+) x 30 cycles
+
+-------------------------------------------------------------------------------
+Gel protocol:
+-------------------------------------------------------------------------------
+- Run at < 70V
+- 20 uL reactions - use 5 or 6uL for gel.
+
+Gel recipe
+----------
+1 g agarose in 100 mL 1X TBE
+
+Loading Samples
+---------------
+Ladder:
+	3uL Elution Buffer, 1uL EZ vision 3 dye, 2uL NEB 1kb ladder
+Samples:
+	1uL EZ vision 3 dye, 5uL PCR product
+
+Layout
+------
+From right to left (with grooved-side of gel facing you)
+Lane	Sample ID
+~~~~~~~~~~~~~~~~~
+L
+|		Ladder
+|		1
+|		2
+|		3
+|		4
+|		5
+|		6
+. . .
+. . .
+L
