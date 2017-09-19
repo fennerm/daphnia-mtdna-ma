@@ -102,7 +102,9 @@ region. Derek volunteered some.
 ===============================================================================
 September 14th-15th, 2017
 ===============================================================================
-Complete DNA extraction and amplification protocol:
+------------------------------------------------------------------------------
+Extraction and PCR 2
+------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
 DNA extraction protocol:
@@ -232,11 +234,14 @@ readings. Will redo extraction on fresh animals, and try to be more careful
 about sterile technique. Also possible that extension times are too long. Will
 try and vary next time.
 
-Extraction and PCR
 ===============================================================================
 September 17th-18th, 2017
 ===============================================================================
 DNA extractions carried out on 5 Daphnia from IB3 and GB8.
+
+------------------------------------------------------------------------------
+Extraction and PCR 2
+------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
 Nanodrop Readings:
@@ -318,6 +323,57 @@ From right to left (with grooved-side of gel facing you)
 Lane	Sample ID
 ~~~~~~~~~~~~~~~~~
 L
+|		.
+|		.
+|		.
+|		.
+|		1
+|		2
+|		3
+|		4
+|		5
+|		6
+|		Ladder
+|		.
+|		.
+|		.
+|		.
+R
+
+Results
+-------
+Another failure - more promising, but dumber reason.
+	- Used the primer stocks rather than the diluted aliquots so the primer the
+	gel just shows super bright bands at low fragment size. 5 looks like the
+	primers are missing (another sloppy mistake). In 3 there is a smear across
+	almost the entire lane, 1 also has a smear but less bright.
+
+-------------------------------------------------------------------------------
+PCR Redo
+-------------------------------------------------------------------------------
+PCR reaction recipe same as above but with correct primer concentrations
+
+Gel recipe
+----------
+1 g agarose in 100 mL 1X TBE
+
+Loading Samples
+---------------
+Ladder:
+	3uL Elution Buffer, 1uL EZ vision 3 dye, 2uL NEB 1kb ladder
+Samples:
+	1uL EZ vision 3 dye, 5uL PCR product
+
+Layout
+------
+From right to left (with grooved-side of gel facing you)
+Lane	Sample ID
+~~~~~~~~~~~~~~~~~
+L
+|		.
+|		.
+|		.
+|		.
 |		Ladder
 |		1
 |		2
@@ -325,6 +381,8 @@ L
 |		4
 |		5
 |		6
-. . .
-. . .
-L
+|		.
+|		.
+|		.
+|		.
+R
