@@ -142,10 +142,14 @@ A-280:		0.148
 Amplification protocol:
 -------------------------------------------------------------------------------
 Samples:
-(2 isolates + 1 no template negative controls)
+-(2 isolates + 1 no template negative controls)
 x 2 primers
-- Possibly vary elongation time
-- Positive controls = Primers that are known to amplify daphnia DNA
+
+Primers:
+- Primers 1 = fwd: TAGGGTTGCCCTTGTTTTTG, rev: GGACCCTACCTCGATTTCGT
+- Primers 2 = fwd: TAGGGTTGCCCTTGTTTTTG, rev: GGTACGTGGGACCCTACCTC
+
+
 - Use KOD hot start DNA polymerase and follow associated protocol. Saved
   locally to:
 ~/proj/research/daphnia_mtdna_ma/docs/protocols/kod_hot_start_polymerase.pdf
@@ -161,8 +165,8 @@ x 2 primers
 
 Reference: KOD Hot Start Polymerase protocol
 
-PCR
----
+PCR 1
+-----
 (2 samples + 1 negative control) x 2 primers
 
 Sample IDs:
@@ -173,7 +177,8 @@ Sample IDs:
 5 - control, primer 1
 6 - control, primer 2
 
-Mix:
+Mix 1
+-----
 - 2.5uL	10X Standard Taq buffer
 - 1.5uL	25mM MgSO4
 - 2.5uL	dNTPs (2 mM each)
@@ -184,7 +189,8 @@ Mix:
 - 0.5uL	KOD Hot Start Polymerase
 Total: 25uL
 
-Program:
+Program 1
+---------
 Activation		95C for 2 min
 (
 Denature		95C for 20s
@@ -269,8 +275,8 @@ A-280:		0.722
 Amplification protocol:
 -------------------------------------------------------------------------------
 
-PCR
----
+PCR 2
+-----
 (2 samples + 1 extraction neg control) x 2 primers
 
 Sample IDs:
@@ -281,7 +287,9 @@ Sample IDs:
 5 - control, primer 1
 6 - control, primer 2
 
-Mix:
+Mix 2
+-----
+(Uses MgCl2 rather than MgSO4)
 - 2.5uL	10X Standard Taq buffer
 - 1.5uL	25mM MgCl2
 - 2.5uL	dNTPs (2 mM each)
@@ -292,13 +300,7 @@ Mix:
 - 0.5uL	KOD Hot Start Polymerase
 Total: 25uL
 
-Program:
-Activation		95C for 2 min
-(
-Denature		95C for 20s
-Annealing		53.5C for 10s
-Extension		70C for 180s
-) x 30 cycles
+Same program as PCR 1 (Program 1)
 
 -------------------------------------------------------------------------------
 Gel protocol:
@@ -349,9 +351,10 @@ Another failure - more promising, but dumber reason.
 	almost the entire lane, 1 also has a smear but less bright.
 
 -------------------------------------------------------------------------------
-PCR Redo
+PCR 3
 -------------------------------------------------------------------------------
 PCR reaction recipe same as above but with correct primer concentrations
+(Mix 2, Program 1)
 
 Gel recipe
 ----------
@@ -386,3 +389,75 @@ L
 |		.
 |		.
 R
+
+Results
+-------
+No bands except ladder. Sarah ordered positive control primers - we'll wait for
+those to arrive before doing more troubleshooting.
+
+
+===============================================================================
+September 21st, 2017
+===============================================================================
+- Received positive control primers which amplify 16s rRNA. Diluted to 100uM
+then made 10uM PCR stocks (in Tris)
+- PC Primers = fwd: AGAAAGCCACCCCTACTAAAA, rev: GGTTAACCCTTTGGAGCTTT
+- Nanodrop DNA concentration for positive control DNA: 12.4 ng/uL
+
+-------------------------------------------------------------------------------
+PCR 4
+-------------------------------------------------------------------------------
+This time vary extension time and run positive controls (PC).
+
+Used different amounts of template to include 50ng gDNA as recommended by the
+KOD protocol
+
+Mix 3
+-----
+- 2.5uL	10X Standard Taq buffer
+- 1.5uL	25mM MgCl2
+- 2.5uL	dNTPs (2 mM each)
+- Nuclease Free Water: 12.5uL (PC)/ 14 uL (G) / 15.5uL (I)
+- 0.75uL Fwd Primer (10 uM)
+- 0.75uL Rev Primer (10 uM)
+- 4 uL PC DNA / 2.5 uL G DNA / 1 uL I DNA
+- 0.5uL	KOD Hot Start Polymerase
+Total: 25uL
+
+Samples
+-------
+(3 DNA samples x 3 Primer sets) + NC samples x 2 primer sets
+
+Sample IDs
+----------
+1. NC, Primers 1
+2. NC, Primers 2
+3. G, Primers 1
+4. G, Primers 2
+5. G, PC Primers
+6. I, Primers 1
+7. I, Primers 2
+8. I, PC Primers
+9. PC, PC Primers
+10. PC, Primers 1
+11. PC, Primers 2
+
+Programs
+--------
+
+Program 2:
+Activation		95C for 2 min
+(
+Denature		95C for 20s
+Annealing		53.5C for 10s
+Extension		70C for 45s
+) x 30 cycles
+
+Program 3:
+Activation		95C for 2 min
+(
+Denature		95C for 20s
+Annealing		53.5C for 10s
+Extension		70C for 100s
+) x 30 cycles
+
