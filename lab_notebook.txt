@@ -232,8 +232,8 @@ R
 |		Ladder
 L
 
-Results
--------
+Gel Results
+-----------
 Failed. Smearing of large fragments in all samples including negative controls.
 I think most likely failure point is extraction due to the low nanodrop
 readings. Will redo extraction on fresh animals, and try to be more careful
@@ -342,8 +342,8 @@ L
 |		.
 R
 
-Results
--------
+Gel Results
+-----------
 Another failure - more promising, but dumber reason.
 	- Used the primer stocks rather than the diluted aliquots so the primer the
 	gel just shows super bright bands at low fragment size. 5 looks like the
@@ -449,7 +449,7 @@ Program 2:
 Activation		95C for 2 min
 (
 Denature		95C for 20s
-Annealing		53.5C for 10s
+Annealing		53C for 10s
 Extension		70C for 45s
 ) x 30 cycles
 
@@ -457,7 +457,72 @@ Program 3:
 Activation		95C for 2 min
 (
 Denature		95C for 20s
-Annealing		53.5C for 10s
+Annealing		53C for 10s
 Extension		70C for 100s
 ) x 30 cycles
+
+Gel recipe
+----------
+1 g agarose in 100 mL 1X TBE
+
+Loading Samples
+---------------
+Ladder:
+	3uL Elution Buffer, 1uL EZ vision 3 dye, 2uL NEB 1kb ladder
+Samples:
+	1uL EZ vision 3 dye, 5uL PCR product
+
+Layout
+------
+From right to left (with grooved-side of gel facing you). Same layout for both
+PCR programs.
+
+Lane	Sample ID
+~~~~~~~~~~~~~~~~~
+L
+|		.
+|		Ladder
+|		1
+|		2
+|		3
+|		4
+|		5
+|		6
+|		7
+|		8
+|		9
+|		10
+|		11
+|		.
+|		.
+R
+
+Gel Results
+-----------
+Program 2: No Bands except positive control (including ladder). Think lanes
+leaked. Will rerun next time.
+
+Program 3: All samples with control region primers either smeared or had no
+bands. My DNA extractions showed a band at ~500bp with the positive control
+primers. Curiously the positive control tissue didn't have a band when paired
+with positive control primers.
+
+Met with Sarah, she suggested: Decreasing annealing temperature to 49C and
+increasing annealing time to 20s. Annealing temperature could be further
+lowered to 47 or 45 later. Increasing template quantity to 100ng per
+25uL PCR. Decreasing cycle number to 25.
+
+Got 4 new positive control samples (GBB, GBH, FBB, FBH) since the previous one
+was exhausted.
+
+Nanodrop Concentrations
+-----------------------
+GBB - 5.2 ng/uL
+GBH - 1.5 ng/uL
+FBB - 5.8 ng/uL
+FBH - 1.0 ng/uL
+
+
+Next steps: Rerun program 2 gel.
+
 
