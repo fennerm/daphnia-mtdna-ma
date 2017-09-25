@@ -509,8 +509,7 @@ with positive control primers.
 
 Met with Sarah, she suggested: Decreasing annealing temperature to 49C and
 increasing annealing time to 20s. Annealing temperature could be further
-lowered to 47 or 45 later. Increasing template quantity to 100ng per
-25uL PCR. Decreasing cycle number to 25.
+lowered to 47 or 45 later. Decreasing cycle number to 25.
 
 Got 4 new positive control samples (GBB, GBH, FBB, FBH) since the previous one
 was exhausted.
@@ -522,7 +521,86 @@ GBH - 1.5 ng/uL
 FBB - 5.8 ng/uL
 FBH - 1.0 ng/uL
 
-
 Next steps: Rerun program 2 gel.
 
+===============================================================================
+September 21st, 2017
+===============================================================================
 
+Reran program 2 gel. Same results - No bands except in positive control DNA
+with positive control primers.
+
+-------------------------------------------------------------------------------
+PCR 5
+-------------------------------------------------------------------------------
+
+Made up a PCR master mix with enough for ~ 4 more PCR runs.
+
+Master mix recipe
+-----------------
+Standard 10x Taq buffer		100uL
+MgCl2						60uL
+dNTPs						100uL
+Hot Start KOD Polymerase	20uL
+
+Made stocks of all DNA samples normalized to approx. 5 ng/uL. 13.2uL of these
+samples can be added directly to the PCR samples..
+
+PCR Sample Recipe
+-----------------
+Master Mix				   5.6 uL
+Diluted DNA Sample		   13.2 uL
+Mixed Primers			   1.2 uL
+
+Sample IDs
+----------
+
+ID # 	DNA		Primers
+~~~~~~~~~~~~~~~~~~~~~~~
+1		PC		PC
+2		G		PC
+3		I		PC
+4		NC		PC
+5		PC		1
+6		G		1
+7		I		1
+8		NC		1
+9		PC		2
+10		G		2
+11		I		2
+12		NC		2
+
+
+Program 4
+---------
+
+Activation		95C for 2 min
+(
+Denature		95C for 20s
+Annealing		49C for 20s
+Extension		70C for 70s
+) x 25 cycles
+
+Layout
+------
+From right to left (with grooved-side of gel facing you).
+
+Lane	Sample ID
+~~~~~~~~~~~~~~~~~
+L
+|		.
+|		Ladder
+|		1
+|		2
+|		3
+|		4
+|		5
+|		6
+|		7
+|		8
+|		9
+|		10
+|		11
+|		12
+|		.
+R
