@@ -524,7 +524,7 @@ FBH - 1.0 ng/uL
 Next steps: Rerun program 2 gel.
 
 ===============================================================================
-September 21st, 2017
+September 22nd, 2017
 ===============================================================================
 
 Reran program 2 gel. Same results - No bands except in positive control DNA
@@ -604,3 +604,25 @@ L
 |		12
 |		.
 R
+
+===============================================================================
+September 25th, 2017
+===============================================================================
+
+Gel Results
+-----------
+No bands. Back to the drawing board. Possible next steps:
+
+1. Redo extractions, the template might be poor quality or sheared. We're
+running out anyway.
+2. Add DMSO
+3. Try regular Taq
+4. Increase primer concentrations
+
+Actual plan:
+- Revert to pcr 4 program 3. Run some samples with DMSO. Some samples with
+original protocol. Some samples with increased primer concentration. Some
+samples with regular Taq.
+- Switch negative control to a no template control.
+
+
