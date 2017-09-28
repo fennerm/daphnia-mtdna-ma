@@ -442,10 +442,10 @@ Sample IDs
 10. PC, Primers 1
 11. PC, Primers 2
 
-Programs
---------
 
-Program 2:
+Program 2
+---------
+
 Activation		95C for 2 min
 (
 Denature		95C for 20s
@@ -453,7 +453,8 @@ Annealing		53C for 10s
 Extension		70C for 45s
 ) x 30 cycles
 
-Program 3:
+Program 3
+---------
 Activation		95C for 2 min
 (
 Denature		95C for 20s
@@ -625,4 +626,36 @@ original protocol. Some samples with increased primer concentration. Some
 samples with regular Taq.
 - Switch negative control to a no template control.
 
+===============================================================================
+September 27th, 2017
+===============================================================================
+
+Asked Maia for PCR advise. She said to definitely use the thermocyclers in the
+GGG lab rather than the ones in Schaack lab. They worked much better for her.
+
+Read: Long PCR amplification of the entire mitochondrial genome from individual
+helminths for direct sequencing (Hu et al., 2007).
+- Advised to definitely use long range PCR.
+- Decrease extension time to around 60 degrees due to AT rich region.
+
+Google says that freezing polymerase in master mix ruins it I guess. Will have
+to dispose of it, very stupid and wasteful mistake.
+
+Taking another look at the primers I think I'd like to redesign them before
+going too much further. They have multiple mismatches and I don't really think
+that is necessary. Also having longer primers, smaller product would be nice.
+
+Primer Design 2
+---------------
+Created a MSA with long and short versions of mtDNA assembly, Chinese sequence
+and sequence which Dieter sent over. Used the short assembly produced for IB as
+a template. Extracted the first 850bp of ND1 to use as a target for the reverse
+primer. Then extracted 850bp of shared sequence at the end of the assembly to
+use as the forward primer target.
+
+Used primer3 web interface to generate primers. Specified a minimum primer
+length of 21bp, GC content of 40-60%, max 3' self-complementarity=0. Excluded
+any primers with mismatches to Dieter's sequence. For the second set of primers
+I increased the GC content bounds to 30-70 % to get a smaller expected product
+size. Sent to Sarah to check.
 
