@@ -659,3 +659,31 @@ any primers with mismatches to Dieter's sequence. For the second set of primers
 I increased the GC content bounds to 30-70 % to get a smaller expected product
 size. Sent to Sarah to check.
 
+===============================================================================
+September 28th, 2017
+===============================================================================
+Redid DNA extractions for a bunch of control Daphnia for use in this and future
+experiments. Followed Maia's ammended Zymo extraction protocol as before.
+Extracted DNA from five animals from 6 control lines (2 Germany, 2 Israel, 2
+Finland). Did two extractions from each line for a total of 12 extractions. For
+half of the extractions I flash froze the Daphnia in liquid N2 before
+homogenizing with pestle. Sarah suggested that this might help to break down
+the carapace.
+
+Extractions all went well - all concentrations ~ 20ng/uL with the exception of
+one which is ~6 ng/uL. Stored at 4 degrees. Will aliquot and freeze tomorrow.
+
+===============================================================================
+September 29th, 2017
+===============================================================================
+Sarah asked me to send Hannah some mtDNA assemblies for the G lines. The ones I
+have now are in pretty bad shape so I started a fresh run. Created a new
+NOVOPlasty seed sequence in
+fmacrae/daphnia-mtdna-ma/data/ref/magna/mit/novoplasty_seed.fa. To produce the
+seed I took the European reference sequence from Dieter and trimmed off
+approximately 2000 bp on either end. This should guarantee that incorrect
+sequence won't become the initial seed to the assemblies.
+
+===============================================================================
+October 4th, 2017
+===============================================================================
