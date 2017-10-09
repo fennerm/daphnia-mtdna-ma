@@ -684,6 +684,3 @@ seed I took the European reference sequence from Dieter and trimmed off
 approximately 2000 bp on either end. This should guarantee that incorrect
 sequence won't become the initial seed to the assemblies.
 
-===============================================================================
-October 4th, 2017
-===============================================================================
