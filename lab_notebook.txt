@@ -684,3 +684,21 @@ seed I took the European reference sequence from Dieter and trimmed off
 approximately 2000 bp on either end. This should guarantee that incorrect
 sequence won't become the initial seed to the assemblies.
 
+===============================================================================
+October 20th, 2017
+===============================================================================
+Received the new primer sets.
+
+Fwd Primer 3:
+ACC GTA TCG AGG TAG CCC TTT
+
+Rev Primer 3:
+TCA ATA GTC GAG TTC TTG TCT GG
+
+Fwd Primer 4:
+GCA GTA ATT TCT AAG AAC ACA ATA TCC
+
+Rev Primer 4:
+CCC AAT TTA ATA CTT AAA CCA ACC
+
+Made 100 uL 10uM aliquots in TE buffer. Will do some PCR on Monday.
