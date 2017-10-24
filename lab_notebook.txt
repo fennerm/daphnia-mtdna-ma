@@ -321,7 +321,7 @@ Samples:
 
 Layout
 ------
-From right to left (with grooved-side of gel facing you)
+From left to right (with grooved-side of gel facing you)
 Lane	Sample ID
 ~~~~~~~~~~~~~~~~~
 L
@@ -369,7 +369,7 @@ Samples:
 
 Layout
 ------
-From right to left (with grooved-side of gel facing you)
+From left to right (with grooved-side of gel facing you)
 Lane	Sample ID
 ~~~~~~~~~~~~~~~~~
 L
@@ -475,7 +475,7 @@ Samples:
 
 Layout
 ------
-From right to left (with grooved-side of gel facing you). Same layout for both
+From left to right (with grooved-side of gel facing you). Same layout for both
 PCR programs.
 
 Lane	Sample ID
@@ -537,6 +537,9 @@ PCR 5
 
 Made up a PCR master mix with enough for ~ 4 more PCR runs.
 
+Mix 4
+-----
+
 Master mix recipe
 -----------------
 Standard 10x Taq buffer		100uL
@@ -584,7 +587,7 @@ Extension		70C for 70s
 
 Layout
 ------
-From right to left (with grooved-side of gel facing you).
+From left to right (with grooved-side of gel facing you).
 
 Lane	Sample ID
 ~~~~~~~~~~~~~~~~~
@@ -695,10 +698,136 @@ ACC GTA TCG AGG TAG CCC TTT
 Rev Primer 3:
 TCA ATA GTC GAG TTC TTG TCT GG
 
+Expected product size: 600 - 2600 bp
+
 Fwd Primer 4:
 GCA GTA ATT TCT AAG AAC ACA ATA TCC
 
 Rev Primer 4:
 CCC AAT TTA ATA CTT AAA CCA ACC
 
+Expected product size: 400 - 2400 bp
+
 Made 100 uL 10uM aliquots in TE buffer. Will do some PCR on Monday.
+
+===============================================================================
+October 20th, 2017
+===============================================================================
+-------------------------------------------------------------------------------
+PCR 6
+-------------------------------------------------------------------------------
+Repeat program 3 with the new primers/tissue. Vary extension time as to target
+lower and upper bounds of product size.
+
+Use the BIO-RAD T100 thermocyclers in the GGG classroom this time.
+
+
+Mix 3
+-----
+- 2 uL	10X Standard Taq buffer
+- 1.2 uL	25mM MgCl2
+- 2 uL	dNTPs (2 mM each)
+- 14.2 uL Nuclease Free Water
+- 0.6 uL Fwd Primer (10 uM)
+- 0.6 uL Rev Primer (10 uM)
+- 1 uL DNA Extraction
+- 0.4 uL	KOD Hot Start Polymerase
+Total: 20uL
+
+Master Mix
+----------
+(Mix x 20)
+- 40 uL 10X Standard Taq Buffer
+- 24 uL 25mM MgCl2
+- 40 uL dNTPs
+- 284 uL Nuclease Free Water
+- 8 uL KOD Hot Start Polymerase
+
+PCR Sample Recipe
+-----------------
+- 17.8 uL Master Mix
+- 1 uL DNA Extraction
+- 0.6 uL Fwd Primer
+- 0.6 uL Rev Primer
+
+Samples
+-------
+((2 DNA samples + NC) x 3 Primer sets) = 9
+
+Sample IDs
+----------
+1. NC, PC Primers
+2. F, PC Primers
+3. G, PC Primers
+4. NC, Primers 3
+5. F, Primers 3
+6. I, Primers 3
+7. NC, Primers 4
+8. F, Primers 4
+9. G, Primers 4
+
+Program 5
+---------
+
+Activation		95C for 2 min
+(
+Denature		95C for 20s
+Annealing		48C for 20s
+Extension		70C for 8s
+) x 35 cycles
+
+Program 6
+---------
+Activation		95C for 2 min
+(
+Denature		95C for 20s
+Annealing		48C for 20s
+Extension		70C for 60s
+) x 35 cycles
+
+Gel recipe
+----------
+1 g agarose in 100 mL 1X TBE
+
+Loading Samples
+---------------
+Ladder:
+	6uL Nanopure water, 2uL EZ vision 3 dye, 4uL NEB 1kb ladder
+Samples:
+	2uL EZ vision 3 dye, 10uL PCR product
+
+Layout
+------
+From left to right (with grooved-side of gel facing away from you). P(5/6) =
+Program 5/6
+
+Lane	Sample ID
+~~~~~~~~~~~~~~~~~
+L
+|		Ladder
+|		P5 - 1
+|		P5 - 2
+|		P5 - 3
+|		P5 - 4
+|		P5 - 5
+|		P5 - 6
+|		P5 - 7
+|		P5 - 8
+|		P5 - 9
+|		P6 - 1
+|		P6 - 2
+|		P6 - 3
+|		P6 - 4
+|		P6 - 5
+|		P6 - 6
+|		P6 - 7
+|		P6 - 8
+|		P6 - 9
+|		Ladder
+R
+
+Gel Results
+-----------
+No bands except ladder.
+
+Will try with regular Taq next time.
