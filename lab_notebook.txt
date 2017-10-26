@@ -831,3 +831,149 @@ Gel Results
 No bands except ladder.
 
 Will try with regular Taq next time.
+
+===============================================================================
+October 25th, 2017
+===============================================================================
+-------------------------------------------------------------------------------
+PCR 7
+-------------------------------------------------------------------------------
+Run PCR with Qiagen Taq PCR Master Mix, and Phusion.
+
+Reduced extension temperature to 60 C as recommended by Su et al., 1996
+
+Added high concentrations of MgCl2 due to recommendations in this thread:
+https://www.researchgate.net/post/What_can_I_do_to_have_pcr_products_with_A-T_\
+rich_sequences_using_genomic_DNA_as_template
+
+Used BIO-RAD T100 thermocyclers.
+
+Protocols
+---------
+Taq: Qiagen Quick Start Protocol
+Phusion: New England Biolabs
+
+Both saved locally in protocols directory.
+
+
+Mix 4 (Taq Master Mix)
+----------------------
+- 12.5 uL Taq Master Mix
+- 1.5 uL Fwd Primer
+- 1.5 uL Rev Primer
+- 2 uL DNA Extraction
+- 7.5 uL Nuclease Free Water
+Total: 25uL
+
+Mix 5 (Phusion)
+---------------
+- 5 uL Phusion HF Buffer
+- 0.5 uL dNTPs (10 mM)
+- 5 uL MgCl2 (25 mM)
+- 1.5 uL Fwd Primer (10 uM)
+- 1.5 uL Rev Primer (10 uM)
+- 2 uL DNA Extraction
+- 0.25 uL Phusion polymerase
+- 9.25 uL Nuclease Free Water
+Total: 25uL
+
+
+Master Mix (Mix 5)
+------------------
+(Mix x 10)
+- 50 uL Phusion HF Buffer
+- 5 uL dNTPs
+- 50 uL MgCl2
+- 2.5 uL Phusion Polymerase
+- 92.5 uL Nuclease free water
+
+Samples
+-------
+((2 DNA samples + NC) x 3 Primer sets) = 9
+
+Sample IDs
+----------
+1. NC, PC Primers
+2. F, PC Primers
+3. G, PC Primers
+4. NC, Primers 3
+5. F, Primers 3
+6. I, Primers 3
+7. NC, Primers 4
+8. F, Primers 4
+9. G, Primers 4
+
+Program 7 (Taq Master Mix)
+--------------------------
+
+Activation		94C for 3 min
+(
+Denature		94C for 10s
+Annealing		Primers 3: 51C / Primers 4: 46C / PC Primers: 50C for 40s
+Extension		60C for 180s
+) x 35 cycles
+Final Extension 60C for 10 minutes
+
+Primers 3 = Row A (Back)
+PC Primers = Row C
+Primers 4 = Row H (Front)
+
+Program 8
+---------
+Activation		98C for 30s
+(
+Denature		98C for 10s
+Annealing		Primers 3: 65C / Primers 4: 63C / PC Primers: 59C for 30s
+Extension		60C for 180s
+) x 35 cycles
+Final Extension 60C for 10 minutes
+
+Primers 3 = Row A (Back)
+Primers 4 = Row D
+PC Primers = Row H (Front)
+
+Primers 3 placed in back row (hotter), primers 4 placed in front row (cooler).
+
+Gel recipe
+----------
+1 g agarose in 100 mL 1X TBE
+
+Loading Samples
+---------------
+Ladder:
+	6uL Nanopure water, 2uL EZ vision 3 dye, 4uL NEB 1kb ladder
+Samples:
+	2uL EZ vision 3 dye, 10uL PCR product
+
+Layout
+------
+From left to right (with grooved-side of gel facing away from you). P(7/8) =
+Program 7/8
+
+Lane	Sample ID
+~~~~~~~~~~~~~~~~~
+L
+|		Ladder
+|		P7 - 1
+|		P7 - 2
+|		P7 - 3
+|		P7 - 4
+|		P7 - 5
+|		P7 - 6
+|		P7 - 7
+|		P7 - 8
+|		P7 - 9
+|		P8 - 1
+|		P8 - 2
+|		P8 - 3
+|		P8 - 4
+|		P8 - 5
+|		P8 - 6
+|		P8 - 7
+|		P8 - 8
+|		P8 - 9
+|		Ladder
+R
+
+Gel Results
+-----------
