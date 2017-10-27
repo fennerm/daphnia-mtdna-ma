@@ -975,5 +975,24 @@ L
 |		Ladder
 R
 
+
+===============================================================================
+October 26th, 2017
+===============================================================================
 Gel Results
 -----------
+No bands in negative controls.
+
+Positive controls primers: A clear band at <1kb for both polymerases and both
+DNA samples. Some extra bands visible >1kb in the F sample with phusion
+polymerase. Probably nonspecific amplification.
+
+Primers 3: Clear bands visible at <1kb for both polymerases both tissues. In
+phusion G sample a clear band is visible at ~1.7kb
+
+Met with Sarah:
+- We agreed that the extra bands in the phusion samples are probably artifacts
+  from nonspecific contamination.
+- This supports the existing genome sequence for D. magna from Dieter, but
+  doesn't solve our problem with artifacts at the ends of the alignments.
+- We decided to go ahead and sequence using primer pair 3.
