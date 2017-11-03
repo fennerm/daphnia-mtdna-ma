@@ -996,3 +996,84 @@ Met with Sarah:
 - This supports the existing genome sequence for D. magna from Dieter, but
   doesn't solve our problem with artifacts at the ends of the alignments.
 - We decided to go ahead and sequence using primer pair 3.
+
+===============================================================================
+October 30th, 2017
+===============================================================================
+- Took a deeper look at the gel from the last PCR and came up with a scenario
+  in which the extra bands in Phusion could be legitimate. In some of the G
+  assemblies the forward primer 3 could potentially produce an unintended
+  ~1.9kb product. If some of the G lines contain a heteroplasmic mixture of
+  genomes we might get double banding like those we see in the Phusion gel.
+  Sarah and I decided to gel purify the mystery ~1.7kb product in addition to
+  the extra bands in the positive control F line.
+
+===============================================================================
+November 1st, 2017
+===============================================================================
+
+-------------------------------------------------------------------------------
+Protocol (Gel Purification)
+-------------------------------------------------------------------------------
+- Run the products on a 1.5 % gel at 70V.
+- Stain with 3 dye EZ vision.
+- Use the Zymoclean Gel DNA Recovery kit to extract the PCR products from the
+  gel.
+
+===============================================================================
+November 2nd, 2017
+===============================================================================
+-------------------------------------------------------------------------------
+Gel Electrophoresis (Gel Purification)
+-------------------------------------------------------------------------------
+
+Gel recipe
+----------
+0.75 g agarose in 50 mL 1X TBE
+
+Loading Samples
+---------------
+Ladder:
+	4uL Nanopure water, 2uL EZ vision 3 dye, 6uL NEB 1kb ladder
+Samples:
+	2uL EZ vision 3 dye, 10uL PCR product
+
+Layout
+------
+From left to right (with grooved-side of gel facing away from you).
+
+Lane	Sample ID (From PCR)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+L
+|		Ladder
+|		-
+|		T5
+|		-
+|		T6
+|		-
+|		P2
+|		-
+|		P6
+|		-
+R
+
+Intermediate wells run with 10 uL of 5 parts Nanopure water to 1 part 3 dye ez
+vision.
+
+-------------------------------------------------------------------------------
+Sample IDs (Gel Purification)
+-------------------------------------------------------------------------------
+(Sample <ID #>: <Polymerase>-<Primers>-<Clone>-<band length>)
+1. The < 1kb band in the Taq gel for primer pair 3, G clone
+(Sample 1: T-P3-G-0.7)
+2. The < 1kb band in the Taq gel for primer pair 3, F clone
+(Sample 2: T-P3-F-0.7)
+3. The ~ 1.2 kb band in the Phusion gel for PC primers, F clone
+(Sample 3: P-PC-F-1.2)
+4. The ~ 2 kb band in the Phusion gel for PC Primers, F clone
+(Sample 4: P-PC-F-2.0)
+5. The ~ 1.7 kb band in the Phusion gel for primer pair 3, G clone
+(Sample 5: P-P3-G-1.7)
+
+Will do the electophoresis and extraction tomorrow morning since I need to use
+the UV box in Jeremy's lab.
