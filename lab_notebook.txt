@@ -1065,15 +1065,156 @@ Sample IDs (Gel Purification)
 -------------------------------------------------------------------------------
 (Sample <ID #>: <Polymerase>-<Primers>-<Clone>-<band length>)
 1. The < 1kb band in the Taq gel for primer pair 3, G clone
-(Sample 1: T-P3-G-0.7)
+(T5: T-P3-G-0.7)
 2. The < 1kb band in the Taq gel for primer pair 3, F clone
-(Sample 2: T-P3-F-0.7)
+(T6: T-P3-F-0.7)
 3. The ~ 1.2 kb band in the Phusion gel for PC primers, F clone
-(Sample 3: P-PC-F-1.2)
+(P2-1: P-PC-F-1.2)
 4. The ~ 2 kb band in the Phusion gel for PC Primers, F clone
-(Sample 4: P-PC-F-2.0)
+(P2-2: P-PC-F-2.0)
 5. The ~ 1.7 kb band in the Phusion gel for primer pair 3, G clone
-(Sample 5: P-P3-G-1.7)
+(P6: P-P3-G-1.7)
 
 Will do the electophoresis and extraction tomorrow morning since I need to use
 the UV box in Jeremy's lab.
+
+===============================================================================
+November 3rd, 2017
+===============================================================================
+
+-------------------------------------------------------------------------------
+Gel extraction protocol (Modified from Zymoclean Gel DNA Recovery Kit Protocol)
+-------------------------------------------------------------------------------
+1. Excise bands from gel under UV light with a scalpel.
+2. Place in 1.7 mL microcentrifuge tube and weigh gel slices.
+3. Add 3 volumes of ADB to each volume of agarose excised from gel. (E.g for
+100 mg of gel, add 300 uL of ADB).
+4. Incube at 50 C for 10 minutes. Mix every 1 minute.
+5. Transfer melted agarose to a zymo spin column in a collection tube.
+6. Centrifuge at 2000 rpm for 1 minute.
+7. Discard flow through by aspiration (do not pour out!)
+8. Add 200 uL of DNA wash buffer and centifuge at 2000 rpm for 30 seconds.
+9. Discard flow through as before.
+10. Place column in a fresh collection tube.
+11. Add 6uL of DNA elution buffer directly to column matrix.
+12. Let sit for 1 minute.
+13. Centrifuge at 2000 rpm for 80 seconds.
+14. Transfer eluted DNA into a labeled microcentrifuge tube.
+
+-------------------------------------------------------------------------------
+Gel extraction results
+-------------------------------------------------------------------------------
+
+Nanodrop readings
+-----------------
+
+ID		Conc. (ng/uL)
+~~~~~~~~~~~~~~~~~~~~~
+T5		1.6
+T6		0.3
+P2-1	8.4
+P2-2	-0.2
+P6		10.6
+
+Non-ideal concentrations. Will do another round of PCR on the extractions to
+further amplify before sequencing.
+
+===============================================================================
+November 5th, 2017
+===============================================================================
+-------------------------------------------------------------------------------
+PCR of Gel Extraction Products
+-------------------------------------------------------------------------------
+Will repeat the corresponding PCR protocol for each sample. Will do a small
+annealing temperature gradient to try to optimize yield and minimize primer
+dimers.
+
+T5, T6 = Mix 4, Program 7
+P2-1, P2-2, P6 = Mix 5, Program 8
+
+Sample IDs
+--------------
+1. T5, Primers 3, 51C Annealing temp
+2. T5, Primers 3, 53C Annealing temp
+3. T5, Primers 3, 55C Annealing temp
+4. T6, Primers 3, 51C Annealing temp
+5. T6, Primers 3, 53C Annealing temp
+6. T6, Primers 3, 55C Annealing temp
+7. P2-1, Primers PC, 59C Annealing temp
+8. P2-1, Primers PC, 61C Annealing temp
+9. P2-1, Primers PC, 63C Annealing temp
+10. P2-2, Primers PC, 59C Annealing temp
+11. P2-2, Primers PC, 61C Annealing temp
+12. P2-2, Primers PC, 63C Annealing temp
+13. P6, Primers 3, 65C Annealing temp
+14. P6, Primers 3, 67C Annealing temp
+15. P6, Primers 3, 69C Annealing temp
+
+Mix 4 (Taq Master Mix)
+----------------------
+25uL for each annealing temperature sample
+- 41.25 uL Taq Master Mix
+- 4.95 uL Fwd Primer 3
+- 4.95 uL Rev Primer 3
+- 6.6 uL DNA Extraction
+- 24.75 uL Nuclease Free Water
+Total: 82.5 uL
+
+Master Mix (Mix 5)
+------------------
+(Mix x 10)
+- 50 uL Phusion HF Buffer
+- 5 uL dNTPs
+- 50 uL MgCl2
+- 2.5 uL Phusion Polymerase
+- 92.5 uL Nuclease free water
+
+Mix 5 (Phusion)
+---------------
+25uL for each annealing temperature sample
+- 66 uL Phusion Master Mix
+- 4.95 uL Fwd Primer (10 uM)
+- 4.95 uL Rev Primer (10 uM)
+- 6.6 uL DNA Extraction
+- 0.825 uL Phusion polymerase
+- 30.525 uL Nuclease Free Water
+Total: 82.5 uL
+
+Gel recipe
+----------
+0.5 g agarose in 50 mL 1X TBE (1 %)
+
+Loading Samples
+---------------
+Ladder:
+	6uL Nanopure water, 2uL EZ vision 3 dye, 4uL NEB 1kb ladder
+Samples:
+	2uL EZ vision 3 dye, 10uL PCR product
+
+Layout
+------
+From left to right (with grooved-side of gel facing away from you).
+
+Lane	Sample ID (From PCR)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+L
+|		Ladder
+|		NC
+|		1
+|		2
+|		3
+|		4
+|		5
+|		6
+|		7
+|		8
+|		9
+|		10
+|		11
+|		12
+|		13
+|		14
+|		15
+|		-
+|		-
+R
