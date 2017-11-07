@@ -310,7 +310,7 @@ Gel protocol:
 
 Gel recipe
 ----------
-1 g agarose in 100 mL 1X TBE
+1 g agarose in 100 mL 1X TBE run at 70V
 
 Loading Samples
 ---------------
@@ -358,7 +358,7 @@ PCR reaction recipe same as above but with correct primer concentrations
 
 Gel recipe
 ----------
-1 g agarose in 100 mL 1X TBE
+1 g agarose in 100 mL 1X TBE run at 70V
 
 Loading Samples
 ---------------
@@ -464,7 +464,7 @@ Extension		70C for 100s
 
 Gel recipe
 ----------
-1 g agarose in 100 mL 1X TBE
+1 g agarose in 100 mL 1X TBE run at 70V
 
 Loading Samples
 ---------------
@@ -787,7 +787,7 @@ Extension		70C for 60s
 
 Gel recipe
 ----------
-1 g agarose in 100 mL 1X TBE
+1 g agarose in 100 mL 1X TBE run at 70V
 
 Loading Samples
 ---------------
@@ -936,7 +936,7 @@ Primers 3 placed in back row (hotter), primers 4 placed in front row (cooler).
 
 Gel recipe
 ----------
-1 g agarose in 100 mL 1X TBE
+1 g agarose in 100 mL 1X TBE run at 70V
 
 Loading Samples
 ---------------
@@ -1029,7 +1029,7 @@ Gel Electrophoresis (Gel Purification)
 
 Gel recipe
 ----------
-0.75 g agarose in 50 mL 1X TBE
+0.75 g agarose in 50 mL 1X TBE run at 70V
 
 Loading Samples
 ---------------
@@ -1182,7 +1182,7 @@ Total: 82.5 uL
 
 Gel recipe
 ----------
-0.5 g agarose in 50 mL 1X TBE (1 %)
+0.5 g agarose in 50 mL 1X TBE (1 %) run at 70V
 
 Loading Samples
 ---------------
@@ -1218,3 +1218,47 @@ L
 |		-
 |		-
 R
+
+===============================================================================
+November 6th, 2017
+===============================================================================
+
+-------------------------------------------------------------------------------
+Gel Results
+-------------------------------------------------------------------------------
+T5 (Primers 3, G tissue) show single clear band at all annealing temperatures.
+T6 (Primers 3, F tissue) show clear but faint band in two annealing
+temperatures. Also has a << 1kb non-target band. All phusion samples have a
+bunch of non target bands. Clearly the phusion PCR program is just way too
+permissive.
+
+Talked with Sarah and we decided to just try to sequence T5 and T6. We will do
+another gel extraction with T6 before sequencing to remove the non-target
+bands.
+
+Heteroplasmic structural variation will have to be taken into account for
+further analysis though. I will look into haplotype assembly to see if we can
+find convincing evidence for multiple segregating structural variants in a
+single line.
+
+-------------------------------------------------------------------------------
+Gel Extraction 2 - T6 extraction
+-------------------------------------------------------------------------------
+Gel recipe
+----------
+0.75 g agarose in 50 mL 1X TBE (1.5 %) run at 70V.
+
+Loading Sample
+---------------
+2.8uL EZ vision 3 dye, 14uL T5 PCR product. Use both sample 5 and 6 from Gel
+PCR 1 and run in adjacent lanes.
+
+Got two clear bands for both samples. The smaller fragment size band was also
+present in gel extraction 1 - PCR 1 gel but I hadn't paid much attention to it.
+It now occurs to me that these two bands might represent real structural
+variation and its probably worth sequencing both. Gel extraction will be
+carried out on both.
+
+Carried out the gel extractions as before with the Zymo kit except I let
+incubate in the elution buffer for 15 minutes prior to eluting.
+
