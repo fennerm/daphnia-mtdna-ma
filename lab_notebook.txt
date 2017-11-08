@@ -1,4 +1,4 @@
-Fenner Macrae Megadaph Lab Notebook
+Fenner Macrae Megadaph - Mitochondrial Analysis Lab Notebook
 ===============================================================================
 # vim: textwidth=79
 
@@ -1262,3 +1262,68 @@ carried out on both.
 Carried out the gel extractions as before with the Zymo kit except I let
 incubate in the elution buffer for 15 minutes prior to eluting.
 
+===============================================================================
+November 7th, 2017
+===============================================================================
+Samples which will be sanger sequenced:
+T5 - All PCR samples (for the 3 annealing temperatures combined)
+T6 small - Gel extraction products
+T6 large - Gel extraction products
+
+-------------------------------------------------------------------------------
+PCR Purification of T5
+-------------------------------------------------------------------------------
+- Combined all T5 samples from Gel extraction - PCR 1. Total PCR volume
+  ~42 uL.
+- Followed Omega E.Z.N.A. cycle pure centrifugation protocol to purify DNA.
+- Eluted in 30 uL nanopure water.
+
+Nanodrop Reading
+----------------
+Conc.:		20.2 ng/uL
+Abs.:		0.216
+260/280:	1.88
+
+Reasonably pure, will have to add 5 uL to big dye reaction.
+
+
+-------------------------------------------------------------------------------
+BigDye Sequencing Reaction
+-------------------------------------------------------------------------------
+Samples
+-------
+1. Purified T5, Forward Primer
+2. Purified T5, Reverse Primer
+3. Small T6, Forward Primer
+4. Small T6, Reverse Primer
+5. Large T6, Forward Primer
+6. Large T6, Reverse Primer
+
+Bigdye reaction components 1:
+-----------------------------
+
+T5 - PCR Purified
+-----------------
+Bigdye Terminator 3.1 Ready Reaction Mix		4 uL
+Primer (fwd or reverse) [3.2 uM]				1 uL
+Nanopure water									5 uL
+Template										1 uL
+
+T6 - Gel Extracted
+-------------------
+Bigdye Terminator 3.1 Ready Reaction Mix		4 uL
+Primer (fwd or reverse) [3.2 uM]				1 uL
+Nanopure water									4 uL
+Template										2 uL
+
+Thermocyler Program 1
+---------------------
+Activation		96C for 1 min
+(
+Denature		96C for 30s
+Annealing		51C for 30s
+Extension		60C for 240s
+) x 25 cycles
+
+Diluted primer stocks to 3.2 uM directly from 100uM stocks. (Combined 1.6 uL
+stocks with 48.4 uL nanopure).
