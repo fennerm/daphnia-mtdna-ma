@@ -1327,3 +1327,8 @@ Extension		60C for 240s
 
 Diluted primer stocks to 3.2 uM directly from 100uM stocks. (Combined 1.6 uL
 stocks with 48.4 uL nanopure).
+
+===============================================================================
+November 8th, 2017
+===============================================================================
+- Sent off sequencing samples to ACGT
