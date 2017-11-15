@@ -1332,3 +1332,19 @@ stocks with 48.4 uL nanopure).
 November 8th, 2017
 ===============================================================================
 - Sent off sequencing samples to ACGT
+
+===============================================================================
+November 14th, 2017
+===============================================================================
+- Got the sanger sequencing data back.
+
+Initial Exploratory Analysis
+----------------------------
+- Blasted sequences to mtDNA and nuclear D. magna references. 1,2,5,6 appear to
+  all be nuclear amplifications.
+- 3 shows a fairly clear large inversion in the control region. Its not
+  entirely clear how large the inversion is though, because the sequence
+  is only ~350 bp.
+- There also seems to have been a smaller deletion in the center of the
+  insertion.
+
