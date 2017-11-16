@@ -1348,3 +1348,10 @@ Initial Exploratory Analysis
 - There also seems to have been a smaller deletion in the center of the
   insertion.
 
+===============================================================================
+November 15th, 2017
+===============================================================================
+-------------------------------------------------------------------------------
+Analysis of MtDNA Control Region Sanger Sequences
+-------------------------------------------------------------------------------
+- Installed R package 'roblanf/sangeranalyseR'.
