@@ -1,6 +1,5 @@
 Fenner Macrae Megadaph - Mitochondrial Analysis Lab Notebook
 ===============================================================================
-# vim: textwidth=79
 
 This is continued from a non-digital lab notebook 12/3/16 - 8/22/17
 
