@@ -7,24 +7,24 @@ from psutil import virtual_memory
 
 ## Main pipeline script for processing pulex and magna sequence files.
 ## Script is very project specific, and applying it to a different dataset would be take a lot of
-## work. 
-## Multi-threading is used whenever possible but memory limitations meant that many components 
+## work.
+## Multi-threading is used whenever possible but memory limitations meant that many components
 ## are single-threaded.
 ## Directory locations are hardlinked. This was to ensure that script could not edit files outside
 ## of its root directory. This design is not super elegant though.
-		
+
 ## Functions
-# Given a dictionary of directories. 
+# Given a dictionary of directories.
 # Create any that do not already exist.
 def init_dirs(directories):
 	for d, path in directories.items():
 		if not os.path.isdir(path):
 			os.makedirs(path)
 
-# Given a directory with paired fastq or fastq.gz files. 
+# Given a directory with paired fastq or fastq.gz files.
 # Return a list of tuples of paired files.
 def pair_files(directory):
-	p1 = (glob(os.path.join(directory, '*_1.*fq')) + 
+	p1 = (glob(os.path.join(directory, '*_1.*fq')) +
 			glob(os.path.join(directory, '*_1.*fastq')))
 
 	p2 = (glob(os.path.join(directory, '*_2.*fq')) +
@@ -84,10 +84,10 @@ def run_command(command):
 	print(err)
 
 	return out, err
-	
-# Given a list of files, return the number of the threads 
-# Not guaranteed to prevent memory errors since it assumes that tools require RAM 
-# approximately equal to input file size. If a tool tries to allocate a multiple of input 
+
+# Given a list of files, return the number of the threads
+# Not guaranteed to prevent memory errors since it assumes that tools require RAM
+# approximately equal to input file size. If a tool tries to allocate a multiple of input
 # file size, system might crash.
 def determine_threads(files):
 	files_memory = 0
@@ -95,7 +95,7 @@ def determine_threads(files):
 	# Loop through files and determine their cumulative file size in bytes.
 	for f in files:
 		files_memory = files_memory + os.stat(f).st_size
-	
+
 	# Average file size
 	avg_size = files_memory/(len(files))
 
@@ -109,25 +109,25 @@ def determine_threads(files):
 	if p > len(files):
 		p = len(files)
 
-	return p 
+	return p
 
 
-## Align reads in working directory (wd) to reference index (ix) and write 
+## Align reads in working directory (wd) to reference index (ix) and write
 ## logs to logdir.
 def align(wd, odir, ix, logdir):
 	pairs = pair_files(wd)
 	print(pairs)
 	max_ins = 100000
-	
+
 	for p in pairs:
-		
+
 		out_sam = os.path.join(odir, sample_name_root(p[0])+'.sam')
 
 		p0 = os.path.join(wd, p[0])
 		p1 = os.path.join(wd, p[1])
 		# Run Bowtie2
-		bowtie_out, bowtie_err = run_command(['bowtie2', bowtie2_preset, '-x', 
-			ix, '-X', max_ins, '-p', threads, '-1', p0, '-2', p1, 
+		bowtie_out, bowtie_err = run_command(['bowtie2', bowtie2_preset, '-x',
+			ix, '-X', max_ins, '-p', threads, '-1', p0, '-2', p1,
 			'-S', out_sam])
 
 		## Write logfiles
@@ -149,7 +149,7 @@ def add_read_groups(f, odir):
 	_id = sample_name_with_orient(f)
 	id_root = sample_name_root(f)
 	out_bam = os.path.join(odir, f_name.replace(".bam",".grouped.bam"))
-	run_command(['picard', 'AddOrReplaceReadGroups', 'I='+f, 'O='+out_bam, 
+	run_command(['picard', 'AddOrReplaceReadGroups', 'I='+f, 'O='+out_bam,
 		'RGLB='+id_root, 'RGPL=illumina', 'RGPU=unit1', 'RGSM='+_id])
 	run_command(["samtools", "index", out_bam])
 	os.remove(f)
@@ -160,9 +160,9 @@ def local_realign(f, odir, ref):
 	f_name = os.path.basename(f)
 	intervals = os.path.join(odir, f_name.replace('.bam', '.intervals'))
 	out_bam = os.path.join(odir, f_name.replace('.bam', '.realign.bam'))
-	run_command(['gatk', '-T', 'RealignerTargetCreator', '-R', ref, '-I', f, '-o', 
+	run_command(['gatk', '-T', 'RealignerTargetCreator', '-R', ref, '-I', f, '-o',
 		intervals])
-	run_command(['gatk', '-T', 'IndelRealigner', '-R', ref, '-I', f, 
+	run_command(['gatk', '-T', 'IndelRealigner', '-R', ref, '-I', f,
 		'--targetIntervals', intervals, '-o', out_bam])
 	os.remove(f)
 	os.remove(f+'.bai')
@@ -172,14 +172,14 @@ def mark_dups(f, odir, logdir):
 	f_name = os.path.basename(f)
 	out_bam = os.path.join(odir, f_name.replace('.bam', '.mrkdup.bam'))
 	logfile = os.path.join(logdir, f_name.replace('.bam', '.txt'))
-	run_command(['picard', 'MarkDuplicates', 'I='+f, 'O='+out_bam, 
+	run_command(['picard', 'MarkDuplicates', 'I='+f, 'O='+out_bam,
 		'REMOVE_DUPLICATES='+removeDups, 'METRICS_FILE='+logfile])
 	run_command(['samtools', 'index', out_bam])
 	os.remove(f)
 	os.remove(f.replace('.bam', '.bai'))
 
 def to_bam_and_sort(wd):
-	## Convert sam to bam	
+	## Convert sam to bam
 	print("Converting SAM to BAM")
 	for f in os.listdir(wd):
 		if f.endswith('.sam'):
@@ -199,14 +199,14 @@ def to_bam_and_sort(wd):
 			os.remove(in_bam)
 
 def viterbi_realignment(f_path, wd, ref):
-	out_bam = os.path.join(wd, f_path.replace(".bam", ".viterbi.bam"))		
+	out_bam = os.path.join(wd, f_path.replace(".bam", ".viterbi.bam"))
 	run_command(["lofreq", "viterbi", "-f", ref, "-o", out_bam, f_path])
 	os.remove(f_path)
 	os.remove(f_path+".bai")
 
 # Run set of processes which follow alignment. Includes local realignment, duplicate removal,
 # sorting etc.
-# Args: 
+# Args:
 #		cwd = directory with files to be processed.
 #		mrkduplogs = directory for markduplicates logfiles
 #		ref = reference sequence corresponding to bam files
@@ -214,7 +214,7 @@ def post_map(wd, mrkduplogs, ref):
 
 	## Add read group information (required by GATK)
 	# Not using the group fields correctly, but they're not actually used anyway.
-	
+
 	print("Adding read group information")
 	for f in os.listdir(wd):
 		if f.endswith('.bam'):
@@ -242,8 +242,8 @@ def post_map(wd, mrkduplogs, ref):
 		if f.endswith('.bam'):
 			f_path = os.path.join(wd, f)
 			local_realign(f_path, wd, ref)
-	
-    ## Remove duplicates 
+
+    ## Remove duplicates
 	print("Removing duplicates")
 	for f in os.listdir(wd):
 		if f.endswith('.bam'):
@@ -261,7 +261,7 @@ def bedgraphs(f, odir):
 def counts(f, odir, ref):
 	f_name = os.path.basename(f)
 	out_counts = os.path.join(odir, f_name.replace(".bam", ".counts"))
-	
+
 	# Write counts
 	os.system("bam-readcount -w 1 -f "+ref+" "+f+" > "+out_counts)
 
@@ -271,7 +271,7 @@ def bam_to_fastq(f, odir):
 	reads_basename = sample_name_with_orient(f_name)
 	p1=os.path.join(odir, reads_basename+'_1.fq')
 	p2=os.path.join(odir, reads_basename+'_2.fq')
-	run_command(['picard', 'SamToFastq', 'I='+f, 'F='+p1, 'F2='+p2])                  
+	run_command(['picard', 'SamToFastq', 'I='+f, 'F='+p1, 'F2='+p2])
 
 # Call variants for all bam files in wd using lofreq.
 def call_variants(wd, ref, odir):
@@ -289,20 +289,20 @@ def call_variants(wd, ref, odir):
 		if f.endswith(".bam"):
 			in_bam = os.path.join(odir, f)
 			out_vcf = os.path.join(odir, f.replace(".bam", ".vcf"))
-			run_command(["lofreq", "call", "-l", region, "-f", ref, "-o", 
+			run_command(["lofreq", "call", "-l", region, "-f", ref, "-o",
 				out_vcf, "--call-indels", in_bam])
-			
+
 	cwd = os.getcwd()
 	os.chdir(odir)
-	
+
 	vcfs = list()
 	for f in os.listdir(odir):
 		if f.endswith('.vcf'):
 			vcf_path = os.path.join(odir, f)
 			vcfs.append(vcf_path)
-	
+
 	## Find shared variants
-	
+
 	os.system("multi_vcf_subtract.py "+' '.join(vcfs))
 
 	os.chdir(cwd)
@@ -319,10 +319,10 @@ def run_pipeline(start):
 		run_map_to_og_and_rot(False)
 	elif start == dirs['map_rot_og']:
 		run_call_variants()
-	
+
 def run_qc():
-	
-	clear_dirs([dirs['trim'], dirs['skewerlog'], dirs['trim_fastqc']]) 
+
+	clear_dirs([dirs['trim'], dirs['skewerlog'], dirs['trim_fastqc']])
 
 	# Unzip .gz files
 	for f in os.listdir(dirs['root']):
@@ -342,7 +342,7 @@ def run_qc():
 		shutil.move(p1.replace(".fq", ".sort.fq"), p1_out)
 		os.remove(os.path.join(dirs['root'], p[0].replace(".fq", ".singletons.fq")))
 		os.remove(os.path.join(dirs['root'], p[1].replace(".fq", ".singletons.fq")))
-	
+
 	## Reencode quality scores in pulex dataset
 	if spp == "pulex":
 		for f in os.listdir(dirs['trim']):
@@ -367,16 +367,16 @@ def run_qc():
 		p0_in = os.path.join(dirs['trim'], p[0])
 		p1_in = os.path.join(dirs['trim'], p[1])
 		if spp == "pulex":
-			run_command(['skewer', '-t', threads, '-q', qual_threshold, '-u', p0_in, p1_in])	
+			run_command(['skewer', '-t', threads, '-q', qual_threshold, '-u', p0_in, p1_in])
 		elif spp == "magna":
-			run_command(['skewer', '-t', threads, '-q', qual_threshold, '-u', '-x', adapter_file, 
-				'-y', adapter_file_rev, p0_in, p1_in])	
+			run_command(['skewer', '-t', threads, '-q', qual_threshold, '-u', '-x', adapter_file,
+				'-y', adapter_file_rev, p0_in, p1_in])
 
 		# Rename trimmed files
 		p1_new_path= os.path.join(dirs['trim'], p[0].replace('.fq', '.trimmed.fq'))
-		p2_new_path= os.path.join(dirs['trim'], p[0].replace('1.sort.rePhred.fq', 
+		p2_new_path= os.path.join(dirs['trim'], p[0].replace('1.sort.rePhred.fq',
 			'2.sort.rePhred.trimmed.fq'))
-			
+
 		p1_trimmed = os.path.join(dirs['trim'], p[0].replace('.fq', '-trimmed-pair1.fastq'))
 		p2_trimmed = os.path.join(dirs['trim'], p[0].replace('.fq', '-trimmed-pair2.fastq'))
 		shutil.move(p1_trimmed, p1_new_path)
@@ -389,7 +389,7 @@ def run_qc():
 		in_log = os.path.join(dirs['trim'], os.path.basename(f))
 		out_log = os.path.join(dirs['skewerlog'], os.path.basename(f))
 		shutil.move(in_log, out_log)
-		
+
 	## Fastqc
 	for f in os.listdir(dirs['trim']):
 		if f.endswith('.fq'):
@@ -399,7 +399,7 @@ def run_qc():
 	run_comp_map()
 
 def run_comp_map():
-	clear_dirs([dirs['comp_map'], dirs['comp_bedgraph'], dirs['comp_maplog'], dirs['complog'], 
+	clear_dirs([dirs['comp_map'], dirs['comp_bedgraph'], dirs['comp_maplog'], dirs['complog'],
 			dirs['mtdna_complog'], dirs['mtdna_comp_map'], dirs['nuc_comp_map']])
 
 	align(dirs['trim'], dirs['comp_map'], merged_ref_index, dirs['comp_maplog'])
@@ -421,17 +421,17 @@ def run_map_to_og_and_rot(skip_extract):
 		mit = '\"gi|5835848|ref|NC_000844.1|\"'
 	elif spp == 'magna':
 		mit = '\"NC_026914.1\"'
-	
+
 	if skip_extract:
 
 		## Extract reads mapped to mitochondria
 		for f in os.listdir(dirs['comp_map']):
 			if f.endswith('.bam'):
 				in_bam = os.path.join(dirs['comp_map'], f)
-				out_bam = os.path.join(dirs['mtdna_comp_map'], 
+				out_bam = os.path.join(dirs['mtdna_comp_map'],
 						f.replace('.bam', '.mapped_to_mtdna.bam'))
 				os.system('samtools view -b -@ '+threads+' '+in_bam+' '+mit+' > '+out_bam)
-					
+
 				run_command(['samtools', 'index', out_bam])
 		## Extract reads mapped to nuclear genome
 		for f in os.listdir(dirs['comp_map']):
@@ -447,7 +447,7 @@ def run_map_to_og_and_rot(skip_extract):
 		#	if f.endswith('.bam'):
 		#		bam_path = os.path.join(dirs['mtdna_comp_map'], f)
 		#		bams.append(bam_path)
-		
+
 		#p = determine_threads(bams)
 		#Parallel(n_jobs=p)(delayed(bam_to_fastq)(f, dirs['mtdna_comp_map']) for f in bams)
 
@@ -464,18 +464,18 @@ def run_map_to_og_and_rot(skip_extract):
 	post_map(dirs['rot_map'], dirs['rot_mrkduplog'], mtdna_rot_ref)
 
 	run_call_variants()
-	
+
 def run_call_variants():
 	clear_dirs([dirs['og_var'], dirs['rot_var'], dirs['og_var_unique'],
 		dirs['rot_var_unique']])
-	
+
 	call_variants(dirs['og_map'], mtdna_og_ref, dirs['og_var'])
 	call_variants(dirs['rot_map'], mtdna_rot_ref, dirs['rot_var'])
 
 
 ## MAIN
 if __name__ == "__main__":
-	
+
 	## PARAM
 
 	## Check inputs
@@ -490,7 +490,7 @@ if __name__ == "__main__":
 		print(usage)
 		sys.exit()
 
-	# Get genotype parameter 
+	# Get genotype parameter
 	if sys.argv[2] in ['LIN', 'TCO', 'I', 'G', 'F']:
 		genotype = sys.argv[2]
 	else:
@@ -505,7 +505,7 @@ if __name__ == "__main__":
 	## Basic directory locations
 	dirs = {}
 	# Home directory for the whole MA project
-	homedir = os.path.join(os.path.expanduser('~'), 
+	homedir = os.path.join(os.path.expanduser('~'),
                         'fmacrae/daphnia_mitochondria_MA/data')
 	print('Project root: '+homedir)
 
@@ -590,7 +590,7 @@ if __name__ == "__main__":
 	# Threshold for quality trimming
 	qual_threshold = '30'
 
-	# Bowtie mapping preset 
+	# Bowtie mapping preset
 	bowtie2_preset = '--very-sensitive'
 
 	#Whether to remove duplicates or just mark them
