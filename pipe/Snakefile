@@ -19,6 +19,8 @@ MAGNA = [x for x in SAMPLE if x.startwith(('F', 'G', 'I'))]
 
 SPECIES = ['pulex', 'magna']
 
+ROTATION = ['og', 'rot']
+
 # ==============================================================================
 # Helper functions
 # ==============================================================================
@@ -45,8 +47,9 @@ def mtdna_fasta_id(wildcards):
 # ==============================================================================
 
 rule all:
-    expand("output/final_dedup/{sample}.fastq.gz", sample=SAMPLE),
-    "output/multiqc/multiqc.html"
+    input:
+        expand("output/local_realignment/{sample}.bam", sample=SAMPLE),
+        "output/multiqc/multiqc.html"
 
 rule rotate_reference:
     input:
@@ -243,7 +246,9 @@ rule local_realignment:
         bam = "output/remove_duplicates/{sample}.{rotation}.bam",
         inter = "output/local_realignment_targets/{sample}.{rotation}.intervals"
     output:
-        "output/local_realignment/{sample}.{rotation}.bam"
+        expand(
+            "output/local_realignment/{sample}.{rotation}.bam",
+            sample=SAMPLE, rotation=ROTATION)
     params:
         ref = os.path.join("input", "ref", species + ".mt.{rotation}")
     log:
