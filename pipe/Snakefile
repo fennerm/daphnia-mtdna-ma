@@ -41,20 +41,24 @@ def species(wildcards):
 
 def mtdna_fasta_id(wildcards):
     """Get the name of the mtdna contig from the sample wildcard"""
-    fasta = os.path.join('input', 'ref', species(wildcards) + '.mt.og.fa')
+    fasta = os.path.join('ref', species(wildcards) + '.mt.og.fa')
     with open(fasta, 'r') as f:
         faid = f.readline()
     return faid
 
 def reference(wildcards):
     """Get the path to the original or rotated mtDNA reference"""
-    return os.path.join(
-        "input", "ref",
-        '.'.join([species(wildcards), wildcards.rotation, "fa"]))
+    return os.path.join("ref",
+                        '.'.join([species(wildcards),
+                                  wildcards.rotation, "fa"]))
 
 def combined_reference(wildcards):
     """Get the path to the combined nuclear + mtDNA reference"""
-    return os.path.join("output", "ref", species(wildcards) + ".all.fa")
+    return os.path.join("ref", species(wildcards) + ".all.fa")
+
+def prefix(wildcards):
+    """Return the filename prefix of the input file"""
+    return os.path.splitext(wildcards.input)[0]
 
 # ==============================================================================
 # Pipeline
@@ -69,21 +73,22 @@ rule all:
 
 rule rotate_reference:
     input:
-        'input/ref/{species}.mt.og.fa'
+        'ref/{species}.mt.og.fa'
     output:
-        expand('input/ref/{species}.mt.rot.fa', species=SPECIES)
+        expand('ref/{species}.mt.rot.fa', species=SPECIES)
     shell:
         "scripts/rotate_ref.py {output}"
 
 rule combine_mt_and_nuc_references:
     input:
-        nuc = 'input/ref/{species}.nuc.fa',
-        og = 'input/ref/{species}.og.fa',
-        rot = 'input/ref/{species}.rot.fa'
+        nuc = 'ref/{species}.nuc.fa',
+        og = 'ref/{species}.og.fa',
+        rot = 'ref/{species}.rot.fa'
     output:
-        'output/ref/{species}.all.fa'
+        'ref/{species}.all.fa'
     shell:
         "cat {input.og} {output.rot} {input.nuc} > {output}"
+
 
 rule raw_fastqc:
     input:
@@ -119,8 +124,8 @@ rule trim_adapters:
 
 rule quality_trim:
     input:
-        fwd_reads = rules.trim_adapters.output.fwd_reads,
-        rev_reads = rules.trim_adapters.output.rev_reads
+        fwd_reads = 'output/trim_adapters/{sample}.R1.fastq.gz',
+        rev_reads = 'output/trim_adapters/{sample}.R2.fastq.gz'
     output:
         fwd_reads = 'output/quality_trim/{sample}.R1.fastq.gz',
         rev_reads = 'output/quality_trim/{sample}.R2.fastq.gz'
@@ -136,24 +141,9 @@ rule quality_trim:
         "qtrim={params.qtrim} trimq={params.trimq} minlen={params.minlen} "
         "2> {log}"
 
-rule phix_filter:
-    input:
-        "output/quality_trim/{sample}.{pair}.fastq.gz"
-    output:
-        "output/phix_filter/{sample}.{pair}.fastq.gz"
-    params:
-        phix_seq = "input/ref/phix.fa",
-        k = '31',
-        hdist = '1'
-    log:
-        "output/phix_filter/log/{sample}.{pair}.log"
-    shell:
-        "bbduk.sh in={input} out={output} ref={params.phix_seq} k={params.k} "
-        "hdist={params.hdist} stats={log}"
-
 rule clean_fastqc:
     input:
-        'output/phix_filter/{sample}.{pair}.fastq.gz'
+        'output/quality_trim/{sample}.{pair}.fastq.gz'
     output:
         'output/clean_fastqc/{sample}.{pair}_fastqc.html'
     params:
@@ -176,8 +166,8 @@ rule multiqc:
 
 rule competitive_align:
     input:
-        fwd_reads = "output/phix_filter/{sample}.R1.fastq.gz",
-        rev_reads = "output/phix_filter/{sample}.R2.fastq.gz"
+        fwd_reads = "output/quality_trim/{sample}.R1.fastq.gz",
+        rev_reads = "output/quality_trim/{sample}.R2.fastq.gz"
     output:
         "output/competitive_align/{sample}.bam"
     params:
@@ -186,7 +176,7 @@ rule competitive_align:
     log:
         "output/competitive_align/{sample}.log"
     shell:
-        "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
+        "scripts/align_and_sort.py -1 {input.fwd_reads} -2 {input.rev_reads} "
         "-x {params.ref} -X {params.max_insert_size} > {output} 2> {log}"
 
 rule extract_mt_reads:
@@ -229,8 +219,7 @@ rule remove_duplicates:
         "output/remove_duplicates/{sample}.{rotation}.log"
     shell:
         "picard MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=True "
-        "METRICS_FILE={log} && "
-        "samtools index {output}"
+        "METRICS_FILE={log} CREATE_INDEX=True"
 
 rule local_realignment_targets:
     input:
@@ -254,5 +243,6 @@ rule local_realignment:
         "output/local_realignment/{sample}.{rotation}.log"
     shell:
         "gatk -T IndelRealigner -R {params.ref} -I {input.bam} -o {output} "
-        "--targetIntervals {input.inter} 2> {log} && "
-        "samtools index {output}"
+        "--targetIntervals {input.inter} --maxReadsForRealignment 1000000 "
+        "--maxPositionMoveAllowed 500 --maxReadsForConsensuses 300 "
+        "--log_to_file {log}"
