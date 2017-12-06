@@ -6,6 +6,7 @@
 *.pyc
 *.swp
 /data/
+devpipe/
 /megadaph.mtdna/data/
 /megadaph.mtdna/tmpdat/
 /megadaph.mtdna/data-raw

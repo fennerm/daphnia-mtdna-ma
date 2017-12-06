@@ -14,16 +14,20 @@ import os
 configfile: "config.yml"
 
 SAMPLE, PAIR = glob_wildcards("input/reads/{sample}.{pair}.fastq.gz")
+SAMPLE = sorted(list(set(SAMPLE)))
+PAIR = sorted(list(set(PAIR)))
 PULEX = [x for x in SAMPLE if x.startswith(('L', 'T'))]
-MAGNA = [x for x in SAMPLE if x.startwith(('F', 'G', 'I'))]
-
+MAGNA = [x for x in SAMPLE if x.startswith(('F', 'G', 'I'))]
 SPECIES = ['pulex', 'magna']
 
 ROTATION = ['og', 'rot']
 
 # ==============================================================================
 # Helper functions
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Used to match the correct species or reference genome to the input files
 # ==============================================================================
+
 def species(wildcards):
     """Determine the species from the sample wildcard"""
     if wildcards.sample in PULEX:
@@ -42,13 +46,25 @@ def mtdna_fasta_id(wildcards):
         faid = f.readline()
     return faid
 
+def reference(wildcards):
+    """Get the path to the original or rotated mtDNA reference"""
+    return os.path.join(
+        "input", "ref",
+        '.'.join([species(wildcards), wildcards.rotation, "fa"]))
+
+def combined_reference(wildcards):
+    """Get the path to the combined nuclear + mtDNA reference"""
+    return os.path.join("output", "ref", species(wildcards) + ".all.fa")
+
 # ==============================================================================
 # Pipeline
 # ==============================================================================
 
 rule all:
     input:
-        expand("output/local_realignment/{sample}.bam", sample=SAMPLE),
+        expand(
+            "output/local_realignment/{sample}.{rotation}.bam",
+            sample=SAMPLE, rotation=ROTATION),
         "output/multiqc/multiqc.html"
 
 rule rotate_reference:
@@ -166,7 +182,7 @@ rule competitive_align:
         "output/competitive_align/{sample}.bam"
     params:
         max_insert_size = 16000,
-        ref = os.path.join("input", "ref", species + ".all")
+        ref = combined_reference
     log:
         "output/competitive_align/{sample}.log"
     shell:
@@ -185,43 +201,28 @@ rule extract_mt_reads:
         "samtools view -b {params.csome} {input.bam} | picard SamToFastq "
         "I=/dev/stdin F={output.fwd_reads} F2={output.rev_reads}"
 
-rule align_to_reference_mt:
-    input:
-        fwd_reads = "output/mt_aligned/{sample}.r1.fastq",
-        rev_reads = "output/mt_aligned/{sample}.r2.fastq"
-    output:
-        "output/align_to_og_and_rot_mt/{sample}.og.bam"
-    params:
-        max_insert_size = 16000,
-        ref = os.path.join("input", "ref", species + ".mt.og")
-    log:
-        "output/align_to_og_and_rot_mt/{sample}.log"
-    shell:
-        "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
-        "-x {params.ref} -x {params.max_insert_size} > {output.bam} "
-        "--very-sensitive --rg-id={sample} --rg=lib:{sample} --rg=pl:illumina "
-        "--rg=sm={sample} > {output} 2> {log}"
-
 rule align_to_rotated_mt:
     input:
-        fwd_reads = "output/mt_aligned/{sample}.r1.fastq",
-        rev_reads = "output/mt_aligned/{sample}.r2.fastq"
+        fwd_reads = "output/mt_aligned/{sample}.R1.fastq",
+        rev_reads = "output/mt_aligned/{sample}.R2.fastq"
     output:
-        "output/align_to_og_and_rot_mt/{sample}.rot.bam"
+        "output/align_to_rotated_mt/{sample}.{rotation}.bam"
     params:
         max_insert_size = 16000,
-        ref = os.path.join("input", "ref", species + ".mt.rot")
+        ref = reference
     log:
         "output/align_to_og_and_rot_mt/{sample}.log"
     shell:
         "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
-        "-x {params.ref} -x {params.max_insert_size} > {output.bam} "
-        "--very-sensitive --rg-id={sample} --rg=lib:{sample} --rg=pl:illumina "
-        "--rg=sm={sample} > {output} 2> {log}"
+        "-x {params.ref} -x {params.max_insert_size} > {output} "
+        "--very-sensitive --rg-id={wildcards.sample} "
+        "--rg=lib:{wildcards.sample} --rg=pl:illumina "
+        "--rg=sm={wildcards.sample} > {output} 2> {log}"
+
 
 rule remove_duplicates:
     input:
-        "output/align_to_og_and_rot_mt/{sample}.{rotation}.bam"
+        "output/align_to_rotated_mt/{sample}.{rotation}.bam"
     output:
         "output/remove_duplicates/{sample}.{rotation}.bam"
     log:
@@ -237,7 +238,7 @@ rule local_realignment_targets:
     output:
         "output/local_realignment_targets/{sample}.{rotation}.intervals"
     params:
-        ref = os.path.join("input", "ref", species + ".mt.{rotation}")
+        ref = reference
     shell:
         "gatk -T RealignerTargetCreator -R {params.ref} -I {input} -o {output}"
 
@@ -246,11 +247,9 @@ rule local_realignment:
         bam = "output/remove_duplicates/{sample}.{rotation}.bam",
         inter = "output/local_realignment_targets/{sample}.{rotation}.intervals"
     output:
-        expand(
-            "output/local_realignment/{sample}.{rotation}.bam",
-            sample=SAMPLE, rotation=ROTATION)
+        "output/local_realignment/{sample}.{rotation}.bam"
     params:
-        ref = os.path.join("input", "ref", species + ".mt.{rotation}")
+        ref = reference
     log:
         "output/local_realignment/{sample}.{rotation}.log"
     shell:
