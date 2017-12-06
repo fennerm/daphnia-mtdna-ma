@@ -13,242 +13,242 @@ import os
 
 configfile: "config.yml"
 
-    SAMPLE, PAIR = glob_wildcards("input/reads/{sample}.{pair}.fastq.gz")
-    PULEX = [x for x in SAMPLE if x.startswith(('L', 'T'))]
-    MAGNA = [x for x in SAMPLE if x.startwith(('F', 'G', 'I'))]
+SAMPLE, PAIR = "input/reads/{sample}.{pair}.fastq.gz"
+PULEX = [x for x in SAMPLE if x.startswith(('L', 'T'))]
+MAGNA = [x for x in SAMPLE if x.startwith(('F', 'G', 'I'))]
 
-    SPECIES = ['pulex', 'magna']
+SPECIES = ['pulex', 'magna']
 
-    ROTATION = ['og', 'rot']
+ROTATION = ['og', 'rot']
 
-    # ==============================================================================
-    # Helper functions
-    # ==============================================================================
-    def species(wildcards):
-        """Determine the species from the sample wildcard"""
-        if wildcards.sample in PULEX:
-            spp = 'pulex'
-        elif wildcards.sample in MAGNA:
-            spp = 'magna'
-        else:
-            raise ValueError('Could not assign species to sample')
-        return spp
+# ==============================================================================
+# Helper functions
+# ==============================================================================
+def species(wildcards):
+    """Determine the species from the sample wildcard"""
+    if wildcards.sample in PULEX:
+        spp = 'pulex'
+    elif wildcards.sample in MAGNA:
+        spp = 'magna'
+    else:
+        raise ValueError('Could not assign species to sample')
+    return spp
 
 
-    def mtdna_fasta_id(wildcards):
-        """Get the name of the mtdna contig from the sample wildcard"""
-        fasta = os.path.join('input', 'ref', species(wildcards) + '.mt.og.fa')
-        with open(fasta, 'r') as f:
-            faid = f.readline()
-        return faid
+def mtdna_fasta_id(wildcards):
+    """Get the name of the mtdna contig from the sample wildcard"""
+    fasta = os.path.join('input', 'ref', species(wildcards) + '.mt.og.fa')
+    with open(fasta, 'r') as f:
+        faid = f.readline()
+    return faid
 
-    # ==============================================================================
-    # Pipeline
-    # ==============================================================================
+# ==============================================================================
+# Pipeline
+# ==============================================================================
 
-    rule all:
-        input:
-            expand("output/local_realignment/{sample}.bam", sample=SAMPLE),
-            "output/multiqc/multiqc.html"
+rule all:
+    input:
+        expand("output/local_realignment/{sample}.bam", sample=SAMPLE),
+        "output/multiqc/multiqc.html"
 
-    rule rotate_reference:
-        input:
-            'input/ref/{species}.mt.og.fa'
-        output:
-            expand('input/ref/{species}.mt.rot.fa', species=SPECIES)
-        shell:
-            "scripts/rotate_ref.py {output}"
+rule rotate_reference:
+    input:
+        'input/ref/{species}.mt.og.fa'
+    output:
+        expand('input/ref/{species}.mt.rot.fa', species=SPECIES)
+    shell:
+        "scripts/rotate_ref.py {output}"
 
-    rule combine_mt_and_nuc_references:
-        input:
-            nuc = 'input/ref/{species}.nuc.fa',
-            og = 'input/ref/{species}.og.fa',
-            rot = 'input/ref/{species}.rot.fa'
-        output:
-            'output/ref/{species}.all.fa'
-        shell:
-            "cat {input.og} {output.rot} {input.nuc} > {output}"
+rule combine_mt_and_nuc_references:
+    input:
+        nuc = 'input/ref/{species}.nuc.fa',
+        og = 'input/ref/{species}.og.fa',
+        rot = 'input/ref/{species}.rot.fa'
+    output:
+        'output/ref/{species}.all.fa'
+    shell:
+        "cat {input.og} {output.rot} {input.nuc} > {output}"
 
-    rule raw_fastqc:
-        input:
-            fwd_reads = 'input/reads/{sample}.R1.fastq.gz',
-            rev_reads = 'input/reads/{sample}.R2.fastq.gz'
-        output:
-            'output/raw_fastqc/{sample}.R1_fastqc.html',
-            'output/raw_fastqc/{sample}.R2_fastqc.html',
-        params:
-            outdir = 'output/raw_fastqc'
-        shell:
-            "fastqc -o {params.outdir} {input.fwd_reads} {input.rev_reads}"
+rule raw_fastqc:
+    input:
+        fwd_reads = 'input/reads/{sample}.R1.fastq.gz',
+        rev_reads = 'input/reads/{sample}.R2.fastq.gz'
+    output:
+        'output/raw_fastqc/{sample}.R1_fastqc.html',
+        'output/raw_fastqc/{sample}.R2_fastqc.html',
+    params:
+        outdir = 'output/raw_fastqc'
+    shell:
+        "fastqc -o {params.outdir} {input.fwd_reads} {input.rev_reads}"
 
-    rule trim_adapters:
-        input:
-            fwd_reads = 'input/reads/{sample}.R1.fastq.gz',
-            rev_reads = 'input/reads/{sample}.R2.fastq.gz'
-        output:
-            fwd_reads = 'output/trim_adapters/{sample}.R1.fastq.gz',
-            rev_reads = 'output/trim_adapters/{sample}.R2.fastq.gz'
-        log: "output/trim_adapters/log/{sample}.log"
-        params:
-            ref = config['adapters'],
-            k = '23',
-            ktrim = 'r',
-            mink = '4',
-            hdist = '1'
-        shell:
-            "bbduk.sh in={input.fwd_reads} in2={input.rev_reads} threads=1 "
-            "out={output.fwd_reads} out2={output.rev_reads} ref={params.ref} "
-            "k={params.k} ktrim={params.ktrim} mink={params.mink} "
-            "hdist={params.hdist} tpe tbo 2> {log}"
+rule trim_adapters:
+    input:
+        fwd_reads = 'input/reads/{sample}.R1.fastq.gz',
+        rev_reads = 'input/reads/{sample}.R2.fastq.gz'
+    output:
+        fwd_reads = 'output/trim_adapters/{sample}.R1.fastq.gz',
+        rev_reads = 'output/trim_adapters/{sample}.R2.fastq.gz'
+    log: "output/trim_adapters/log/{sample}.log"
+    params:
+        ref = config['adapters'],
+        k = '23',
+        ktrim = 'r',
+        mink = '4',
+        hdist = '1'
+    shell:
+        "bbduk.sh in={input.fwd_reads} in2={input.rev_reads} threads=1 "
+        "out={output.fwd_reads} out2={output.rev_reads} ref={params.ref} "
+        "k={params.k} ktrim={params.ktrim} mink={params.mink} "
+        "hdist={params.hdist} tpe tbo 2> {log}"
 
-    rule quality_trim:
-        input:
-            fwd_reads = rules.trim_adapters.output.fwd_reads,
-            rev_reads = rules.trim_adapters.output.rev_reads
-        output:
-            fwd_reads = 'output/quality_trim/{sample}.R1.fastq.gz',
-            rev_reads = 'output/quality_trim/{sample}.R2.fastq.gz'
-        log:
-            "output/quality_trim/log/{sample}.paired.log"
-        params:
-            qtrim = 'rl',
-            trimq = '20',
-            minlen = '50'
-        shell:
-            "bbduk.sh in={input.fwd_reads} in2={input.rev_reads} "
-            "out={output.fwd_reads} out2={output.rev_reads} threads=1 "
-            "qtrim={params.qtrim} trimq={params.trimq} minlen={params.minlen} "
-            "2> {log}"
+rule quality_trim:
+    input:
+        fwd_reads = rules.trim_adapters.output.fwd_reads,
+        rev_reads = rules.trim_adapters.output.rev_reads
+    output:
+        fwd_reads = 'output/quality_trim/{sample}.R1.fastq.gz',
+        rev_reads = 'output/quality_trim/{sample}.R2.fastq.gz'
+    log:
+        "output/quality_trim/log/{sample}.paired.log"
+    params:
+        qtrim = 'rl',
+        trimq = '20',
+        minlen = '50'
+    shell:
+        "bbduk.sh in={input.fwd_reads} in2={input.rev_reads} "
+        "out={output.fwd_reads} out2={output.rev_reads} threads=1 "
+        "qtrim={params.qtrim} trimq={params.trimq} minlen={params.minlen} "
+        "2> {log}"
 
-    rule phix_filter:
-        input:
-            "output/quality_trim/{sample}.{pair}.fastq.gz"
-        output:
-            "output/phix_filter/{sample}.{pair}.fastq.gz"
-        params:
-            phix_seq = "input/ref/phix.fa",
-            k = '31',
-            hdist = '1'
-        log:
-            "output/phix_filter/log/{sample}.{pair}.log"
-        shell:
-            "bbduk.sh in={input} out={output} ref={params.phix_seq} k={params.k} "
-            "hdist={params.hdist} stats={log}"
+rule phix_filter:
+    input:
+        "output/quality_trim/{sample}.{pair}.fastq.gz"
+    output:
+        "output/phix_filter/{sample}.{pair}.fastq.gz"
+    params:
+        phix_seq = "input/ref/phix.fa",
+        k = '31',
+        hdist = '1'
+    log:
+        "output/phix_filter/log/{sample}.{pair}.log"
+    shell:
+        "bbduk.sh in={input} out={output} ref={params.phix_seq} k={params.k} "
+        "hdist={params.hdist} stats={log}"
 
-    rule clean_fastqc:
-        input:
-            'output/phix_filter/{sample}.{pair}.fastq.gz'
-        output:
-            'output/clean_fastqc/{sample}.{pair}_fastqc.html'
-        params:
-            outdir='output/clean_fastqc'
-        shell:
-            "fastqc -o {params.outdir} {input}"
+rule clean_fastqc:
+    input:
+        'output/phix_filter/{sample}.{pair}.fastq.gz'
+    output:
+        'output/clean_fastqc/{sample}.{pair}_fastqc.html'
+    params:
+        outdir='output/clean_fastqc'
+    shell:
+        "fastqc -o {params.outdir} {input}"
 
-    rule multiqc:
-        input:
-            expand(
-                'output/clean_fastqc/{sample}.{pair}_fastqc.html',
-                sample=SAMPLE, pair=PAIR),
-            expand(
-                'output/raw_fastqc/{sample}.{pair}_fastqc.html',
-                sample=SAMPLE, pair=PAIR),
-        output:
-            'output/multiqc/multiqc.html'
-        shell:
-            'multiqc -d -n {output} .'
+rule multiqc:
+    input:
+        expand(
+            'output/clean_fastqc/{sample}.{pair}_fastqc.html',
+            sample=SAMPLE, pair=PAIR),
+        expand(
+            'output/raw_fastqc/{sample}.{pair}_fastqc.html',
+            sample=SAMPLE, pair=PAIR),
+    output:
+        'output/multiqc/multiqc.html'
+    shell:
+        'multiqc -d -n {output} .'
 
-    rule competitive_align:
-        input:
-            fwd_reads = "output/phix_filter/{sample}.R1.fastq.gz",
-            rev_reads = "output/phix_filter/{sample}.R2.fastq.gz"
-        output:
-            "output/competitive_align/{sample}.bam"
-        params:
-            max_insert_size = 16000,
-            ref = os.path.join("input", "ref", species + ".all")
-        log:
-            "output/competitive_align/{sample}.log"
-        shell:
-            "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
-            "-x {params.ref} -X {params.max_insert_size} > {output} 2> {log}"
+rule competitive_align:
+    input:
+        fwd_reads = "output/phix_filter/{sample}.R1.fastq.gz",
+        rev_reads = "output/phix_filter/{sample}.R2.fastq.gz"
+    output:
+        "output/competitive_align/{sample}.bam"
+    params:
+        max_insert_size = 16000,
+        ref = os.path.join("input", "ref", species + ".all")
+    log:
+        "output/competitive_align/{sample}.log"
+    shell:
+        "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
+        "-x {params.ref} -X {params.max_insert_size} > {output} 2> {log}"
 
-    rule extract_mt_reads:
-        input:
-            bam = "output/competitive_align/{sample}.bam"
-        output:
-            fwd_reads = "output/mt_aligned/{sample}.R1.fastq",
-            rev_reads = "output/mt_aligned/{sample}.R2.fastq"
-        params:
-            csome = mtdna_fasta_id
-        shell:
-            "samtools view -b {params.csome} {input.bam} | picard SamToFastq "
-            "I=/dev/stdin F={output.fwd_reads} F2={output.rev_reads}"
+rule extract_mt_reads:
+    input:
+        bam = "output/competitive_align/{sample}.bam"
+    output:
+        fwd_reads = "output/mt_aligned/{sample}.R1.fastq",
+        rev_reads = "output/mt_aligned/{sample}.R2.fastq"
+    params:
+        csome = mtdna_fasta_id
+    shell:
+        "samtools view -b {params.csome} {input.bam} | picard SamToFastq "
+        "I=/dev/stdin F={output.fwd_reads} F2={output.rev_reads}"
 
-    rule align_to_reference_mt:
-        input:
-            fwd_reads = "output/mt_aligned/{sample}.r1.fastq",
-            rev_reads = "output/mt_aligned/{sample}.r2.fastq"
-        output:
-            "output/align_to_og_and_rot_mt/{sample}.og.bam"
-        params:
-            max_insert_size = 16000,
-            ref = os.path.join("input", "ref", species + ".mt.og")
-        log:
-            "output/align_to_og_and_rot_mt/{sample}.log"
-        shell:
-            "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
-            "-x {params.ref} -x {params.max_insert_size} > {output.bam} "
-            "--very-sensitive --rg-id={sample} --rg=lib:{sample} --rg=pl:illumina "
-            "--rg=sm={sample} > {output} 2> {log}"
+rule align_to_reference_mt:
+    input:
+        fwd_reads = "output/mt_aligned/{sample}.r1.fastq",
+        rev_reads = "output/mt_aligned/{sample}.r2.fastq"
+    output:
+        "output/align_to_og_and_rot_mt/{sample}.og.bam"
+    params:
+        max_insert_size = 16000,
+        ref = os.path.join("input", "ref", species + ".mt.og")
+    log:
+        "output/align_to_og_and_rot_mt/{sample}.log"
+    shell:
+        "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
+        "-x {params.ref} -x {params.max_insert_size} > {output.bam} "
+        "--very-sensitive --rg-id={sample} --rg=lib:{sample} --rg=pl:illumina "
+        "--rg=sm={sample} > {output} 2> {log}"
 
-    rule align_to_rotated_mt:
-        input:
-            fwd_reads = "output/mt_aligned/{sample}.r1.fastq",
-            rev_reads = "output/mt_aligned/{sample}.r2.fastq"
-        output:
-            "output/align_to_og_and_rot_mt/{sample}.rot.bam"
-        params:
-            max_insert_size = 16000,
-            ref = os.path.join("input", "ref", species + ".mt.rot")
-        log:
-            "output/align_to_og_and_rot_mt/{sample}.log"
-        shell:
-            "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
-            "-x {params.ref} -x {params.max_insert_size} > {output.bam} "
-            "--very-sensitive --rg-id={sample} --rg=lib:{sample} --rg=pl:illumina "
-            "--rg=sm={sample} > {output} 2> {log}"
+rule align_to_rotated_mt:
+    input:
+        fwd_reads = "output/mt_aligned/{sample}.r1.fastq",
+        rev_reads = "output/mt_aligned/{sample}.r2.fastq"
+    output:
+        "output/align_to_og_and_rot_mt/{sample}.rot.bam"
+    params:
+        max_insert_size = 16000,
+        ref = os.path.join("input", "ref", species + ".mt.rot")
+    log:
+        "output/align_to_og_and_rot_mt/{sample}.log"
+    shell:
+        "scripts/align_and_sort.sh -1 {input.fwd_reads} -2 {input.rev_reads} "
+        "-x {params.ref} -x {params.max_insert_size} > {output.bam} "
+        "--very-sensitive --rg-id={sample} --rg=lib:{sample} --rg=pl:illumina "
+        "--rg=sm={sample} > {output} 2> {log}"
 
-    rule remove_duplicates:
-        input:
-            "output/align_to_og_and_rot_mt/{sample}.{rotation}.bam"
-        output:
-            "output/remove_duplicates/{sample}.{rotation}.bam"
-        log:
-            "output/remove_duplicates/{sample}.{rotation}.log"
-        shell:
-            "picard MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=True "
-            "METRICS_FILE={log} && "
-            "samtools index {output}"
+rule remove_duplicates:
+    input:
+        "output/align_to_og_and_rot_mt/{sample}.{rotation}.bam"
+    output:
+        "output/remove_duplicates/{sample}.{rotation}.bam"
+    log:
+        "output/remove_duplicates/{sample}.{rotation}.log"
+    shell:
+        "picard MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=True "
+        "METRICS_FILE={log} && "
+        "samtools index {output}"
 
-    rule local_realignment_targets:
-        input:
-            "output/remove_duplicates/{sample}.{rotation}.bam"
-        output:
-            "output/local_realignment_targets/{sample}.{rotation}.intervals"
-        params:
-            ref = os.path.join("input", "ref", species + ".mt.{rotation}")
-        shell:
-            "gatk -T RealignerTargetCreator -R {params.ref} -I {input} -o {output}"
+rule local_realignment_targets:
+    input:
+        "output/remove_duplicates/{sample}.{rotation}.bam"
+    output:
+        "output/local_realignment_targets/{sample}.{rotation}.intervals"
+    params:
+        ref = os.path.join("input", "ref", species + ".mt.{rotation}")
+    shell:
+        "gatk -T RealignerTargetCreator -R {params.ref} -I {input} -o {output}"
 
-    rule local_realignment:
-        input:
-            bam = "output/remove_duplicates/{sample}.{rotation}.bam",
-            inter = "output/local_realignment_targets/{sample}.{rotation}.intervals"
-        output:
-            expand(
-                "output/local_realignment/{sample}.{rotation}.bam",
-                sample=SAMPLE, rotation=ROTATION)
+rule local_realignment:
+    input:
+        bam = "output/remove_duplicates/{sample}.{rotation}.bam",
+        inter = "output/local_realignment_targets/{sample}.{rotation}.intervals"
+    output:
+        expand(
+            "output/local_realignment/{sample}.{rotation}.bam",
+            sample=SAMPLE, rotation=ROTATION)
     params:
         ref = os.path.join("input", "ref", species + ".mt.{rotation}")
     log:
