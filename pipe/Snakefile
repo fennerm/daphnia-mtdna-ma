@@ -13,7 +13,7 @@ import os
 
 configfile: "config.yml"
 
-SAMPLE, PAIR = "input/reads/{sample}.{pair}.fastq.gz"
+SAMPLE, PAIR = glob_wildcards("input/reads/{sample}.{pair}.fastq.gz")
 PULEX = [x for x in SAMPLE if x.startswith(('L', 'T'))]
 MAGNA = [x for x in SAMPLE if x.startwith(('F', 'G', 'I'))]
 
