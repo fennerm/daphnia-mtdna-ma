@@ -82,8 +82,8 @@ rule rotate_reference:
 rule combine_mt_and_nuc_references:
     input:
         nuc = 'ref/{species}.nuc.fa',
-        og = 'ref/{species}.og.fa',
-        rot = 'ref/{species}.rot.fa'
+        og = 'ref/{species}.mt.og.fa',
+        rot = 'ref/{species}.mt.rot.fa'
     output:
         'ref/{species}.all.fa'
     shell:
