@@ -180,8 +180,8 @@ rule competitive_align:
     run:
         ref_idx = os.path.splitext(input.ref)[0]
         shell("scripts/align_and_sort.py -1 {input.fwd_reads} "
-              "-2 {input.rev_reads} -x {input.ref} -X {params.max_insert_size} "
-              "> {output} 2> {log}")
+              "-2 {input.rev_reads} -x " + ref_idx + " -X "
+              "{params.max_insert_size} > {output} 2> {log}")
 
 rule extract_mt_reads:
     input:
