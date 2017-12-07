@@ -79,7 +79,7 @@ rule rotate_reference:
     output:
         'ref/{species}.mt.rot.fa'
     shell:
-        "scripts/rotate_ref.py {output}"
+        "scripts/rotate_ref.py {input} {output}"
 
 rule combine_mt_and_nuc_references:
     input:
