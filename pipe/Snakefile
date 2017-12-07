@@ -49,7 +49,7 @@ def mtdna_fasta_id(wildcards):
 def reference(wildcards):
     """Get the path to the original or rotated mtDNA reference"""
     return os.path.join("ref",
-                        '.'.join([species(wildcards),
+                        '.'.join([species(wildcards), "mt",
                                   wildcards.rotation, "fa"]))
 
 def combined_reference(wildcards):
@@ -66,16 +66,18 @@ def prefix(wildcards):
 
 rule all:
     input:
+        expand('ref/{species}.mt.rot.fa', species=SPECIES),
         expand(
             "output/local_realignment/{sample}.{rotation}.bam",
             sample=SAMPLE, rotation=ROTATION),
-        "output/multiqc/multiqc.html"
+        "output/multiqc/multiqc.html",
+        expand('ref/{species}.all.fa', species=SPECIES)
 
 rule rotate_reference:
     input:
         'ref/{species}.mt.og.fa'
     output:
-        expand('ref/{species}.mt.rot.fa', species=SPECIES)
+        'ref/{species}.mt.rot.fa'
     shell:
         "scripts/rotate_ref.py {output}"
 
@@ -87,7 +89,7 @@ rule combine_mt_and_nuc_references:
     output:
         'ref/{species}.all.fa'
     shell:
-        "cat {input.og} {output.rot} {input.nuc} > {output}"
+        "cat {input.og} {input.rot} {input.nuc} > {output}"
 
 
 rule raw_fastqc:
@@ -224,13 +226,13 @@ rule remove_duplicates:
 
 rule local_realignment_targets:
     input:
-        "output/remove_duplicates/{sample}.{rotation}.bam"
+        bam = "output/remove_duplicates/{sample}.{rotation}.bam",
+        ref = reference
     output:
         "output/local_realignment_targets/{sample}.{rotation}.intervals"
-    params:
-        ref = reference
     shell:
-        "gatk -T RealignerTargetCreator -R {params.ref} -I {input} -o {output}"
+        "gatk -T RealignerTargetCreator -R {input.ref} -I {input.bam} -o "
+        "{output}"
 
 rule local_realignment:
     input:
