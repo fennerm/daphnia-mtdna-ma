@@ -1348,9 +1348,46 @@ Initial Exploratory Analysis
   insertion.
 
 ===============================================================================
-November 15th, 2017
+November 15th, December 3rd 2017
 ===============================================================================
 -------------------------------------------------------------------------------
 Analysis of MtDNA Control Region Sanger Sequences
 -------------------------------------------------------------------------------
+
 - Installed R package 'roblanf/sangeranalyseR'.
+
+- Created merged consensus sequences for each of the fwd/rev sanger reads.
+
+Sample IDs:
+FBSC-L = Large T5
+GASC-L = Large T6
+GASC-S = Small T6
+
+- Blasted the three sequences against the nr/nt database:
+
+Sample  Hits
+------  ----
+FBC-L   No hits, even with relaxed criteria
+GASC-L  Lots of partial (Query Cover = 40-55%) hits to insect mRNA sequences
+        No Daphnia hits.
+GASC-S  ~400-600bp hits to D. magna control region. Then a gap of ~100bp then a
+        ~100bp inverted match to D. magna control region.
+
+- GASC-S seems to be the only read which is mitochondrial. The other two are
+  likely to be unintended hits to the nuclear genome etc.
+- GASC-S confirms an inversion and a large deletion.
+
+===============================================================================
+December 3rd 2017
+===============================================================================
+- Did some simple calculations to figure out approximately how much of the
+  output from MarkDuplicates are false positives. See expected_dups.R
+- The expected number of duplicates due to random chance was calculated to be
+  approximately 4 % of our data. In our D. magna dataset, on average we actually
+  lose approximately 30 % of our data. This seems like an acceptable false
+  positive rate.
+
+===============================================================================
+December 4th, 6th 2017
+===============================================================================
+-Completely reimplemented the QC pipeline in snakemake.
