@@ -174,7 +174,7 @@ rule competitive_align:
         max_insert_size = 16000,
         ref = combined_reference
     log:
-        "output/competitive_align/{sample}.log"
+        "output/competitive_align/log/{sample}.log"
     shell:
         "scripts/align_and_sort.py -1 {input.fwd_reads} "
         "-2 {input.rev_reads} -x {params.ref} -X {params.max_insert_size} "
@@ -202,7 +202,7 @@ rule align_to_rotated_mt:
         max_insert_size = 16000,
         ref = reference
     log:
-        "output/align_to_og_and_rot_mt/{sample}.log"
+        "output/align_to_og_and_rot_mt/log/{sample}.log"
     shell:
         "scripts/align_and_sort.py -1 {input.fwd_reads} "
         "-2 {input.rev_reads} -x {params.ref} -x {params.max_insert_size} "
@@ -217,7 +217,7 @@ rule remove_duplicates:
     output:
         "output/remove_duplicates/{sample}.{rotation}.bam"
     log:
-        "output/remove_duplicates/{sample}.{rotation}.log"
+        "output/remove_duplicates/log/{sample}.{rotation}.log"
     shell:
         "picard MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=True "
         "METRICS_FILE={log} CREATE_INDEX=True"
@@ -241,7 +241,7 @@ rule local_realignment:
     params:
         ref = reference
     log:
-        "output/local_realignment/{sample}.{rotation}.log"
+        "output/local_realignment/log/{sample}.{rotation}.log"
     shell:
         "gatk -T IndelRealigner -R {params.ref} -I {input.bam} -o {output} "
         "--targetIntervals {input.inter} --maxReadsForRealignment 1000000 "
