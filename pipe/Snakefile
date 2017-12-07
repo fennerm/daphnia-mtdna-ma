@@ -11,8 +11,7 @@ import os
 # Set up
 # ==============================================================================
 
-configfile: "config.yml"
-
+configfile: "config.yml" 
 SAMPLE, PAIR = glob_wildcards("input/reads/{sample}.{pair}.fastq.gz")
 SAMPLE = sorted(list(set(SAMPLE)))
 PAIR = sorted(list(set(PAIR)))
@@ -55,10 +54,6 @@ def reference(wildcards):
 def combined_reference(wildcards):
     """Get the path to the combined nuclear + mtDNA reference"""
     return os.path.join("ref", species(wildcards) + ".all.fa")
-
-def prefix(wildcards):
-    """Return the filename prefix of the input file"""
-    return os.path.splitext(wildcards.input)[0]
 
 # ==============================================================================
 # Pipeline
@@ -214,7 +209,6 @@ rule align_to_rotated_mt:
               "--rg-id={wildcards.sample} "
               "--rg=lib:{wildcards.sample} --rg=pl:illumina "
               "--rg=sm={wildcards.sample} > {output} 2> {log}")
-
 
 rule remove_duplicates:
     input:
