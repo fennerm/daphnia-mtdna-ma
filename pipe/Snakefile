@@ -177,10 +177,11 @@ rule competitive_align:
         max_insert_size = 16000
     log:
         "output/competitive_align/log/{sample}.log"
-    shell:
-        "scripts/align_and_sort.py -1 {input.fwd_reads} "
-        "-2 {input.rev_reads} -x {input.ref} -X {params.max_insert_size} "
-        "> {output} 2> {log}"
+    run:
+        ref_idx = os.path.splitext(input.ref)[0]
+        shell("scripts/align_and_sort.py -1 {input.fwd_reads} "
+              "-2 {input.rev_reads} -x {input.ref} -X {params.max_insert_size} "
+              "> {output} 2> {log}")
 
 rule extract_mt_reads:
     input:
@@ -202,15 +203,17 @@ rule align_to_rotated_mt:
     output:
         "output/align_to_rotated_mt/{sample}.{rotation}.bam"
     params:
-        max_insert_size = 16000
+        max_insert_size = 16000,
     log:
         "output/align_to_og_and_rot_mt/log/{sample}.log"
-    shell:
-        "scripts/align_and_sort.py -1 {input.fwd_reads} "
-        "-2 {input.rev_reads} -x {input.ref} -x {params.max_insert_size} "
-        "--very-sensitive --rg-id={wildcards.sample} "
-        "--rg=lib:{wildcards.sample} --rg=pl:illumina "
-        "--rg=sm={wildcards.sample} > {output} 2> {log}"
+    run:
+        ref_idx = os.path.splitext(input.ref)[0]
+        shell("scripts/align_and_sort.py -1 {input.fwd_reads} "
+              "-2 {input.rev_reads} -x " + ref_idx + "-x "
+              "{params.max_insert_size} --very-sensitive "
+              "--rg-id={wildcards.sample} "
+              "--rg=lib:{wildcards.sample} --rg=pl:illumina "
+              "--rg=sm={wildcards.sample} > {output} 2> {log}")
 
 
 rule remove_duplicates:
@@ -237,19 +240,19 @@ rule local_realignment_targets:
 rule local_realignment:
     input:
         bam = "output/remove_duplicates/{sample}.{rotation}.bam",
-        inter = "output/local_realignment_targets/{sample}.{rotation}.intervals"
+        intr = "output/local_realignment_targets/{sample}.{rotation}.intervals",
+        ref = reference
     output:
         "output/local_realignment/{sample}.{rotation}.bam"
     params:
-        ref = reference,
         max_move = '500',
         max_cons_reads = '300',
         max_realignment_reads = '1000000'
     log:
         "output/local_realignment/log/{sample}.{rotation}.log"
     shell:
-        "gatk -T IndelRealigner -R {params.ref} -I {input.bam} -o {output} "
-        "--targetIntervals {input.inter} --maxReadsForRealignment "
+        "gatk -T IndelRealigner -R {input.ref} -I {input.bam} -o {output} "
+        "--targetIntervals {input.intr} --maxReadsForRealignment "
         "{params.max_realignment_reads} --maxPositionMoveAllowed "
         "{params.max_move} --maxReadsForConsensuses {params.max_cons_reads} "
         "--log_to_file {log}"
