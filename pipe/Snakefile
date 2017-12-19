@@ -12,7 +12,6 @@ import os
 # ==============================================================================
 
 configfile: "config.yml"
-
 SAMPLE, PAIR = glob_wildcards("input/reads/{sample}.{pair}.fastq.gz")
 SAMPLE = sorted(list(set(SAMPLE)))
 PAIR = sorted(list(set(PAIR)))
