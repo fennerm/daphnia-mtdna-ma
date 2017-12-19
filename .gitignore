@@ -5,8 +5,13 @@
 *.vcf
 *.pyc
 *.swp
+.snakemake
+.\#*
+\#*
 /data/
 devpipe/
+pipe/input
+pipe/ref
 /megadaph.mtdna/data/
 /megadaph.mtdna/tmpdat/
 /megadaph.mtdna/data-raw

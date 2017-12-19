@@ -1,1 +1,1 @@
-../../../../code/fmscripts/align_and_sort.py
+/mnt/lfs2/schaack/fmacrae/code/fmscripts/fmscripts/align_and_sort.py

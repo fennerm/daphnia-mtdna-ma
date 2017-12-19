@@ -2,7 +2,7 @@
 
 Snakemake: https://snakemake.readthedocs.io/en/stable/
 
-Input files: Paired end whole genome short read illumina sequencing from 
+Input files: Paired end whole genome short read illumina sequencing from
 D. pulex and D. magna
 """
 import os
@@ -19,6 +19,7 @@ PAIR = sorted(list(set(PAIR)))
 PULEX = [x for x in SAMPLE if x.startswith(('L', 'T'))]
 MAGNA = [x for x in SAMPLE if x.startswith(('F', 'G', 'I'))]
 SPECIES = ['pulex', 'magna']
+GENOME = ['nuc', 'all', 'mt.og', 'mt.rot']
 
 ROTATION = ['og', 'rot']
 
@@ -38,27 +39,50 @@ def species(wildcards):
         raise ValueError('Could not assign species to sample')
     return spp
 
+def indices(reference):
+    """Given the name of a reference seq, return the names of its indices"""
+    idx = {}
+    prefix = os.path.splitext(reference)[0]
+    for (tool, suffix) in [("picard_idx", ".dict"), ("bowtie2_idx", ".1.bt2"),
+                           ("samtools_idx", ".fa.fai")]:
+        idx[tool] = prefix + suffix
+    return idx
 
-def mtdna_fasta_id(wildcards):
-    """Get the name of the mtdna contig from the sample wildcard"""
-    fasta = os.path.join('ref', species(wildcards) + '.mt.og.fa')
-    with open(fasta, 'r') as f:
-        faid = f.readline()
-    return faid
+def add_indices(reference):
+    """Given the name of a fasta, combine it with its indices in a dict"""
+    outdict = indices(reference)
+    outdict["ref"] = reference
+    return outdict
+
 
 def reference(wildcards):
-    """Get the path to the original or rotated mtDNA reference"""
-    return os.path.join("ref",
-                        '.'.join([species(wildcards), "mt",
-                                  wildcards.rotation, "fa"]))
+    """Get the paths to the original or rotated mtDNA fasta and their indices"""
+    name = '.'.join([species(wildcards), "mt", wildcards.rotation, "fa"])
+    ref = os.path.join("ref", name)
+    return add_indices(ref)
+
+
+def rotated_reference(wildcards):
+    """Get the paths to the rotated mtDNA fasta and its indices"""
+    name = species(wildcards) + ".mt.rot.fa"
+    ref = os.path.join("ref", name)
+    return add_indices(ref)
+
 
 def combined_reference(wildcards):
-    """Get the path to the combined nuclear + mtDNA reference"""
-    return os.path.join("ref", species(wildcards) + ".all.fa")
+    """Get the path to the combined nuclear + mtDNA fasta and their indices"""
+    ref = os.path.join("ref", species(wildcards) + ".all.fa")
+    return add_indices(ref)
+
 
 def prefix(wildcards):
     """Return the filename prefix of the input file"""
     return os.path.splitext(wildcards.input)[0]
+
+
+def bowtie2_idx_root(idx):
+    """Given the path to a forward bowtie2 index, return its root name"""
+    return os.path.splitext(os.path.splitext(idx)[0])[0]
 
 # ==============================================================================
 # Pipeline
@@ -66,12 +90,11 @@ def prefix(wildcards):
 
 rule all:
     input:
-        expand('ref/{species}.mt.rot.fa', species=SPECIES),
-        expand(
-            "output/local_realignment/{sample}.{rotation}.bam",
-            sample=SAMPLE, rotation=ROTATION),
         "output/multiqc/multiqc.html",
-        expand('ref/{species}.all.fa', species=SPECIES)
+        expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
+               rotation=ROTATION),
+        expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
+               "ref/{species}.{genome}.fa.fai"], species=SPECIES, genome=GENOME)
 
 rule rotate_reference:
     input:
@@ -80,6 +103,7 @@ rule rotate_reference:
         'ref/{species}.mt.rot.fa'
     shell:
         "scripts/rotate_ref.py {input} {output}"
+
 
 rule combine_mt_and_nuc_references:
     input:
@@ -91,6 +115,15 @@ rule combine_mt_and_nuc_references:
     shell:
         "cat {input.og} {input.rot} {input.nuc} > {output}"
 
+rule index_references:
+    input:
+        "ref/{species}.{genome}.fa"
+    output:
+        "ref/{species}.{genome}.1.bt2",
+        "ref/{species}.{genome}.dict",
+        "ref/{species}.{genome}.fa.fai"
+    shell:
+        "scripts/index_fasta.py {input}"
 
 rule raw_fastqc:
     input:
@@ -153,72 +186,64 @@ rule clean_fastqc:
     shell:
         "fastqc -o {params.outdir} {input}"
 
-rule multiqc:
-    input:
-        expand(
-            'output/clean_fastqc/{sample}.{pair}_fastqc.html',
-            sample=SAMPLE, pair=PAIR),
-        expand(
-            'output/raw_fastqc/{sample}.{pair}_fastqc.html',
-            sample=SAMPLE, pair=PAIR),
-    output:
-        'output/multiqc/multiqc.html'
-    shell:
-        'multiqc -d -n {output} .'
 
 rule competitive_align:
     input:
+        unpack(combined_reference),
         fwd_reads = "output/quality_trim/{sample}.R1.fastq.gz",
-        rev_reads = "output/quality_trim/{sample}.R2.fastq.gz",
-        ref = combined_reference
+        rev_reads = "output/quality_trim/{sample}.R2.fastq.gz"
     output:
-        "output/competitive_align/{sample}.bam"
+        bam = "output/competitive_align/{sample}.bam",
+        bai = "output/competitive_align/{sample}.bam.bai"
     params:
-        max_insert_size = 16000
+        max_insert_size = '16000'
+    threads:
+        16
     log:
         "output/competitive_align/log/{sample}.log"
     run:
-        ref_idx = os.path.splitext(input.ref)[0]
+        ref_idx = bowtie2_idx_root(input.bowtie2_idx)
         shell("scripts/align_and_sort.py -1 {input.fwd_reads} "
-              "-2 {input.rev_reads} -x " + ref_idx + " -X "
-              "{params.max_insert_size} > {output} 2> {log}")
+              "-2 {input.rev_reads} -x " + ref_idx + " -p {threads} -X "
+              "{params.max_insert_size} 2> {log} > {output.bam}")
+        shell("samtools index {output}")
 
 rule extract_mt_reads:
     input:
+        unpack(combined_reference),
         bam = "output/competitive_align/{sample}.bam"
     output:
         fwd_reads = "output/mt_aligned/{sample}.R1.fastq",
-        rev_reads = "output/mt_aligned/{sample}.R2.fastq"
-    params:
-        csome = mtdna_fasta_id
-    shell:
-        "samtools view -b {params.csome} {input.bam} | picard SamToFastq "
-        "I=/dev/stdin F={output.fwd_reads} F2={output.rev_reads}"
-
-rule align_to_rotated_mt:
-    input:
-        fwd_reads = "output/mt_aligned/{sample}.R1.fastq",
         rev_reads = "output/mt_aligned/{sample}.R2.fastq",
-        ref = reference
+        unpaired_reads = "output/mt_aligned/{sample}.unpaired.fastq"
+    script:
+        "scripts/extract_mt_reads.py"
+
+rule align_to_mt_rotation:
+    input:
+        unpack(reference),
+        fwd_reads = "output/mt_aligned/{sample}.R1.fastq",
+        rev_reads = "output/mt_aligned/{sample}.R2.fastq"
     output:
-        "output/align_to_rotated_mt/{sample}.{rotation}.bam"
+        bam = "output/align_to_mt_rotation/{sample}.{rotation}.bam",
+        bai = "output/align_to_mt_rotation/{sample}.{rotation}.bam.bai"
     params:
-        max_insert_size = 16000,
+        max_insert_size = 16000
     log:
-        "output/align_to_og_and_rot_mt/log/{sample}.log"
+        "output/align_to_mt_rotation/log/{sample}.{rotation}.log"
     run:
-        ref_idx = os.path.splitext(input.ref)[0]
+        ref_idx = bowtie2_idx_root(input.bowtie2_idx)
         shell("scripts/align_and_sort.py -1 {input.fwd_reads} "
-              "-2 {input.rev_reads} -x " + ref_idx + "-x "
+              "-2 {input.rev_reads} -x " + ref_idx + " -X "
               "{params.max_insert_size} --very-sensitive "
               "--rg-id={wildcards.sample} "
-              "--rg=lib:{wildcards.sample} --rg=pl:illumina "
-              "--rg=sm={wildcards.sample} > {output} 2> {log}")
-
+              "--rg=LIB:{wildcards.sample} --rg=PL:illumina "
+              "--rg=SM:{wildcards.sample} > {output.bam} 2> {log}")
+        shell("samtools index {output.bam}")
 
 rule remove_duplicates:
     input:
-        "output/align_to_rotated_mt/{sample}.{rotation}.bam"
+        "output/align_to_mt_rotation/{sample}.{rotation}.bam"
     output:
         "output/remove_duplicates/{sample}.{rotation}.bam"
     log:
@@ -227,32 +252,47 @@ rule remove_duplicates:
         "picard MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=True "
         "METRICS_FILE={log} CREATE_INDEX=True"
 
-rule local_realignment_targets:
-    input:
-        bam = "output/remove_duplicates/{sample}.{rotation}.bam",
-        ref = reference
-    output:
-        "output/local_realignment_targets/{sample}.{rotation}.intervals"
-    shell:
-        "gatk -T RealignerTargetCreator -R {input.ref} -I {input.bam} -o "
-        "{output}"
-
 rule local_realignment:
     input:
-        bam = "output/remove_duplicates/{sample}.{rotation}.bam",
-        intr = "output/local_realignment_targets/{sample}.{rotation}.intervals",
-        ref = reference
+        unpack(reference),
+        bam = "output/remove_duplicates/{sample}.{rotation}.bam"
     output:
-        "output/local_realignment/{sample}.{rotation}.bam"
+        bam = "output/local_realignment/{sample}.{rotation}.bam",
+        intervals = "output/local_realignment/{sample}.{rotation}.intervals"
     params:
         max_move = '500',
         max_cons_reads = '300',
-        max_realignment_reads = '1000000'
+        max_realignment_reads = '1000000',
+        max_cons = '100'
     log:
         "output/local_realignment/log/{sample}.{rotation}.log"
+    script:
+        "scripts/local_realign.py"
+
+rule remove_singletons:
+    input:
+        "output/local_realignment/{sample}.{rotation}.bam"
+    output:
+        "output/remove_singletons/{sample}.{rotation}.bam"
     shell:
-        "gatk -T IndelRealigner -R {input.ref} -I {input.bam} -o {output} "
-        "--targetIntervals {input.intr} --maxReadsForRealignment "
-        "{params.max_realignment_reads} --maxPositionMoveAllowed "
-        "{params.max_move} --maxReadsForConsensuses {params.max_cons_reads} "
-        "--log_to_file {log}"
+        "bamtools filter -isMateMapped true -in {input} -out {output}"
+
+rule qualimap:
+    input:
+        "output/remove_singletons/{sample}.{rotation}.bam"
+    output:
+        "output/qualimap/{sample}_{rotation}/"
+    shell:
+        "qualimap bamqc -bam {input} -outdir output/qualimap"
+
+rule multiqc:
+    input:
+        expand(['output/clean_fastqc/{sample}.{pair}_fastqc.html',
+               'output/raw_fastqc/{sample}.{pair}_fastqc.html'],
+               sample=SAMPLE, pair=PAIR),
+        expand("output/qualimap/{sample}_{rotation}/",
+               sample=SAMPLE, rotation=ROTATION)
+    output:
+        'output/multiqc/multiqc.html'
+    shell:
+        'multiqc -d -n {output} .'
