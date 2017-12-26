@@ -25,8 +25,7 @@ list_bams <- function(dir, pattern=NULL) {
 get_sample <- function(filepath) {
     filepath <- unlist(filepath)
     sapply(filepath, function(filepath) {
-        unlist(strsplit(basename(filepath), ".", fixed=TRUE))[1]
-    })
+        unlist(strsplit(basename(filepath), ".", fixed=TRUE))[1] })
 }
 
 # Get isolate ID from filename or vector of paths.

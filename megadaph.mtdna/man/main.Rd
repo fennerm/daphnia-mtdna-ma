@@ -4,10 +4,12 @@
 \alias{main}
 \title{Main function}
 \usage{
-main(fwd, rev)
+main(fwd, rev, name)
 }
 \arguments{
 \item{fwd, rev}{Forward and reverse chromatograms}
+
+\item{name}{Name of the sample (for writing fasta ID)}
 }
 \description{
 Main function

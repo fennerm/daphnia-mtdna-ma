@@ -1,4 +1,3 @@
-
 ## Generate simulated mutant-wildtype contingency tables. Binomial mutation
 ## frequency is constant for each table. This corresponds to the null hypothesis
 ## of extreme_max_test.
@@ -11,7 +10,6 @@
 ##             variable coverage randomly distributed with the interval
 ## Return:
 ##  A list of nsamples x 2 matrices
-
 #' @export
 simulate_contingency_tables <- function(ntables, nsamples, prob=NULL,
                                         coverage=c(1000, 10000)) {
@@ -62,6 +60,7 @@ true_counts <- function(split_bool, ntrue) {
         c(true_pos, false_neg)
     })
 }
+
 #' @export
 #' @importFrom qvalue qvalue
 test_corrado_accuracy <- function(false_tabs, true_tabs, true_freqs,
@@ -87,6 +86,7 @@ test_corrado_accuracy <- function(false_tabs, true_tabs, true_freqs,
 predicted_false_pos <- function(coverage, nsites, err_rate, cutoff) {
     pbinom(cutoff, coverage, err_rate * 2, lower.tail = FALSE) * nsites
 }
+
 calc_cutoff <- function(coverage, nsites, err_rate) {
     cut <- 0
     pred_false <- predicted_false_pos(coverage, nsites, err_rate, cut)
@@ -123,7 +123,6 @@ test_binom_accuracy <- function(coverage, false_tabs, true_tabs, true_freqs,
     true_stats <- true_counts(true_split, ntrue)
     list(false_pos = false_pos, true_neg = true_neg, true_stats = true_stats)
 }
-
 
 #' @export
 ## Actual mean coverage: 4702

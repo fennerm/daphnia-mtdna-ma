@@ -2,7 +2,8 @@
 % Please edit documentation in R/pile_tools.R
 \name{subsample}
 \alias{subsample}
-\title{Subsample a count vector}
+\title{Set of functions for creating and manipulating allele count pileups.
+Subsample a count vector}
 \usage{
 subsample(r, cap)
 }
@@ -15,5 +16,6 @@ subsample(r, cap)
 An integer vector
 }
 \description{
+Set of functions for creating and manipulating allele count pileups.
 Subsample a count vector
 }

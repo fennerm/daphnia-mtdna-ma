@@ -1,3 +1,4 @@
+#' Calculate the mutation rate
 #' @param muts numeric; mutant allele frequencies
 #' @param gen numeric; Mean generation number
 #' @param nuc integer; Number of nucleotides surveyed

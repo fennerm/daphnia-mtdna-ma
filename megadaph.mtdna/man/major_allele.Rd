@@ -2,18 +2,16 @@
 % Please edit documentation in R/pile_tools.R
 \name{major_allele}
 \alias{major_allele}
-\title{Get highest frequency allele for each position from pileup
-WARNING: Returns the first value if tied}
+\title{Get the major allele at each genome position for a single sample}
 \usage{
 major_allele(pile)
 }
 \arguments{
-\item{pile}{A pileup}
+\item{pile}{- A data.table; allele counts at each genome position}
 }
 \value{
-Character; Vector of major allele names
+Character; Vector of major alleles
 }
 \description{
-Get highest frequency allele for each position from pileup
 WARNING: Returns the first value if tied
 }

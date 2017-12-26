@@ -26,7 +26,7 @@ OUTPUT_DIR <- file.path(INPUT_DIR, 'merged_seqs')
 #' @importFrom sangeranalyseR merge.reads
 #' @importFrom sangerseqR primarySeq readsangerseq
 #' @export
-create_consensus <- function(fwd, rev) {
+create_sanger_consensus <- function(fwd, rev) {
     # Get sequence
     fwd <- primarySeq(readsangerseq(fwd))
     rev <- primarySeq(readsangerseq(rev))
@@ -64,5 +64,5 @@ main <- function(fwd, rev, name) {
 
 if (!interactive()) {
     paired <- .pair_chromatograms(CHROMATOGRAMS)
-    merged <- mapply(main, fwd = paired$fwd, rev = paired$rev, name = NAMES, SIMPLIFY = FALSE)
+    #merged <- mapply(main, fwd = paired$fwd, rev = paired$rev, name = NAMES, SIMPLIFY = FALSE)
 }

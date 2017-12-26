@@ -55,8 +55,6 @@ pile_to_maj_min <- function(piles) {
 
 
 if (!interactive()) {
-    library(parallel)
-    library(megadaph.mtdna)
     args = commandArgs(trailingOnly = TRUE)
     file_list <- list_bams(args[1])
 
