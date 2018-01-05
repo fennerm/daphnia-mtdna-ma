@@ -5,6 +5,7 @@
 *.vcf
 *.pyc
 *.swp
+slurm*
 .snakemake
 .\#*
 \#*
