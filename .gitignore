@@ -9,6 +9,7 @@ slurm*
 .snakemake
 .\#*
 \#*
+output
 /data/
 devpipe/
 pipe/input
