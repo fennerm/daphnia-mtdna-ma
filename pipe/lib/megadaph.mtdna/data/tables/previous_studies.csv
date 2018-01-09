@@ -1,0 +1,11 @@
+id,organism,genotype,technology,approximate_coverage,base_sub_fraction,small_indel_fraction,large_indel_fraction,generations,GC_over_AT,coding_over_noncoding,ts_over_tv,u,u_ci1,u_ci2,ubs,ubs_ci1,ubs_ci2,u_indel,u_indel_ci1,u_indel_ci1
+konrad_et_al_2017,C. elegans,,NGS,200,0.2391304348,0.6956521739,0.0652173913,363,0.8888888889,0.8888888889,0.6666666667,0.000000105,0.000000052,0.00000018,4.32E-08,0.000000087,9.44E-08,6.14E-08,2.56E-08,0.000000111
+sung_et_al_2012,P. tetraurelia,,NGS,,,,,3310,,,,6.96E-08,2.1776E-08,6.96E-08,6.96E-08,2.1776E-08,6.96E-08,0,,
+saxer_et_al_2012,D. discoideum,,NGS,4000,,,,70,,,,6.76E-09,4.1E-09,9.5E-09,,,,,,
+molnar_et_al_2011,P. pacificus,,sanger,,0.5833333333,0.4166666667,0,142,,,0.7142857143,0.000000076,0.000000054,0.000000098,0.000000045,0.000000028,0.000000062,0.000000032,0.000000018,0.000000046
+xu_et_al_2012,D. pulex,CYC,sanger,,,,,,,,,1.37E-07,,,,,,,,
+xu_et_al_2012,D. pulex,ASEX,sanger,,,,,,,,,1.73E-07,,,,,,,,
+haag-liautard_et_al_2008,D. melanogaster,Florida,sanger,,,,,,,,,6.30E-08,2.60E-08,1.34E-07,,,,,,
+haag-liautard_et_al_2008,D. melanogaster,Madrid,sanger,,,,,,,,,8.10E-08,4.80E-08,1.32E-07,,,,,,
+denver_et_al_2000,C. elegans,,sanger,,,,,,,,,1.60E-07,1.29E-07,1.91E-07,,,,,,
+lynch_et_al_2008,S. cerevisiae,,NGS + Sanger,,,,,,,,,1.22E-08,,,,,,,,
