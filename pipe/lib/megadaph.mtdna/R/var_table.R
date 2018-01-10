@@ -32,10 +32,9 @@ convert_to_vcf_format <- function(var_table, species) {
 #'
 #' VCF files are output in a folder named "VCF/". Headers are in "inst/headers/"
 #' @param var_table A variant table
-#' @importFrom fen.R.util write.table.with.header
+#' @importFrom fen.R.util write_table_with_header
 #' @export
 var_table_to_vcfs <- function(var_table) {
-
     # Split the table by genotype
     genotype_vars <- split(var_table, var_table$genotype)
     ngenotypes <- length(genotype_vars)

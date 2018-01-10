@@ -4,7 +4,7 @@ Version: 0.0.0.1
 Authors@R: person("Fenner", "Macrae", email = "fennermacrae@gmail.com", role = c("aut", "cre"))
 Description: R package containing Data analysis scripts for the mitochondrial portion of the Megadaph project.
 Depends: R (>= 3.2.2)
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: qvalue,
@@ -21,7 +21,15 @@ Imports: qvalue,
     rworldmap,
     matrixStats,
     reshape2,
-    truncdist
-Remotes: fennerm/fen.R.util
+    truncdist,
+    RColorBrewer,
+    Biostrings,
+    fen.R.util,
+    pmultinom,
+    sangeranalyseR,
+    sangerseqR
+Remotes: fennerm/fen.R.util,
+         fennerm/pmultinom,
+         roblanf/sangeranalyseR
 RoxygenNote: 6.0.1
 Suggests: testthat

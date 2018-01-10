@@ -2,72 +2,6 @@
 # EXPORTS
 # ==============================================================================
 
-#' Splice the original and rotated BAM files into a single allele count table
-#' @param og_bam .bam files from alignment to the unrotated reference
-#'                sequences
-#' @param rot_bam .bam files from alignment to the rotated reference
-#'                sequences
-#' @param min_base_quality Numeric; minimum Phred base quality for base to be
-#'        included in table
-#' @param distinguish_strands; If TRUE base counts on the +/- strands are
-#'        counted separately
-#' @return A data.frame
-#' @export
-construct_spliced_pileup <- function(og_bam, rot_bam, min_base_quality=30,
-                                     distinguish_strands=FALSE) {
-  # Create individual pileups
-  og_pile <- construct_pileup(og_bam, min_base_quality, distinguish_strands)
-  rot_pile <- construct_pileup(rot_bam, min_base_quality, distinguish_strands)
-
-  # Splice the pileups
-  spliced_pile <- splice_pileups(og_pile, rot_pile, species)
-  spliced_pile
-}
-
-#' Create an allele count pileup with RSamtools
-#' @param bam Path to a .bam file
-#' @param min_base_quality All read positions with phred score <
-#'        min_base_quality will be excluded
-#' @param distinguish_strands; If TRUE, base counts on the +/- strands are
-#'        counted separately
-#' @param min_nucleotide_depth; Minimum allele count to be included in pileup
-#' @return A data.table
-#' @importFrom Rsamtools PileupParam pileup
-#' @importFrom data.table setDT
-#' @importFrom reshape2 dcast
-#' @export
-construct_pileup <- function(bam, min_base_quality = 30,
-                             distinguish_strands = FALSE,
-                             min_nucleotide_depth = 1) {
-  pileup_param <- PileupParam(max_depth = 1000000,
-                              distinguish_strands = distinguish_strands,
-                              distinguish_nucleotides = TRUE,
-                              ignore_query_Ns = TRUE,
-                              min_nucleotide_depth = min_nucleotide_depth,
-                              include_deletions = TRUE,
-                              include_insertions = TRUE,
-                              min_base_quality = min_base_quality)
-
-  pile <- pileup(bam, pileupParam = pileup_param)
-
-  # Cast the table to wide format
-  if (distinguish_strands) {
-    pile_wide <- dcast(pile,
-                       seqnames + pos ~ nucleotide + strand,
-                       value.var = "count",
-                       fill = 0L)
-  } else {
-    pile_wide <- dcast(pile,
-                       seqnames + pos ~ nucleotide,
-                       value.var = "count",
-                       fill = 0L)
-  }
-  pile_wide <- setDT(pile_wide)
-  # Remove unnecessary columns
-  pile_wide[, c("seqnames", "pos") := NULL]
-  pile_wide
-}
-
 #' Create a consensus sequence from a set of nucleotide count pileups
 #' @param piles List of data.table; Each list item contains allele counts at
 #'        each genome position for a single sample.
@@ -240,6 +174,7 @@ convert_to_mut_cov_counts <- function(pile, mutant_consensus) {
 #' @param seq_error_rates Numeric vector; Sequencing error rate estimates for
 #'                        each sample
 #' @return Logical vector
+#' @export
 determine_unique <- function(mut_cov_counts, seq_error_rates) {
   nsamples <- length(mut_cov_counts)
 
@@ -253,46 +188,122 @@ determine_unique <- function(mut_cov_counts, seq_error_rates) {
   unique
 }
 
+#' Get the type of mutation
+#' @param allele Character; Vector of alleles, {A, C, G, T, +, -}
+#' @return Character; Vector of {snv, insertion, deletion}
+#' @export
+get_mutation_class <- function(mutant_allele) {
+  ifelse(mutant_allele == "-", "deletion",
+         ifelse(mutant_allele == "+", "insertion", "snv"))
+}
+
+#' Convert a list of tables separated by sample to a list of tables separated by
+#' genome position
+#' @param x List of matrices or vectors
+#' @return List of matrices
+#' @export
+by_position <- function(x) {
+  # If x is a list of vectors
+  if (is.null(dim(x[[1]])[2])) {
+    nsamples <- length(x)
+    bp <- length(x[[1]])
+    y <- lapply(1:bp, function(i) ulapply(1:nsamples, function(j) x[[j]][i]))
+  # If x is a list of matrices
+  } else {
+    bp <- nrow(x[[1]])
+    y <- lapply(1:bp, function(i) {
+             mat <- sapply(x, function(x) x[i, ])
+             colnames(mat) <- NULL
+             t(mat)
+           })
+  }
+  y
+}
+
+#' Assign a p-value to a variant
+#' @param mut_cov_matrix Numeric matrix; Rows are genome samples, column 1 is
+#'                       mutant allele count. Column 2 is sequencing coverage.
+#' @return A p-value
+#' @importFrom pmultinom pmultinom
+#' @importFrom fen.R.util ulapply
+#' @export
+call_variant <- function(mut_cov_matrix) {
+  # Model mutation as a multinomial distribution. Under the null hypothesis, the
+  # chance of observing a mutant allele is determined by sequencing coverage
+  # only.
+
+  max_mut_af <- max(mut_cov_matrix[, 1] / mut_cov_matrix[, 2])
+
+  # Set quantile cutoff equal to the observed mutant allele frequency
+  q <- ceiling(mut_cov_matrix[, 2] * max_mut_af) - 1
+  q[q < 0] <- 0
+  if (all(q == 0)) {
+    p <- 1
+  } else {
+    n <- sum(mut_cov_matrix[, 1])
+
+    # Set multinomial probability from sequencing coverage
+    prob <- mut_cov_matrix[, 2] / sum(mut_cov_matrix[, 2])
+    prob[is.nan(prob)] <- 0
+    p <- pmultinom(q, n, prob, lower.tail = FALSE)
+  }
+  p
+}
+
+#' Merge multinucleotide indels (p < 0.05) into single indel events
+#' Deletions are renamed to correct VCF style format, but insertions will need
+#' to be renamed manually.
+#' @param var_table data.frame; A table of variant information, rows are genome
+#'                  positions
+#' @return data.frame; var_table with indels merged
+#' @export
+merge_significant_indels <- function(var_table) {
+  # Find an indel
+  indel_idx <- find_indel(var_table)
+
+  if (!is.null(indel_idx)) {
+    # Recursively call merge_significant_indels, until all indels merged
+    updated_table <- merge_indel(var_table, indel_idx)
+    merge_significant_indels(updated_table)
+  } else {
+    var_table
+  }
+}
+
+#' RSamtools pileup labels indels with "-". This function updates deletion.
+#' fields in var_table with VCF formatting. This allows easy export to .vcf.
+#' This function assumes all indels are small. Call merge_significant_indels
+#' first to handle multinucleotide indels. Unfortunately Rsamtools doesn't
+#' specify inserted bases so these have to be renamed manually.
+#' @param var_table data.frame; A table of variant information, rows are genome
+#'                  positions
+#' @return data.frame
+#' @export
+rename_small_deletions <- function(var_table) {
+  # Get indices of all deletions in table
+  del_idx <- which(var_table$class == "deletion")
+  ndel <- length(del_idx)
+  # Output table
+  new_t <- var_table
+
+  for (i in 1:ndel) {
+    j <- del_idx[i]
+    if (var_table[j, "pos"] == 0) {
+      prev_idx <- nrow[var_table]
+    } else {
+      prev_idx <- j - 1
+    }
+    new_t[j, "pos"] <- var_table[prev_idx, "pos"]
+    new_t[j, "ref"] <- paste0(var_table[prev_idx, "ref"], var_table[j, "ref"])
+    new_t[j, "alt"] <- var_table[j, "ref"]
+  }
+
+  new_t
+}
+
 # ==============================================================================
 # END EXPORTS
 # ==============================================================================
-
-#' Splice the 'original' and 'rotated' pileups into a single pileup
-#' @param og_pile Pileup from alignment to the 'original' reference sequence
-#' @param rot_pile Pileup from alignment to the 'rotated' reference sequence
-#' @return A spliced pileup containing the middle halves of both the 'rotated'
-#' and 'original' pileups
-#' @importFrom data.table rbindlist
-splice_pileups <- function(og_pile, rot_pile, rot_ref) {
-  bp <- nrow(og_pile)
-  splx <- compute_split_indices(bp)
-
-  data_type <- class(og_pile)[1]
-
-  if (data_type == "matrix") {
-    spliced <- rbind(rot_pile[splx[[1]], ], og_pile[splx[[2]],],
-                     rot_pile[splx[[3]],])
-  } else if (data_type == "data.table") {
-    spliced <- rbindlist(list(rot_pile[splx[[1]],], og_pile[splx[[2]],],
-                              rot_pile[splx[[3]],]))
-  } else if (data_type %in% c("numeric", "integer")) {
-    spliced <- c(rot_pile[splx[[1]]], og_pile[splx[[2]]], rot_pile[splx[[3]]])
-  }
-  spliced
-}
-
-#' Compute the indices for splicing the 'original' and 'rotated' pileups
-#' @param sequence_length Integer; The length of the reference sequence
-#' @return List, length=3; First and third list items are indices from 'rotated'
-#' pileup. Second item is indices into 'original' pileup.
-compute_split_indices <- function(sequence_length) {
-  spl <- floor(seq(1, sequence_length, len = 5))
-  rot1 <- og_to_rot(spl[1], sequence_length):og_to_rot(spl[2] - 1,
-                                                       sequence_length)
-  og <- spl[2]:(spl[4] - 1)
-  rot2 <- og_to_rot(spl[4], sequence_length):og_to_rot(spl[5], sequence_length)
-  list(rot1, og, rot2)
-}
 
 #' Generate a table of minor allele frequencies for each genome position in a
 #' sample
@@ -311,9 +322,9 @@ get_minor_allele_frequencies <- function(pile, consensus) {
 
 #' Get the highest frequency allele in a vector of allele counts
 #' WARNING: Returns the first value if tied
-#' @param counts Numeric vector; Allele counts for a single genome position and
+#' @param counts numeric vector; allele counts for a single genome position and
 #'        sample
-#' @return Character; One of {A, C, G, T, +, -)
+#' @return Character; One of {A, C, G, T, +, -}
 get_highest_frequency_allele <- function(counts) {
   n <- length(counts)
   counts <- unlist(counts)
@@ -348,29 +359,6 @@ compute_allele_frequency <- function(counts, allele) {
   counts[allele] / sum(counts)
 }
 
-#' Consolidate strand counts in a strand-split allele count table
-#' @param counts data.table; Table with nucleotide and indel counts for each
-#'        genome position split by strand
-#' @return data.table; A allele count table with the stranded counts summed
-#' @export
-#' @importFrom data.table setDT
-destrand <- function(counts) {
-  idx1 <- seq(1, 11, by = 2)
-  idx2 <- idx1 + 1
-
-  if (is.numeric(counts)) {
-    destranded <- counts[idx1] + counts[idx2]
-  } else {
-    sum_counts <- function(x1, x2) {
-      counts[, x1, with = FALSE] + counts[, x2, with = FALSE]
-    }
-    destranded <- mapply(sum_counts, idx1, idx2)
-    destranded <- setDT(destranded)
-  }
-  names(destranded) <- c("A", "C", "G", "T", "-", "+")
-  destranded
-}
-
 #' Calculate strand bias for a single genome position using fisher exact test
 #' @param counts Numeric vector; Allele counts for a single genome position and
 #'        sample
@@ -383,6 +371,7 @@ compute_strand_bias <- function(counts, wild_type_allele,
   cnames <- names(counts)
   mut_idx <- which(grepl(paste0(mutant_allele, "_"), cnames, fixed = TRUE))
   wt_idx <- which(grepl(paste0(wild_type_allele, "_"), cnames, fixed = TRUE))
+  print(mut_idx)
   fisher_matrix <- matrix(c(counts[mut_idx], counts[wt_idx]),
                           byrow = TRUE, ncol = 2)
   p <- fisher.test(fisher_matrix, workspace = 2e8)$p.value
@@ -415,16 +404,67 @@ is_unique <- function(ps) {
   (sorted[1] < 0.05) && (sorted[2] > 0.05)
 }
 
+#' Split a vector by its runs of consecutive values
+#' E.g partition_by_runs(c(1, 2, 4, 5)) == list(c(1, 2), c(4, 5))
+#' @param x Numeric vector
+#' @return List of numeric vectors
+partition_by_runs <- function(x) {
+  split(x, cumsum(seq_along(x) %in% (which(diff(x) > 1) + 1)))
+}
 
-# Merge rows of test_table given by indel_idx into a single row.
-# Given:
-#   test_table - A table generated by construct_test_tables
-#   indel_idx - A numeric vector (length > 1)
-# Return:
-#   A test_table with indel_idx rows merged into single row.
-merge_indel <- function(test_table, indel_idx) {
-  pre_row <- test_table[indel_idx[1] - 1, ]
-  indel_row <- test_table[indel_idx,]
+#' Find runs of consecutive values with length > 1
+#' @param x Numeric vector
+#' @return List of numeric vectors
+find_runs <- function(x) {
+  # Partition idx by runs
+  par <- partition_by_runs(x)
+  # Return runs > 1
+  runs <- par[lengths(par) > 1]
+  runs
+}
+
+#' Find a multinucleotide indel in a table of variants
+#' @param var_table data.frame; A table of variant information, rows are genome
+#'                  positions
+#' @return Numeric vector; row indices of a multinucleotide indel. NULL if no
+#'         indels can be found.
+find_indel <- function(var_table) {
+
+  # First look for insertions
+  is_ins <- var_table[, "alt"] == "+"
+  is_sig <- var_table$p_value < 0.05
+
+  insertion_idx <- which(is_ins & is_sig)
+  insertion_run <- find_runs(insertion_idx)
+
+  if (length(insertion_run) == 0) {
+    # If we've found all insertions, look for deletions
+    is_del <- var_table[, "alt"] == "-"
+    deletion_idx <- which(is_del & is_sig)
+    deletion_run <- find_runs(deletion_idx)
+
+    # If all indels have been merged, return NULL
+    if (length(deletion_run) == 0) {
+      indel_idx <- NULL
+    } else {
+      indel_idx <- deletion_run[[1]]
+    }
+
+  } else {
+    indel_idx <- insertion_run[[1]]
+  }
+
+  indel_idx
+}
+
+#' Merge rows of var_table given by indel_idx into a single row.
+#' @param var_table data.frame; A table of variant information, rows are genome
+#'                  positions
+#' @param indel_idx Numeric vector (length > 1)
+#' @return A var_table
+merge_indel <- function(var_table, indel_idx) {
+  pre_row <- var_table[indel_idx[1] - 1, ]
+  indel_row <- var_table[indel_idx,]
 
   # Determine alternative and reference alleles based upon indel class
   in_or_del <- unique(indel_row$alt)
@@ -473,214 +513,6 @@ merge_indel <- function(test_table, indel_idx) {
                   mean(indel_row$coverage_proportion),
                   # p value
                   mean(indel_row$p_value))
-
-  new_test_table <- replace_rows(test_table, indel_idx, new_row)
-  new_test_table
-}
-
-
-#' @export
-#' @importFrom qvalue qvalue
-mult_comparisons_correct <- function(test_tables, fdr_level=0.05) {
-  merged_table <<- do.call(rbind, test_tables)
-  # filtered_table <- merged_table[which(!merged_table$low_coverage),]
-  fdr <- qvalue(merged_table$p_value, fdr.level=fdr_level)
-  significant <- fdr$significant
-  q_value <- fdr$qvalues
-  fdr_table <- cbind(merged_table, q_value, significant)
-  fdr_table <- data.frame(fdr_table, stringsAsFactors=FALSE)
-  fdr_table <- fdr_table[which(fdr_table$unique),]
-  fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
-  fdr_table
-
-  # split_by_isolate <- split(merged_table, merged_table$isolate)
-  # fdr <- lapply(split_by_isolate, function(x) {
-  #     qvalue(x$p_value, fdr.level=fdr_level/length(unique(merged_table$isolate)))
-  # })
-  # significant <- unlist(lapply(fdr, function(x) x$significant))
-  # q_value <- unlist(lapply(fdr, function(x) x$qvalues))
-  # fdr_table <- cbind(merged_table, q_value, significant)
-  # fdr_table <- data.frame(fdr_table, stringsAsFactors=FALSE)
-  # fdr_table <- fdr_table[which(fdr_table$unique),]
-  # fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
-  # fdr_table
-}
-
-get_stat_significant <- function(fdr_table) {
-  sig_table <- fdr_table[which(fdr_table$significant),]
-  row.names(sig_table) <- NULL
-  sig_table
-}
-
-calc_coverages <- function(test_tables) {
-  coverages <- sapply(test_tables, function(x) mean(x$coverage))
-  coverages
-}
-
-partition_by_runs <- function(x) {
-  split(x, cumsum(seq_along(x) %in%
-                  (which(diff(x) > 1) + 1)))
-}
-
-# Find runs of identical values
-# Given:
-#   idx - A numeric vector
-# Return:
-#   A list of numeric vectors of values in idx. Each list item is a run.
-find_runs <- function(x) {
-  # Partition idx by runs
-  par <- partition_by_runs(x)
-  # Return runs > 1
-  runs <- par[lengths(par) > 1]
-  runs
-}
-
-# Find a multinucleotide indel in a test table
-# Given:
-#   test_table - A table generated by construct_test_tables
-# Return:
-#   The indices of an arbitrary multinucleotide indel in test_table. If no
-#   indels found, NULL is returned.
-#' @export
-find_indel <- function(test_table) {
-
-  # First look for insertions
-  is_ins <- test_table[, "alt"] == "+"
-  is_sig <- test_table$p_value < 0.05
-
-  insertion_idx <- which(is_ins & is_sig)
-  insertion_run <- find_runs(insertion_idx)
-
-  if (length(insertion_run) == 0) {
-    is_del <- test_table[, "alt"] == "+"
-
-    # If we've found all insertions, look for deletions
-    deletion_idx <- which(is_del & is_sig)
-    deletion_run <- find_runs(deletion_idx)
-
-    # If all indels have been merged, return NULL
-    if (length(deletion_run) == 0) {
-      NULL
-    } else {
-      deletion_run[[1]]
-    }
-  } else {
-    insertion_run[[1]]
-  }
-}
-
-## Find runs of significant (p < 0.05) insertions or deletions and merge them
-## into single indel events. Deletions are renamed to correct VCF style format,
-## but insertions will need to be renamed manually.
-## Given:
-##   test_table - A table generated by construct_test_tables
-## Return:
-##   A test_table
-#' @export
-merge_significant_indels <- function(test_table) {
-  # Find an indel
-  indel_idx <- find_indel(test_table)
-
-  if (!is.null(indel_idx)) {
-    # Recursively call merge_significant_indels, until all indels merged
-    updated_table <- merge_indel(test_table, indel_idx)
-    merge_significant_indels(updated_table)
-  } else {
-    test_table
-  }
-}
-
-## RSamtools pileup labels indels with "-". This function updates deletion.
-## fields in test_table with VCF formatting. This allows easy export to .vcf.
-## This function assumes all indels are small. Call merge_significant_indels
-## first to handle multinucleotide indels. Unfortunately Rsamtools doesn't
-## specify inserted bases so these have to be renamed manually.
-## Given:
-##   test_table - A table generated by construct_test_tables
-## Return:
-##   A test_table
-#' @export
-rename_small_deletions <- function(test_table) {
-  # Get indices of all deletions in table
-  del_idx <- which(test_table$class == "deletion")
-  ndel <- length(del_idx)
-  # Output table
-  new_t <- test_table
-
-  for (i in 1:ndel) {
-    j <- del_idx[i]
-    if (test_table[j, "pos"] == 0) {
-      prev_idx <- nrow[test_table]
-    } else {
-      prev_idx <- j - 1
-    }
-    new_t[j, "pos"] <- test_table[prev_idx, "pos"]
-    new_t[j, "ref"] <- paste0(test_table[prev_idx, "ref"],
-                              test_table[j, "ref"])
-    new_t[j, "alt"] <- test_table[j, "ref"]
-  }
-
-  new_t
-}
-
-
-#' Subsample a count vector
-#' @param r An integer vector
-#' @param cap Integer; Vector will be subsampled such that its sum = cap
-#' @return An integer vector
-#' @export
-subsample <- function(r, cap) {
-  r <- unlist(r)
-  cov <- sum(r)
-  if (cov > cap) {
-    # Calculate the surplus and randomly subtract from the row
-    surplus <- cov - cap
-    prop <- r / sum(r)
-    smp <- rmultinom(1, surplus, prop)
-    new_row <- as.integer(r - smp)
-  } else {
-    new_row <- r
-  }
-  new_row
-}
-
-#' Subsample an allele count pileup
-#' @param pile A data.table; allele counts at each genome position
-#' @param cap Integer; Pileup will be subsampled such that its sum = cap
-#' @return A pileup
-#' @export
-#' @importFrom data.table setDT setnames
-subsample_pileup <- function(pile, cap) {
-  subsampled_rows <- apply(pile, 1, subsample)
-  subsampled_pile <- setDT(data.frame(t(subsampled_rows)))
-  setnames(subsampled_pile, colnames(pile))
-  subsampled_pile
-}
-
-
-#' Convert allele count pileups to mutant vs wildtype pileups
-#'
-#' @param piles list of data.table; each list item contains allele counts at
-#'        each genome position for a single sample.
-#' @param mutant_consensus; An alternate allele consensus sequence produced by
-#'        `create_mutant_consensus`
-#' @export
-piles_to_mut_wt <- function(piles, mutant_consensus) {
-  bp <- length(mutant_consensus)
-  mut_wt_counts <- lapply(piles, convert_to_mut_wt_counts, mutant_consensus)
-  mut_wt_matrices <- lapply(1:bp, function(i) {
-                              mat <- sapply(mut_wt_counts, function(x) {
-                                              x[i, ]
-                  })
-                              t(mat)
-                              })
-  mut_wt_matrices
-}
-
-#' Given a column index into an unstranded pileup, return the equiv. stranded
-#' indices
-.stranded_indices <- function(idx) {
-  str_idx <- list(c(1, 2), c(3, 4), c(5, 6), c(7, 8), c(9, 10), c(11, 12))
-  str_idx <- matrix(unlist(str_idx[idx]), ncol = 2, byrow = TRUE)
-  str_idx
+  new_var_table <- replace_rows(var_table, indel_idx, new_row)
+  new_var_table
 }
