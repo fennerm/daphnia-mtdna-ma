@@ -1,1 +1,0 @@
-/mnt/lfs2/schaack/fmacrae/code/fmscripts/fmscripts/index_fasta.py

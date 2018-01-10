@@ -6,13 +6,6 @@ does not have to be accounted for.
 
 Usage: seq_error_estimate.R INPUT_BAM OUTPUT_CSV" -> doc
 
-library(data.table)
-library(docopt)
-library(Rsamtools)
-
-## Calculate the sequencing error rate for a single bam file.
-## param: bam A path to a bam file
-## return: Numeric
 main <- function(bam) {
   pileup_param <- Rsamtools::PileupParam(max_depth = 1000000,
                                          distinguish_strands = FALSE,
@@ -28,9 +21,9 @@ main <- function(bam) {
                             value.var="count", fill = 0L)
   pile <- pile[, 3:length(pile)]
 
-  consensus <- get_major_alleles(pile)
-  minor_alleles <- get_minor_alleles(pile, consensus)
-  minor_allele_counts <- get_allele_counts(pile, minor_alleles)
+  consensus <- megadaph.mtdna::get_major_alleles(pile)
+  minor_alleles <- megadaph.mtdna::get_minor_alleles(pile, consensus)
+  minor_allele_counts <- megadaph.mtdna::get_allele_counts(pile, minor_alleles)
 
   # Coverage at each position
   sum_counts <- apply(pile, 1, sum)
@@ -41,15 +34,21 @@ main <- function(bam) {
   homo <- which((minor_allele_counts < cutoff) & (sum_counts > 39))
 
   # Sequencing error estimate
-  seq_err <- mean(minor_allele_counts[homo] / sum_counts[homo])
-  seq_err
+  minor_fraction <- minor_allele_counts[homo] / sum_counts[homo]
+  seq_err <- mean(minor_fraction)
+  stdev <- sd(minor_fraction)
+  c(seq_err, stdev)
 }
 
 if (!interactive()) {
   opts <- docopt::docopt(doc)
-  sample <- megadaph.mtdna::get_sample(opts["INPUT_BAM"])
-  seq_err_rate <- main(opts["INPUT_BAM"])
-  seq_err_table <- data.frame(sample = sample, sequencing_error = seq_err_rate,
+  input_bam <- unlist(opts["INPUT_BAM"])
+  output_csv <- unlist(opts["OUTPUT_CSV"])
+  smp <- megadaph.mtdna::get_sample(input_bam)
+  seq_err_stats <- main(input_bam)
+  seq_err_table <- data.frame(sample = smp,
+                              sequencing_error = seq_err_stats[1],
+                              stdev = seq_err_stats[2],
                               stringsAsFactors = FALSE)
-  write.csv(seq_err_rate, opts["OUTPUT_CSV"], quote=FALSE, row.names = FALSE)
+  write.csv(seq_err_table, output_csv, quote = FALSE, row.names = FALSE)
 }
