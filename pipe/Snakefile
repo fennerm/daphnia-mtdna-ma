@@ -19,6 +19,7 @@ PULEX = [x for x in SAMPLE if x.startswith(('L', 'T'))]
 MAGNA = [x for x in SAMPLE if x.startswith(('F', 'G', 'I'))]
 SPECIES = ['pulex', 'magna']
 GENOME = ['nuc', 'all', 'mt.og', 'mt.rot']
+GENOTYPE = ['FA', 'FB', 'FC', 'GA', 'GB', 'GC', 'IA', 'IB', 'IC', 'L', 'TCO']
 
 ROTATION = ['og', 'rot']
 
@@ -93,7 +94,9 @@ rule all:
         expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
                rotation=ROTATION),
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
-               "ref/{species}.{genome}.fa.fai"], species=SPECIES, genome=GENOME)
+               "ref/{species}.{genome}.fa.fai"], species=SPECIES,
+               genome=GENOME),
+        expand("output/estimate_sequencing_error/{sample}.csv", sample=SAMPLE)
 
 rule rotate_reference:
     input:
@@ -218,6 +221,14 @@ rule extract_mt_reads:
     script:
         "scripts/extract_mt_reads.py"
 
+rule extract_nuclear_alignments:
+    input:
+        "output/competitive_align/{sample}.bam"
+    output:
+        "output/extract_nuclear_alignments/{sample}.bam"
+    script:
+        "scripts/extract_nuclear_alignments.py"
+
 rule align_to_mt_rotation:
     input:
         unpack(reference),
@@ -284,6 +295,43 @@ rule qualimap:
     shell:
         "qualimap bamqc -bam {input} -outdir output/qualimap"
 
+rule estimate_sequencing_error:
+    input:
+        "output/extract_nuclear_alignments/{sample}.bam"
+    output:
+        "output/estimate_sequencing_error/{sample}.csv"
+    shell:
+        "scripts/estimate_seq_error.R {input} {output}"
+#
+# rule merge_sequencing_error_files:
+#     input:
+#         expand("output/estimate_sequencing_error/{sample}.csv", sample=SAMPLE)
+#     output:
+#         "output/merge_sequencing_error_files/{genotype}.csv"
+#     run:
+#         for genotype in GENOTYPE:
+#             samples = [x for x in input.sample if x.startswith(genotype)]
+#             shell(' '.join([
+#                 "scripts/merge_sequencing_error_files.R --output {output}",
+#                 samples]))
+#
+# rule produce_spliced_pileups:
+#     input:
+#         og_bam = "output/remove_singletons/{sample}.og.bam",
+#         rot_bam = "output/remove_singletons/{sample}.rot.bam"
+#     output:
+#         "output/produce_spliced_pileups/{sample}.csv"
+#     shell:
+#         "scripts/produce_spliced_pileups.R --output {output} {input.og_bam} "
+#         "{input.rot_bam}"
+#
+# rule call_variants:
+#     input:
+#         pile = expand("output/produce_spliced_pileups/{sample}.csv",
+#                       sample=SAMPLE)
+
+
+
 rule multiqc:
     input:
         expand(['output/clean_fastqc/{sample}.{pair}_fastqc.html',
@@ -292,6 +340,8 @@ rule multiqc:
         expand("output/qualimap/{sample}_{rotation}/",
                sample=SAMPLE, rotation=ROTATION)
     output:
-        'output/multiqc/multiqc.html'
+        report = 'output/multiqc/multiqc.html',
+        data = "output/multiqc/multiqc_data"
     shell:
-        'multiqc -d -n {output} .'
+        'multiqc -d -n {output.report} .'
+
