@@ -8,6 +8,7 @@ Usage: seq_error_estimate.R INPUT_BAM OUTPUT_CSV" -> doc
 
 main <- function(bam) {
   pileup_param <- Rsamtools::PileupParam(max_depth = 1000000,
+                                         min_base_quality = 30,
                                          distinguish_strands = FALSE,
                                          distinguish_nucleotides = TRUE,
                                          ignore_query_Ns = TRUE,
@@ -33,10 +34,19 @@ main <- function(bam) {
   cutoff <- 0.2 * sum_counts
   homo <- which((minor_allele_counts < cutoff) & (sum_counts > 39))
 
-  # Sequencing error estimate
-  minor_fraction <- minor_allele_counts[homo] / sum_counts[homo]
-  seq_err <- mean(minor_fraction)
-  stdev <- sd(minor_fraction)
+  if (length(homo) > 0) {
+    # Sequencing error estimate
+    minor_fraction <- minor_allele_counts[homo] / sum_counts[homo]
+    seq_err <- mean(minor_fraction)
+    stdev <- sd(minor_fraction)
+  } else {
+    # If no homozygous positions found, set sequencing error to 0
+    # This is primarily to ensure that a value is still returned for small test
+    # files.
+    seq_err <- 0
+    stdev <- 0
+  }
+
   c(seq_err, stdev)
 }
 
