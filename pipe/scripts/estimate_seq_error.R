@@ -15,36 +15,42 @@ main <- function(bam) {
                                          include_deletions = TRUE,
                                          include_insertions = TRUE)
   # Create base count pilep and convert to a data.table
-  pile <- data.table::setDT(Rsamtools::pileup(bam, pileupParam = pileup_param))
-
-  # Convert from long to wide format and exclude position and c'some fields
-  pile <- data.table::dcast(pile, seqnames + pos ~ nucleotide,
-                            value.var="count", fill = 0L)
-  pile <- pile[, 3:length(pile)]
-
-  consensus <- megadaph.mtdna::get_major_alleles(pile)
-  minor_alleles <- megadaph.mtdna::get_minor_alleles(pile, consensus)
-  minor_allele_counts <- megadaph.mtdna::get_allele_counts(pile, minor_alleles)
-
-  # Coverage at each position
-  sum_counts <- apply(pile, 1, sum)
-
-  # Homozygous positions
-  # 0.2 chosen as cutoff since pbinom is approx 0.001 for depth of 20.
-  cutoff <- 0.2 * sum_counts
-  homo <- which((minor_allele_counts < cutoff) & (sum_counts > 39))
-
-  if (length(homo) > 0) {
-    # Sequencing error estimate
-    minor_fraction <- minor_allele_counts[homo] / sum_counts[homo]
-    seq_err <- mean(minor_fraction)
-    stdev <- sd(minor_fraction)
-  } else {
-    # If no homozygous positions found, set sequencing error to 0
-    # This is primarily to ensure that a value is still returned for small test
-    # files.
+  pile <- Rsamtools::pileup(bam, pileupParam = pileup_param)
+  if (nrow(pile) == 0) {
     seq_err <- 0
     stdev <- 0
+  } else {
+    pile <- data.table::setDT(pile)
+
+    # Convert from long to wide format and exclude position and c'some fields
+    pile <- data.table::dcast(pile, seqnames + pos ~ nucleotide,
+                              value.var="count", fill = 0L)
+    pile <- pile[, 3:length(pile)]
+
+    consensus <- megadaph.mtdna::get_major_alleles(pile)
+    minor_alleles <- megadaph.mtdna::get_minor_alleles(pile, consensus)
+    minor_allele_counts <- megadaph.mtdna::get_allele_counts(pile, minor_alleles)
+
+    # Coverage at each position
+    sum_counts <- apply(pile, 1, sum)
+
+    # Homozygous positions
+    # 0.2 chosen as cutoff since pbinom is approx 0.001 for depth of 20.
+    cutoff <- 0.2 * sum_counts
+    homo <- which((minor_allele_counts < cutoff) & (sum_counts > 39))
+
+    if (length(homo) > 0) {
+      # Sequencing error estimate
+      minor_fraction <- minor_allele_counts[homo] / sum_counts[homo]
+      seq_err <- mean(minor_fraction)
+      stdev <- sd(minor_fraction)
+    } else {
+      # If no homozygous positions found, set sequencing error to 0
+      # This is primarily to ensure that a value is still returned for small test
+      # files.
+      seq_err <- 0
+      stdev <- 0
+    }
   }
 
   c(seq_err, stdev)
