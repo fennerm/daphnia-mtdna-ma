@@ -1,4 +1,3 @@
 ---
-# Snakemake config
 adapters: input/adapters/adapters_illumina.fa
 threadsmax: 10

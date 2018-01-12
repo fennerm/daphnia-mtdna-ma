@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
-snakemake --immediate-submit --debug --cluster 'snakefile_sbatch.py {dependencies}' -j 384 "$@"
+SCHEDULER="$HOME/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/sbatch_scheduler.py"
+snakemake --cluster "$SCHEDULER" --cluster-config "sbatch_config.yml" -j 499 \
+    --rerun-incomplete "$@"
