@@ -1,7 +1,7 @@
 Package: megadaph.mtdna
 Title: Megadaph mtDNA Mutation Accumulation Project
 Version: 0.0.0.1
-Authors@R: person("Fenner", "Macrae", email = "fennermacrae@gmail.com", role = c("aut", "cre"))
+Authors@R: person("Fenner", "Macrae", email = "fmacrae.dev@gmail.com", role = c("aut", "cre"))
 Description: R package containing Data analysis scripts for the mitochondrial portion of the Megadaph project.
 Depends: R (>= 3.2.2)
 License: MIT + file LICENSE
