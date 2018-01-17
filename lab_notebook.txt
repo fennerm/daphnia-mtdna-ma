@@ -1400,14 +1400,13 @@ December 5th, 6th 2017
 ===============================================================================
 December 9th-19th, 2017
 ===============================================================================
--Have been distracted by lab maintenance work, but finally got the full QC and 
+-Have been distracted by lab maintenance work, but finally got the full QC and
 alignment pipeline running correctly with some additional improvements: Removal
-of unpaired alignments as final stage of pipeline, paramaters for increased 
+of unpaired alignments as final stage of pipeline, paramaters for increased
 sensitivity used in local realignment step, qualimap reports.
 
 ===============================================================================
 December 22nd, 2017
 ===============================================================================
--Have been working on improving my R scripts for variant calling with the 
+-Have been working on improving my R scripts for variant calling with the
  intent of integrating them into the snakemake pipeline.
-

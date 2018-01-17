@@ -21,6 +21,11 @@ SPECIES = ['pulex', 'magna']
 GENOME = ['nuc', 'all', 'mt.og', 'mt.rot']
 GENOTYPE = ['FA', 'FB', 'FC', 'GA', 'GB', 'GC', 'IA', 'IB', 'IC', 'L', 'TCO']
 
+# Assign each sample to a genotype
+GENOTYPE_SAMPLE = {}
+for genotype in GENOTYPE:
+    GENOTYPE_SAMPLE["genotype"] = [x for x in SAMPLE if x.startswith(genotype)]
+
 ROTATION = ['og', 'rot']
 
 # ==============================================================================
@@ -96,7 +101,8 @@ rule all:
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
-        expand("output/estimate_sequencing_error/{sample}.csv", sample=SAMPLE)
+        expand("output/estimate_sequencing_error/{sample}.csv",
+               sample=SAMPLE)
 
 rule rotate_reference:
     input:
@@ -127,10 +133,19 @@ rule index_references:
     shell:
         "scripts/index_fasta.py {input}"
 
+rule convert_quality_scores:
+    input:
+        'input/reads/{sample}.{rotation}.fastq.gz'
+    output:
+        'output/convert_quality_scores/{sample}.{rotation}.fastq.gz'
+    threads: 4
+    shell:
+        "seqkit convert --threads {threads} {input} | gzip - > {output}"
+
 rule raw_fastqc:
     input:
-        fwd_reads = 'input/reads/{sample}.R1.fastq.gz',
-        rev_reads = 'input/reads/{sample}.R2.fastq.gz'
+        fwd_reads = 'output/convert_quality_scores/{sample}.R1.fastq.gz',
+        rev_reads = 'output/convert_quality_scores/{sample}.R2.fastq.gz'
     output:
         'output/raw_fastqc/{sample}.R1_fastqc.html',
         'output/raw_fastqc/{sample}.R2_fastqc.html',
@@ -141,8 +156,8 @@ rule raw_fastqc:
 
 rule trim_adapters:
     input:
-        fwd_reads = 'input/reads/{sample}.R1.fastq.gz',
-        rev_reads = 'input/reads/{sample}.R2.fastq.gz'
+        fwd_reads = 'output/convert_quality_scores/{sample}.R1.fastq.gz',
+        rev_reads = 'output/convert_quality_scores/{sample}.R2.fastq.gz'
     output:
         fwd_reads = 'output/trim_adapters/{sample}.R1.fastq.gz',
         rev_reads = 'output/trim_adapters/{sample}.R2.fastq.gz'
@@ -208,7 +223,7 @@ rule competitive_align:
         shell("scripts/align_and_sort.py -1 {input.fwd_reads} "
               "-2 {input.rev_reads} -x " + ref_idx + " -p {threads} -X "
               "{params.max_insert_size} 2> {log} > {output.bam}")
-        shell("samtools index {output}")
+        shell("samtools index {output.bam}")
 
 rule extract_mt_reads:
     input:
@@ -302,18 +317,22 @@ rule estimate_sequencing_error:
         "output/estimate_sequencing_error/{sample}.csv"
     shell:
         "scripts/estimate_seq_error.R {input} {output}"
-#
-# rule merge_sequencing_error_files:
-#     input:
-#         expand("output/estimate_sequencing_error/{sample}.csv", sample=SAMPLE)
-#     output:
-#         "output/merge_sequencing_error_files/{genotype}.csv"
-#     run:
-#         for genotype in GENOTYPE:
-#             samples = [x for x in input.sample if x.startswith(genotype)]
-#             shell(' '.join([
-#                 "scripts/merge_sequencing_error_files.R --output {output}",
-#                 samples]))
+
+#rule merge_sequencing_error_files:
+#    input:
+#        lambda wildcards: os.path.join(
+#            "output", "estimate_sequencing_error",
+#            GENOTYPE_SAMPLE[wildcards.genotype] + ".csv")
+#    output:
+#        "output/merge_sequencing_error_files/{genotype}.csv"
+#    run:
+#        basenames = [os.path.basename(x) for x in input]
+#        samples = [x for x in basenames if x.startswith(genotype)]
+#        samples = ["output/estimate_sequencing_error/" + x for x in samples]
+#        if samples:
+#            shell("scripts/merge_sequencing_error_files.R --output "
+#                  + "output/merge_sequencing_error_files/" + genotype
+#                  + ".csv " + ' '.join(samples))
 #
 # rule produce_spliced_pileups:
 #     input:
@@ -329,7 +348,6 @@ rule estimate_sequencing_error:
 #     input:
 #         pile = expand("output/produce_spliced_pileups/{sample}.csv",
 #                       sample=SAMPLE)
-
 
 
 rule multiqc:
