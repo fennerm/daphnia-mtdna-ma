@@ -1390,17 +1390,17 @@ December 3rd 2017
 ===============================================================================
 December 4th, 6th 2017
 ===============================================================================
--Completely reimplemented the QC pipeline in snakemake.
+- Completely reimplemented the QC pipeline in snakemake.
 
 ===============================================================================
 December 5th, 6th 2017
 ===============================================================================
--Ironed out a bunch of bugs in the new pipeline
+- Ironed out a bunch of bugs in the new pipeline
 
 ===============================================================================
 December 9th-19th, 2017
 ===============================================================================
--Have been distracted by lab maintenance work, but finally got the full QC and
+- Have been distracted by lab maintenance work, but finally got the full QC and
 alignment pipeline running correctly with some additional improvements: Removal
 of unpaired alignments as final stage of pipeline, paramaters for increased
 sensitivity used in local realignment step, qualimap reports.
@@ -1408,5 +1408,25 @@ sensitivity used in local realignment step, qualimap reports.
 ===============================================================================
 December 22nd, 2017
 ===============================================================================
--Have been working on improving my R scripts for variant calling with the
- intent of integrating them into the snakemake pipeline.
+- Have been working on improving my R scripts for variant calling with the
+intent of integrating them into the snakemake pipeline.
+
+===============================================================================
+December 23rd 2017 - January 12th, 2018
+===============================================================================
+- Rewriting and debugging the R scripts has been a larger task than anticipated.
+They were written in such a way which made reuse quite difficult, and I slacked
+off on documentation quite badly in places. I completely rebuilt the core of the
+variant calling algorithm and released as an independent package
+('fennerm/pmultinom'). Added some tests where I was most unsure of the
+algorithm, more tests would be ideal but its not worth the time suck given that
+everything seems to be working fine. The main snakemake pipeline now contains
+all analysis steps up until multiple comparison correction. Currently queued on
+SLURM. Next steps are to rewrite the multiple comparisons, variant annotation
+and mutation rate analyses, which should be much quicker.
+
+================================================================================
+January 16th, 2018
+================================================================================
+- Realized that I hadn't transferred quality score conversion step of the old
+  pipeline to the new one. Added it and restarted.
