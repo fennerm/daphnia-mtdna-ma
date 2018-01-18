@@ -101,7 +101,7 @@ rule all:
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
-        expand("output/estimate_sequencing_error/{sample}.csv",
+        expand("output/extract_nuclear_alignments/{sample}.bam",
                sample=SAMPLE)
 
 rule rotate_reference:
@@ -133,19 +133,10 @@ rule index_references:
     shell:
         "index_fasta.py {input}"
 
-rule convert_quality_scores:
-    input:
-        'input/reads/{sample}.{rotation}.fastq.gz'
-    output:
-        'output/convert_quality_scores/{sample}.{rotation}.fastq.gz'
-    threads: 4
-    shell:
-        "seqkit convert --threads {threads} {input} | gzip - > {output}"
-
 rule raw_fastqc:
     input:
-        fwd_reads = 'output/convert_quality_scores/{sample}.R1.fastq.gz',
-        rev_reads = 'output/convert_quality_scores/{sample}.R2.fastq.gz'
+        fwd_reads = 'input/reads/{sample}.R1.fastq.gz',
+        rev_reads = 'input/reads/{sample}.R2.fastq.gz'
     output:
         'output/raw_fastqc/{sample}.R1_fastqc.html',
         'output/raw_fastqc/{sample}.R2_fastqc.html',
@@ -156,8 +147,8 @@ rule raw_fastqc:
 
 rule trim_adapters:
     input:
-        fwd_reads = 'output/convert_quality_scores/{sample}.R1.fastq.gz',
-        rev_reads = 'output/convert_quality_scores/{sample}.R2.fastq.gz'
+        fwd_reads = 'output/input/reads/{sample}.R1.fastq.gz',
+        rev_reads = 'output/input/reads/{sample}.R2.fastq.gz'
     output:
         fwd_reads = 'output/trim_adapters/{sample}.R1.fastq.gz',
         rev_reads = 'output/trim_adapters/{sample}.R2.fastq.gz'
