@@ -225,9 +225,23 @@ rule extract_nuclear_alignments:
     input:
         "output/competitive_align/{sample}.bam"
     output:
-        "output/extract_nuclear_alignments/{sample}.bam"
+        bam = "output/extract_nuclear_alignments/{sample}.bam",
+        bai = "output/extract_nuclear_alignments/{sample}.bam.bai"
     script:
         "scripts/extract_nuclear_alignments.py"
+
+rule subsample_nuclear_alignments:
+    input:
+        "output/extract_nuclear_alignments/{sample}.bam"
+    output:
+        bam="output/subsample_nuclear_alignments/{sample}.bam",
+        bai="output/subsample_nuclear_alignments/{sample}.bam.bai"
+    params:
+        n=10000
+    shell:
+        "scripts/subsample_bam_by_csome.py -n {params.n} -o {output.bam} "
+        "{input} && "
+        "samtools index {output.bam}"
 
 rule align_to_mt_rotation:
     input:
@@ -297,7 +311,7 @@ rule qualimap:
 
 rule estimate_sequencing_error:
     input:
-        "output/extract_nuclear_alignments/{sample}.bam"
+        "output/subsample_nuclear_alignments/{sample}.bam"
     output:
         "output/estimate_sequencing_error/{sample}.csv"
     shell:
