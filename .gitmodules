@@ -1,0 +1,3 @@
+[submodule "pipe/sbatch_scheduler"]
+	path = pipe/sbatch_scheduler
+	url = git://github.com/fennerm/snakemake_sbatch_scheduler.git
