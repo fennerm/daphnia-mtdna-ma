@@ -147,8 +147,8 @@ rule raw_fastqc:
 
 rule trim_adapters:
     input:
-        fwd_reads = 'output/input/reads/{sample}.R1.fastq.gz',
-        rev_reads = 'output/input/reads/{sample}.R2.fastq.gz'
+        fwd_reads = 'input/reads/{sample}.R1.fastq.gz',
+        rev_reads = 'input/reads/{sample}.R2.fastq.gz'
     output:
         fwd_reads = 'output/trim_adapters/{sample}.R1.fastq.gz',
         rev_reads = 'output/trim_adapters/{sample}.R2.fastq.gz'
