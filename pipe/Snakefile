@@ -236,27 +236,6 @@ rule extract_mt_reads:
     script:
         "scripts/extract_mt_reads.py"
 
-rule extract_nuclear_alignments:
-    input:
-        "output/competitive_align/{sample}.bam"
-    output:
-        bam = "output/extract_nuclear_alignments/{sample}.bam",
-        bai = "output/extract_nuclear_alignments/{sample}.bam.bai"
-    script:
-        "scripts/extract_nuclear_alignments.py"
-
-rule subsample_nuclear_alignments:
-    input:
-        "output/extract_nuclear_alignments/{sample}.bam"
-    output:
-        bam="output/subsample_nuclear_alignments/{sample}.bam",
-        bai="output/subsample_nuclear_alignments/{sample}.bam.bai"
-    params:
-        n=10000
-    shell:
-        "scripts/subsample_bam_by_csome.py -n {params.n} -o {output.bam} "
-        "{input} && "
-        "samtools index {output.bam}"
 
 rule align_to_mt_rotation:
     input:
@@ -324,13 +303,41 @@ rule qualimap:
     shell:
         "qualimap bamqc -bam {input} -outdir output/qualimap"
 
-rule estimate_sequencing_error:
+rule extract_nuclear_alignments:
     input:
-        "output/subsample_nuclear_alignments/{sample}.bam"
+        "output/competitive_align/{sample}.bam"
     output:
-        "output/estimate_sequencing_error/{sample}.csv"
-    shell:
-        "scripts/estimate_seq_error.R {input} {output}"
+        bam = "output/extract_nuclear_alignments/{sample}.bam",
+        bai = "output/extract_nuclear_alignments/{sample}.bam.bai"
+    script:
+        "scripts/extract_nuclear_alignments.py"
+
+rule randomly_select_nuclear_csomes:
+    input:
+        expand("output/extract_nuclear_alignments/{sample}.bam", sample=SAMPLE)
+    output:
+
+
+# rule subsample_nuclear_alignments:
+#     input:
+#         "output/extract_nuclear_alignments/{sample}.bam"
+#     output:
+#         bam="output/subsample_nuclear_alignments/{sample}.bam",
+#         bai="output/subsample_nuclear_alignments/{sample}.bam.bai"
+#     params:
+#         n=10000
+#     shell:
+#         "scripts/subsample_bam_by_csome.py -n {params.n} -o {output.bam} "
+#         "{input} && "
+#         "samtools index {output.bam}"
+#
+# rule estimate_sequencing_error:
+#     input:
+#         "output/subsample_nuclear_alignments/{sample}.bam"
+#     output:
+#         "output/estimate_sequencing_error/{sample}.csv"
+#     shell:
+#         "scripts/estimate_seq_error.R {input} {output}"
 
 #rule merge_sequencing_error_files:
 #    input:
