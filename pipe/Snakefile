@@ -131,7 +131,7 @@ rule index_references:
         "ref/{species}.{genome}.dict",
         "ref/{species}.{genome}.fa.fai"
     shell:
-        "scripts/index_fasta.py {input}"
+        "index_fasta.py {input}"
 
 rule convert_quality_scores:
     input:
@@ -220,7 +220,7 @@ rule competitive_align:
         "output/competitive_align/log/{sample}.log"
     run:
         ref_idx = bowtie2_idx_root(input.bowtie2_idx)
-        shell("scripts/align_and_sort.py -1 {input.fwd_reads} "
+        shell("align_and_sort.py -1 {input.fwd_reads} "
               "-2 {input.rev_reads} -x " + ref_idx + " -p {threads} -X "
               "{params.max_insert_size} 2> {log} > {output.bam}")
         shell("samtools index {output.bam}")
