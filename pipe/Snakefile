@@ -316,6 +316,10 @@ rule randomly_select_nuclear_csomes:
     input:
         expand("output/extract_nuclear_alignments/{sample}.bam", sample=SAMPLE)
     output:
+        expand("output/randomly_select_nuclear_csomes/{species}.txt",
+               species=SPECIES)
+    script:
+        "scripts/randomly_select_nuclear_csomes.py"
 
 
 # rule subsample_nuclear_alignments:
