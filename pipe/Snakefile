@@ -309,6 +309,8 @@ rule randomly_select_nuclear_csomes:
     output:
         expand("output/randomly_select_nuclear_csomes/{species}.txt",
                species=SPECIES)
+    params:
+        n = 10000
     script:
         "scripts/randomly_select_nuclear_csomes.py"
 
