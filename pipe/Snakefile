@@ -101,8 +101,8 @@ rule all:
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
-        expand("output/randomly_select_nuclear_csomes/{species}.txt",
-               species=SPECIES)
+        expand("output/subsample_nuclear_alignments/{sample}.bam",
+               sample=SAMPLE)
 
 rule rotate_reference:
     input:
@@ -314,28 +314,24 @@ rule randomly_select_nuclear_csomes:
     script:
         "scripts/randomly_select_nuclear_csomes.py"
 
-# rule subsample_nuclear_alignments:
-#     input:
-#         csome_list = lambda wildcards: os.path.join(
-#             "output/randomly_select_nuclear_csomes", species(wildcards) + ".txt"
-#             )
-#         bam = "output/extract_nuclear_alignments/{sample}.bam"
-#     output:
-#         bam = "output/subsample_nuclear_alignments/{sample}.bam",
-#         bai = "output/subsample_nuclear_alignments/{sample}.bam.bai"
-#     params:
-#         n=10000
-#     run:
-#         with open(csome_list) as f:
-#             # Read the list of target chromosomes into a space-separated string
-#             target_csomes = ' '.join(f.read().split("\n"))
-#
-#         shell("extract_csome "
-#         "extract_csome "
-#         "scripts/subsample_bam_by_csome.py -n {params.n} -o {output.bam} "
-#         "{input} && "
-#         "samtools index {output.bam}"
-#
+rule subsample_nuclear_alignments:
+    input:
+        csome_list = lambda wildcards: os.path.join(
+            "output/randomly_select_nuclear_csomes", species(wildcards) + ".txt"
+            )
+        bam = "output/extract_nuclear_alignments/{sample}.bam"
+    output:
+        bam = "output/subsample_nuclear_alignments/{sample}.bam",
+        bai = "output/subsample_nuclear_alignments/{sample}.bam.bai"
+    run:
+        with open(csome_list) as f:
+            # Read the list of target chromosomes into a space-separated string
+            target_csomes = ' '.join(f.read().split("\n"))
+
+        shell("extract_csome {input.bam} " + target_csomes + " > {output.bam}")
+        shell("samtools index {output.bam}")
+
+
 # rule estimate_sequencing_error:
 #     input:
 #         "output/subsample_nuclear_alignments/{sample}.bam"
