@@ -38,5 +38,5 @@ for spp, subsplit in zip(species, species_split):
     # Convert to string and write to output file
     rand_csomes = '\n'.join(rand_csomes)
     outfile = snakemake.output[spp]
-    with open(outfile) as out:
+    with open(outfile, "w") as out:
         out.write(rand_csomes)
