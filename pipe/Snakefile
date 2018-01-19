@@ -318,7 +318,7 @@ rule subsample_nuclear_alignments:
     input:
         csome_list = lambda wildcards: os.path.join(
             "output/randomly_select_nuclear_csomes", species(wildcards) + ".txt"
-            )
+            ),
         bam = "output/extract_nuclear_alignments/{sample}.bam"
     output:
         bam = "output/subsample_nuclear_alignments/{sample}.bam",
