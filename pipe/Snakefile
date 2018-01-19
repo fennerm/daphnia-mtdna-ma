@@ -207,6 +207,8 @@ rule competitive_align:
         max_insert_size = '16000'
     threads:
         16
+    resources:
+        mem_mb = 30000
     log:
         "output/competitive_align/log/{sample}.log"
     run:
@@ -324,7 +326,7 @@ rule subsample_nuclear_alignments:
         bam = "output/subsample_nuclear_alignments/{sample}.bam",
         bai = "output/subsample_nuclear_alignments/{sample}.bam.bai"
     run:
-        with open(csome_list) as f:
+        with open(input.csome_list) as f:
             # Read the list of target chromosomes into a space-separated string
             target_csomes = ' '.join(f.read().split("\n"))
 
