@@ -22,7 +22,7 @@ species = ("pulex", "magna")
 species_split = partition_by_species(samples)
 for spp, subsplit in zip(species, species_split):
     # Get all csomes with at least one alignment
-    csomes = [list_nonempty_csomes(sample) for sample in species]
+    csomes = [list_nonempty_csomes(sample).split("\n") for sample in subsplit]
 
     # Get csomes which have at least one alignment in all samples
     shared_csomes = set(csomes[0]).intersection(*csomes)
