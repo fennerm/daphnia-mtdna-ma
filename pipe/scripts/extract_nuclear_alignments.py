@@ -17,7 +17,7 @@ def get_nuclear_csome_names(bam):
     names = ' '.join(names)
     return names
 
-csomes = get_nuclear_csome_names(snakemake.input.bam[0])
+csomes = get_nuclear_csome_names(snakemake.input[0])
 
 # Extract nuclear aligned reads
 shell(' '.join(["samtools view -bh {snakemake.input}", csomes,
