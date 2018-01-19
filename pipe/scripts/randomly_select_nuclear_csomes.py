@@ -10,9 +10,9 @@ def partition_by_species(samples):
     pulex = []
     magna = []
     for sample in samples:
-        if sample.name.startswith(["F", "G", "I"]):
+        if sample.name.startswith(("F", "G", "I")):
             magna.append(sample)
-        elif sample.name.startswith(["L", "TCO"]):
+        elif sample.name.startswith(("L", "TCO")):
             pulex.append(sample)
     return pulex, magna
 
