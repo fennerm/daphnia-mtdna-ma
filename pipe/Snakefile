@@ -307,8 +307,8 @@ rule randomly_select_nuclear_csomes:
     input:
         expand("output/extract_nuclear_alignments/{sample}.bam", sample=SAMPLE)
     output:
-        expand("output/randomly_select_nuclear_csomes/{species}.txt",
-               species=SPECIES)
+        magna = "output/randomly_select_nuclear_csomes/magna.txt",
+        pulex = "output/randomly_select_nuclear_csomes/pulex.txt"
     params:
         n = 10000
     script:
