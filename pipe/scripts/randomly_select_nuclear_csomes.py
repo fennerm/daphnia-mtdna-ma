@@ -28,10 +28,15 @@ for spp, subsplit in zip(species, species_split):
     shared_csomes = set(csomes[0]).intersection(*csomes)
 
     # Randomly select some chromosomes
-    rand_csomes = random.sample(shared_csomes, snakemake.params.n)
+    if int(snakemake.params.n) < len(shared_csomes):
+        rand_csomes = random.sample(shared_csomes, snakemake.params.n)
+    else:
+        # If number of shared csomes is less than n, just return them all
+        # (This should only happen in testing)
+        rand_csomes = shared_csomes
 
     # Convert to string and write to output file
-    shared_csomes = '\n'.join(shared_csomes)
+    rand_csomes = '\n'.join(rand_csomes)
     outfile = snakemake.output[spp]
     with open(outfile) as out:
-        out.write(shared_csomes)
+        out.write(rand_csomes)
