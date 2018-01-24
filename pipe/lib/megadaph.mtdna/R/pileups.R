@@ -3,17 +3,19 @@
 #'                sequences
 #' @param rot_bam .bam files from alignment to the rotated reference
 #'                sequences
+#' @param bp Number of base pairs in the mitochondrial reference sequence.
 #' @param min_base_quality Numeric; minimum Phred base quality for base to be
 #'        included in table
 #' @param distinguish_strands; If TRUE base counts on the +/- strands are
 #'        counted separately
 #' @return A data.frame
 #' @export
-construct_spliced_pileup <- function(og_bam, rot_bam, min_base_quality=30,
+construct_spliced_pileup <- function(og_bam, rot_bam, bp, min_base_quality=30,
                                      distinguish_strands=FALSE) {
   # Create individual pileups
-  og_pile <- construct_pileup(og_bam, min_base_quality, distinguish_strands)
-  rot_pile <- construct_pileup(rot_bam, min_base_quality, distinguish_strands)
+  og_pile <- construct_pileup(og_bam, bp, min_base_quality, distinguish_strands)
+  rot_pile <- construct_pileup(rot_bam, bp, min_base_quality,
+                               distinguish_strands)
 
   # Splice the pileups
   spliced_pile <- splice_pileups(og_pile, rot_pile, species)
@@ -22,6 +24,7 @@ construct_spliced_pileup <- function(og_bam, rot_bam, min_base_quality=30,
 
 #' Create an allele count pileup with RSamtools
 #' @param bam Path to a .bam file
+#' @param bp Number of base pairs in the mitochondrial reference sequence.
 #' @param min_base_quality All read positions with phred score <
 #'        min_base_quality will be excluded
 #' @param distinguish_strands; If TRUE, base counts on the +/- strands are
@@ -32,9 +35,9 @@ construct_spliced_pileup <- function(og_bam, rot_bam, min_base_quality=30,
 #' @importFrom data.table setDT
 #' @importFrom reshape2 dcast
 #' @export
-construct_pileup <- function(bam, min_base_quality = 30,
+construct_pileup <- function(bam, bp, min_base_quality = 30,
                              distinguish_strands = FALSE,
-                             min_nucleotide_depth = 1) {
+                             min_nucleotide_depth = 0) {
   pileup_param <- PileupParam(max_depth = 1000000,
                               distinguish_strands = distinguish_strands,
                               distinguish_nucleotides = TRUE,
@@ -45,6 +48,9 @@ construct_pileup <- function(bam, min_base_quality = 30,
                               min_base_quality = min_base_quality)
 
   pile <- pileup(bam, pileupParam = pileup_param)
+
+  # Add missing rows to the pileup
+  pile <- merge(data.frame(pos = 1:bp), pile, all.x = TRUE)
 
   # Cast the table to wide format
   if (distinguish_strands) {
