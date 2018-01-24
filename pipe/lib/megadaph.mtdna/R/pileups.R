@@ -104,7 +104,8 @@ splice_pileups <- function(og_pile, rot_pile, rot_ref) {
                      rot_pile[splx[[3]], ])
   } else if (data_type == "data.table") {
     spliced <- rbindlist(list(rot_pile[splx[[1]], ], og_pile[splx[[2]], ],
-                              rot_pile[splx[[3]], ]))
+                              rot_pile[splx[[3]], ]), fill=TRUE)
+    spliced[is.na(spliced)] <- 0
   } else if (data_type %in% c("numeric", "integer")) {
     spliced <- c(rot_pile[splx[[1]]], og_pile[splx[[2]]], rot_pile[splx[[3]]])
   }
