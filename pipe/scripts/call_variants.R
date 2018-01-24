@@ -36,7 +36,7 @@ library(fen.R.util)
 library(megadaph.mtdna)
 
 MUT_COV_MATRICES_DIR <- "mut_cov_matrices"
-VARIANT_TABLE_DIR <- "variant_tables"
+TEST_TABLE_DIR <- "test_tables"
 CONSENSUS_DIR <- "consensus_seqs"
 
 ## Write data to an .Rds or .csv file
@@ -54,7 +54,7 @@ write_output <- function(dat, dir, genotype, type) {
 ## Create the output directories
 create_output_directories <- function(outdir) {
   dir.create(file.path(outdir, MUT_COV_MATRICES_DIR))
-  dir.create(file.path(outdir, VARIANT_TABLE_DIR))
+  dir.create(file.path(outdir, TEST_TABLE_DIR))
   dir.create(file.path(outdir, CONSENSUS_DIR))
 }
 
@@ -139,20 +139,20 @@ main <- function(pileup_files, seq_err_file, outdir) {
   p <- ulapply(mut_cov_matrices, call_variant)
 
   cat("Tabulating data \n")
-  var_table <- cbind(as.data.frame(species, stringsAsFactors = FALSE), genotype,
+  test_table <- cbind(as.data.frame(species, stringsAsFactors = FALSE), genotype,
                      isolate, mutant_sample_ids, 1:bp, mean_coverage, consensus,
                      mutant_consensus, mutation_class, max_mut_afs, diff_afs,
                      strand_bias, unique_sites, coverage_proportion, p,
                      stringsAsFactors = FALSE)
-  colnames(var_table) <- c("species", "genotype", "isolate", "sample", "pos",
+  colnames(test_table) <- c("species", "genotype", "isolate", "sample", "pos",
                            "coverage", "ref", "alt", "class", "af", "af_diff",
                            "strand_bias", "unique", "coverage_proportion",
                            "p_value")
 
   cat("Merging multinucleotide indels \n")
-  var_table <- merge_significant_indels(var_table)
-  var_table <- rename_small_deletions(var_table)
-  write_output(var_table, dir = file.path(outdir, VARIANT_TABLE_DIR),
+  test_table <- merge_significant_indels(test_table)
+  test_table <- rename_small_deletions(test_table)
+  write_output(test_table, dir = file.path(outdir, TEST_TABLE_DIR),
                genotype = genotype, type = "csv")
 }
 

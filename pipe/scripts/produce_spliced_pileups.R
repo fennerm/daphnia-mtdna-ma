@@ -3,25 +3,29 @@
 original and rotated mtDNA reference sequences.
 
 Usage:
-  produce_spliced_pileups.R --output PILE OGBAM ROTBAM
+  produce_spliced_pileups.R --output PILE --bp N OGBAM ROTBAM
 
 Options:
-  -o --output     Output file" -> doc
+  -o --output     Output file
+  -n --bp         Number of bases in reference sequence
+" -> doc
 
 library(docopt)
+opts <- docopt::docopt(doc)
 
-main <- function(og, rot, out) {
-  pile <- megadaph.mtdna::construct_spliced_pileup(og, rot,
+library(megadaph.mtdna)
+
+main <- function(og, rot, bp, out) {
+  pile <- megadaph.mtdna::construct_spliced_pileup(og, rot, bp,
                                                    distinguish_strands = TRUE)
   pile
 }
 
 if (!interactive()) {
-  opts <- docopt::docopt(doc)
-  library(megadaph.mtdna)
   og <- unlist(opts["OGBAM"])
   rot <- unlist(opts["ROTBAM"])
-  out <- unlist(opts["PILE"])
+  out <- unlist(opts["--output"])
+  bp <- int(unlist(opts["--bp"]))
   pile <- main(og, rot, out)
   write.csv(pile, out, quote = FALSE, row.names = FALSE)
 }

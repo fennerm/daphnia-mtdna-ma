@@ -253,49 +253,49 @@ call_variant <- function(mut_cov_matrix) {
 #' Merge multinucleotide indels (p < 0.05) into single indel events
 #' Deletions are renamed to correct VCF style format, but insertions will need
 #' to be renamed manually.
-#' @param var_table data.frame; A table of variant information, rows are genome
+#' @param test_table data.frame; A table of variant information, rows are genome
 #'                  positions
-#' @return data.frame; var_table with indels merged
+#' @return data.frame; test_table with indels merged
 #' @export
-merge_significant_indels <- function(var_table) {
+merge_significant_indels <- function(test_table) {
   # Find an indel
-  indel_idx <- find_indel(var_table)
+  indel_idx <- find_indel(test_table)
 
   if (!is.null(indel_idx)) {
     # Recursively call merge_significant_indels, until all indels merged
-    updated_table <- merge_indel(var_table, indel_idx)
+    updated_table <- merge_indel(test_table, indel_idx)
     merge_significant_indels(updated_table)
   } else {
-    var_table
+    test_table
   }
 }
 
 #' RSamtools pileup labels indels with "-". This function updates deletion.
-#' fields in var_table with VCF formatting. This allows easy export to .vcf.
+#' fields in test_table with VCF formatting. This allows easy export to .vcf.
 #' This function assumes all indels are small. Call merge_significant_indels
 #' first to handle multinucleotide indels. Unfortunately Rsamtools doesn't
 #' specify inserted bases so these have to be renamed manually.
-#' @param var_table data.frame; A table of variant information, rows are genome
+#' @param test_table data.frame; A table of variant information, rows are genome
 #'                  positions
 #' @return data.frame
 #' @export
-rename_small_deletions <- function(var_table) {
+rename_small_deletions <- function(test_table) {
   # Get indices of all deletions in table
-  del_idx <- which(var_table$class == "deletion")
+  del_idx <- which(test_table$class == "deletion")
   ndel <- length(del_idx)
   # Output table
-  new_t <- var_table
+  new_t <- test_table
 
   for (i in 1:ndel) {
     j <- del_idx[i]
-    if (var_table[j, "pos"] == 0) {
-      prev_idx <- nrow[var_table]
+    if (test_table[j, "pos"] == 0) {
+      prev_idx <- nrow[test_table]
     } else {
       prev_idx <- j - 1
     }
-    new_t[j, "pos"] <- var_table[prev_idx, "pos"]
-    new_t[j, "ref"] <- paste0(var_table[prev_idx, "ref"], var_table[j, "ref"])
-    new_t[j, "alt"] <- var_table[j, "ref"]
+    new_t[j, "pos"] <- test_table[prev_idx, "pos"]
+    new_t[j, "ref"] <- paste0(test_table[prev_idx, "ref"], test_table[j, "ref"])
+    new_t[j, "alt"] <- test_table[j, "ref"]
   }
 
   new_t
@@ -424,22 +424,22 @@ find_runs <- function(x) {
 }
 
 #' Find a multinucleotide indel in a table of variants
-#' @param var_table data.frame; A table of variant information, rows are genome
+#' @param test_table data.frame; A table of variant information, rows are genome
 #'                  positions
 #' @return Numeric vector; row indices of a multinucleotide indel. NULL if no
 #'         indels can be found.
-find_indel <- function(var_table) {
+find_indel <- function(test_table) {
 
   # First look for insertions
-  is_ins <- var_table[, "alt"] == "+"
-  is_sig <- var_table$p_value < 0.05
+  is_ins <- test_table[, "alt"] == "+"
+  is_sig <- test_table$p_value < 0.05
 
   insertion_idx <- which(is_ins & is_sig)
   insertion_run <- find_runs(insertion_idx)
 
   if (length(insertion_run) == 0) {
     # If we've found all insertions, look for deletions
-    is_del <- var_table[, "alt"] == "-"
+    is_del <- test_table[, "alt"] == "-"
     deletion_idx <- which(is_del & is_sig)
     deletion_run <- find_runs(deletion_idx)
 
@@ -457,14 +457,14 @@ find_indel <- function(var_table) {
   indel_idx
 }
 
-#' Merge rows of var_table given by indel_idx into a single row.
-#' @param var_table data.frame; A table of variant information, rows are genome
+#' Merge rows of test_table given by indel_idx into a single row.
+#' @param test_table data.frame; A table of variant information, rows are genome
 #'                  positions
 #' @param indel_idx Numeric vector (length > 1)
-#' @return A var_table
-merge_indel <- function(var_table, indel_idx) {
-  pre_row <- var_table[indel_idx[1] - 1, ]
-  indel_row <- var_table[indel_idx,]
+#' @return A test_table
+merge_indel <- function(test_table, indel_idx) {
+  pre_row <- test_table[indel_idx[1] - 1, ]
+  indel_row <- test_table[indel_idx,]
 
   # Determine alternative and reference alleles based upon indel class
   in_or_del <- unique(indel_row$alt)
@@ -513,6 +513,6 @@ merge_indel <- function(var_table, indel_idx) {
                   mean(indel_row$coverage_proportion),
                   # p value
                   mean(indel_row$p_value))
-  new_var_table <- replace_rows(var_table, indel_idx, new_row)
-  new_var_table
+  new_test_table <- replace_rows(test_table, indel_idx, new_row)
+  new_test_table
 }
