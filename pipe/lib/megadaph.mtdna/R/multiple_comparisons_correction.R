@@ -1,33 +1,37 @@
-
-
-
-
 #' @export
 #' @importFrom qvalue qvalue
-mult_comparisons_correct <- function(var_tables, fdr_level=0.05) {
-  merged_table <- do.call(rbind, var_tables)
-  # filtered_table <- merged_table[which(!merged_table$low_coverage),]
-  fdr <- qvalue(merged_table$p_value, fdr.level=fdr_level)
-  significant <- fdr$significant
-  q_value <- fdr$qvalues
-  fdr_table <- cbind(merged_table, q_value, significant)
-  fdr_table <- data.frame(fdr_table, stringsAsFactors=FALSE)
-  fdr_table <- fdr_table[which(fdr_table$unique),]
-  fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
-  fdr_table
+mult_comparisons_correct <- function(test_tables, fdr_level=0.05) {
+  # Merge into a single table
+  merged_table <- do.call(rbind, test_tables)
 
-  # split_by_isolate <- split(merged_table, merged_table$isolate)
-  # fdr <- lapply(split_by_isolate, function(x) {
-  #     qvalue(x$p_value, fdr.level=fdr_level/length(unique(merged_table$isolate)))
-  # })
-  # significant <- unlist(lapply(fdr, function(x) x$significant))
-  # q_value <- unlist(lapply(fdr, function(x) x$qvalues))
-  # fdr_table <- cbind(merged_table, q_value, significant)
-  # fdr_table <- data.frame(fdr_table, stringsAsFactors=FALSE)
-  # fdr_table <- fdr_table[which(fdr_table$unique),]
-  # fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
-  # fdr_table
+  # Calculate q values
+  fdr <- qvalue(merged_table$p_value, fdr.level = fdr_level)
+
+  # Add the FDR information to the table
+  fdr_table <- cbind(merged_table, fdr$qvalues, fdr$significant)
+  fdr_table <- data.frame(fdr_table, stringsAsFactors = FALSE)
+
+  # Split the table back into genotypes
+  fdr_tables <- split(fdr_table, fdr_table$genotype)
+  fdr_tables
 }
+
+# filter_variants
+#   fdr_table <- fdr_table[which(fdr_table$unique),]
+#   fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
+#   fdr_table
+#   # split_by_isolate <- split(merged_table, merged_table$isolate)
+#   # fdr <- lapply(split_by_isolate, function(x) {
+#   #     qvalue(x$p_value, fdr.level=fdr_level/length(unique(merged_table$isolate)))
+#   # })
+#   # significant <- unlist(lapply(fdr, function(x) x$significant))
+#   # q_value <- unlist(lapply(fdr, function(x) x$qvalues))
+#   # fdr_table <- cbind(merged_table, q_value, significant)
+#   # fdr_table <- data.frame(fdr_table, stringsAsFactors=FALSE)
+#   # fdr_table <- fdr_table[which(fdr_table$unique),]
+#   # fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
+#   # fdr_table
+# }
 
 get_stat_significant <- function(fdr_table) {
   sig_table <- fdr_table[which(fdr_table$significant),]
@@ -39,7 +43,6 @@ calc_coverages <- function(var_tables) {
   coverages <- sapply(var_tables, function(x) mean(x$coverage))
   coverages
 }
-
 
 
 #' Subsample a count vector
