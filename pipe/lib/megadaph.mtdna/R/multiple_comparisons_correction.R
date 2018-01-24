@@ -16,22 +16,23 @@ mult_comparisons_correct <- function(test_tables, fdr_level=0.05) {
   fdr_tables
 }
 
-filter_variants
-  fdr_table <- fdr_table[which(fdr_table$unique),]
-  fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
-  fdr_table
-  # split_by_isolate <- split(merged_table, merged_table$isolate)
-  # fdr <- lapply(split_by_isolate, function(x) {
-  #     qvalue(x$p_value, fdr.level=fdr_level/length(unique(merged_table$isolate)))
-  # })
-  # significant <- unlist(lapply(fdr, function(x) x$significant))
-  # q_value <- unlist(lapply(fdr, function(x) x$qvalues))
-  # fdr_table <- cbind(merged_table, q_value, significant)
-  # fdr_table <- data.frame(fdr_table, stringsAsFactors=FALSE)
-  # fdr_table <- fdr_table[which(fdr_table$unique),]
-  # fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
-  # fdr_table
-}
+
+# filter_variants
+#   fdr_table <- fdr_table[which(fdr_table$unique),]
+#   fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
+#   fdr_table
+#   # split_by_isolate <- split(merged_table, merged_table$isolate)
+#   # fdr <- lapply(split_by_isolate, function(x) {
+#   #     qvalue(x$p_value, fdr.level=fdr_level/length(unique(merged_table$isolate)))
+#   # })
+#   # significant <- unlist(lapply(fdr, function(x) x$significant))
+#   # q_value <- unlist(lapply(fdr, function(x) x$qvalues))
+#   # fdr_table <- cbind(merged_table, q_value, significant)
+#   # fdr_table <- data.frame(fdr_table, stringsAsFactors=FALSE)
+#   # fdr_table <- fdr_table[which(fdr_table$unique),]
+#   # fdr_table <- fdr_table[which(fdr_table$strand_bias < 60),]
+#   # fdr_table
+# }
 
 get_stat_significant <- function(fdr_table) {
   sig_table <- fdr_table[which(fdr_table$significant),]

@@ -4,10 +4,10 @@
 \alias{find_indel}
 \title{Find a multinucleotide indel in a table of variants}
 \usage{
-find_indel(var_table)
+find_indel(test_table)
 }
 \arguments{
-\item{var_table}{data.frame; A table of variant information, rows are genome
+\item{test_table}{data.frame; A table of variant information, rows are genome
 positions}
 }
 \value{
