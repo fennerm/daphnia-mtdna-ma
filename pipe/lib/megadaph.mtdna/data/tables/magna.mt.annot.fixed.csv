@@ -1,4 +1,0 @@
-species,genotype,isolate,sample,pos,coverage,ref,alt,class,af,af_diff,strand_bias,unique,coverage_proportion,p_value,q_value,significant,reproduction,effect,gene,feature,coding,ts_tv,severity
-magna,G,GA,GA4,6681,4554.375,A,G,snv,0.9983490177,0.9982132864,1.2333083434,TRUE,0.9756800938,2.2250738585072e-308,8.94197486630523E-305,TRUE,CYC,missense_variant,ND5,transcript,protein_coding,transition,MODERATE
-magna,G,GB,GB1,13689,4546.625,C,T,snv,0.9954275263,0.9952985024,0,TRUE,0.9820980943,2.2250738585072e-308,8.94197486630523E-305,TRUE,CYC,upstream_gene_variant,ND4,transcript,protein_coding,transition,MODIFIER
-magna,G,GC,GC8,2777,2979.125,A,G,snv,1,1,0,TRUE,1.1177460279,2.2250738585072e-308,8.94197486630523E-305,TRUE,CYC,missense_variant,COX1,transcript,protein_coding,transition,MODERATE

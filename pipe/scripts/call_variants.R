@@ -25,11 +25,12 @@
 "Call variants from allele count pileup
 
 Usage:
-  call_variants.R --seqerr SEQERR --output_dir OUTDIR PILEUP ...
+  call_variants.R --seqerr=SEQERR --output_dir=OUTDIR PILEUP ...
 
 Options:
-  -e --seqerr       .csv file with estimates of sequencing error for each sample
-  -o --output_dir   Output directory
+  -e --seqerr=SEQERR        .csv file with estimates of sequencing error for
+                            each sample
+  -o --output_dir=OUTDIR    Output directory
 " -> doc
 
 library(fen.R.util)
@@ -139,11 +140,12 @@ main <- function(pileup_files, seq_err_file, outdir) {
   p <- ulapply(mut_cov_matrices, call_variant)
 
   cat("Tabulating data \n")
-  test_table <- cbind(as.data.frame(species, stringsAsFactors = FALSE), genotype,
-                     isolate, mutant_sample_ids, 1:bp, mean_coverage, consensus,
-                     mutant_consensus, mutation_class, max_mut_afs, diff_afs,
-                     strand_bias, unique_sites, coverage_proportion, p,
-                     stringsAsFactors = FALSE)
+  test_table <- cbind(as.data.frame(species, stringsAsFactors = FALSE),
+                      genotype, isolate, mutant_sample_ids, 1:bp, mean_coverage,
+                      consensus,
+                      mutant_consensus, mutation_class, max_mut_afs, diff_afs,
+                      strand_bias, unique_sites, coverage_proportion, p,
+                      stringsAsFactors = FALSE)
   colnames(test_table) <- c("species", "genotype", "isolate", "sample", "pos",
                            "coverage", "ref", "alt", "class", "af", "af_diff",
                            "strand_bias", "unique", "coverage_proportion",
@@ -158,8 +160,5 @@ main <- function(pileup_files, seq_err_file, outdir) {
 
 if (!interactive()) {
   opts <- docopt::docopt(doc)
-  pileups <- unlist(opts["PILEUP"])
-  seq_err_file <- unlist(opts["SEQERR"])
-  output_dir <- unlist(opts["OUTDIR"])
-  main(pileups, seq_err_file, output_dir)
+  main(opts["PILEUP"], opts["seqerr"], opts["output_dir"])
 }
