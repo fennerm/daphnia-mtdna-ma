@@ -11,7 +11,6 @@ Options:
 " -> doc
 
 library(docopt)
-opts <- docopt::docopt(doc)
 
 library(megadaph.mtdna)
 
@@ -22,10 +21,11 @@ main <- function(og, rot, bp, out) {
 }
 
 if (!interactive()) {
+  opts <- docopt::docopt(doc)
   og <- unlist(opts["OGBAM"])
   rot <- unlist(opts["ROTBAM"])
-  out <- unlist(opts["--output"])
-  bp <- int(unlist(opts["--bp"]))
-  pile <- main(og, rot, out)
+  out <- unlist(opts["PILE"])
+  bp <- as.numeric(unlist(opts["N"]))
+  pile <- main(og, rot, bp, out)
   write.csv(pile, out, quote = FALSE, row.names = FALSE)
 }
