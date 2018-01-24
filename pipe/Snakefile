@@ -7,6 +7,8 @@ D. pulex and D. magna
 """
 import os
 
+from plumbum.cmd import nbases
+
 # ==============================================================================
 # Set up
 # ==============================================================================
@@ -24,7 +26,7 @@ GENOTYPE = ['FA', 'FB', 'FC', 'GA', 'GB', 'GC', 'IA', 'IB', 'IC', 'L', 'TCO']
 # Assign each sample to a genotype
 GENOTYPE_SAMPLE = {}
 for genotype in GENOTYPE:
-    GENOTYPE_SAMPLE["genotype"] = [x for x in SAMPLE if x.startswith(genotype)]
+    GENOTYPE_SAMPLE[genotype] = [x for x in SAMPLE if x.startswith(genotype)]
 
 ROTATION = ['og', 'rot']
 
@@ -58,6 +60,12 @@ def add_indices(reference):
     outdict = indices(reference)
     outdict["ref"] = reference
     return outdict
+
+
+def get_nbases(wildcards):
+    spp = species(wildcards)
+    bp = nbases("ref/" + spp + ".mt.og.fa").split("\n")[0]
+    return bp
 
 
 def reference(wildcards):
@@ -96,13 +104,17 @@ def bowtie2_idx_root(idx):
 rule all:
     input:
         "output/multiqc/multiqc.html",
-        expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
-               rotation=ROTATION),
+#        expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
+#               rotation=ROTATION),
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
-        expand("output/subsample_nuclear_alignments/{sample}.bam",
-               sample=SAMPLE)
+        expand("output/merge_sequencing_error_files/{genotype}.csv",
+               genotype=GENOTYPE),
+        expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
+               rotation=ROTATION),
+        expand("output/call_variants/mut_cov_matrices/{genotype}.Rds",
+               genotype=GENOTYPE)
 
 rule rotate_reference:
     input:
@@ -220,12 +232,11 @@ rule competitive_align:
 
 rule extract_mt_reads:
     input:
-        unpack(combined_reference),
-        bam = "output/competitive_align/{sample}.bam"
+        "output/competitive_align/{sample}.bam"
     output:
-        fwd_reads = "output/mt_aligned/{sample}.R1.fastq",
-        rev_reads = "output/mt_aligned/{sample}.R2.fastq",
-        unpaired_reads = "output/mt_aligned/{sample}.unpaired.fastq"
+        fwd_reads = "output/extract_mt_reads/{sample}.R1.fastq",
+        rev_reads = "output/extract_mt_reads/{sample}.R2.fastq",
+        unpaired_reads = "output/extract_mt_reads/{sample}.unpaired.fastq"
     script:
         "scripts/extract_mt_reads.py"
 
@@ -233,8 +244,8 @@ rule extract_mt_reads:
 rule align_to_mt_rotation:
     input:
         unpack(reference),
-        fwd_reads = "output/mt_aligned/{sample}.R1.fastq",
-        rev_reads = "output/mt_aligned/{sample}.R2.fastq"
+        fwd_reads = "output/extract_mt_reads/{sample}.R1.fastq",
+        rev_reads = "output/extract_mt_reads/{sample}.R2.fastq"
     output:
         bam = "output/align_to_mt_rotation/{sample}.{rotation}.bam",
         bai = "output/align_to_mt_rotation/{sample}.{rotation}.bam.bai"
@@ -284,9 +295,11 @@ rule remove_singletons:
     input:
         "output/local_realignment/{sample}.{rotation}.bam"
     output:
-        "output/remove_singletons/{sample}.{rotation}.bam"
+        bam = "output/remove_singletons/{sample}.{rotation}.bam",
+        bai = "output/remove_singletons/{sample}.{rotation}.bam.bai"
     shell:
-        "bamtools filter -isMateMapped true -in {input} -out {output}"
+        "bamtools filter -isMateMapped true -in {input} -out {output.bam} && "
+        "samtools index {output.bam}"
 
 rule qualimap:
     input:
@@ -294,20 +307,11 @@ rule qualimap:
     output:
         "output/qualimap/{sample}_{rotation}/"
     shell:
-        "qualimap bamqc -bam {input} -outdir output/qualimap"
-
-rule extract_nuclear_alignments:
-    input:
-        "output/competitive_align/{sample}.bam"
-    output:
-        bam = "output/extract_nuclear_alignments/{sample}.bam",
-        bai = "output/extract_nuclear_alignments/{sample}.bam.bai"
-    script:
-        "scripts/extract_nuclear_alignments.py"
+        "qualimap bamqc -bam {input} -outdir {output}"
 
 rule randomly_select_nuclear_csomes:
     input:
-        expand("output/extract_nuclear_alignments/{sample}.bam", sample=SAMPLE)
+        expand("output/competitive_align/{sample}.bam", sample=SAMPLE)
     output:
         magna = "output/randomly_select_nuclear_csomes/magna.txt",
         pulex = "output/randomly_select_nuclear_csomes/pulex.txt"
@@ -321,7 +325,7 @@ rule subsample_nuclear_alignments:
         csome_list = lambda wildcards: os.path.join(
             "output/randomly_select_nuclear_csomes", species(wildcards) + ".txt"
             ),
-        bam = "output/extract_nuclear_alignments/{sample}.bam"
+        bam = "output/competitive_align/{sample}.bam"
     output:
         bam = "output/subsample_nuclear_alignments/{sample}.bam",
         bai = "output/subsample_nuclear_alignments/{sample}.bam.bai"
@@ -329,49 +333,59 @@ rule subsample_nuclear_alignments:
         with open(input.csome_list) as f:
             # Read the list of target chromosomes into a space-separated string
             target_csomes = ' '.join(f.read().split("\n"))
-
-        shell("extract_csome {input.bam} " + target_csomes + " > {output.bam}")
+        shell("extract_csome {input.bam} " + target_csomes + " | "
+              "samtools sort - > {output.bam}")
         shell("samtools index {output.bam}")
 
+rule estimate_sequencing_error:
+    input:
+        "output/subsample_nuclear_alignments/{sample}.bam"
+    output:
+        "output/estimate_sequencing_error/{sample}.csv"
+    shell:
+        "scripts/estimate_seq_error.R {input} {output}"
 
-# rule estimate_sequencing_error:
-#     input:
-#         "output/subsample_nuclear_alignments/{sample}.bam"
-#     output:
-#         "output/estimate_sequencing_error/{sample}.csv"
-#     shell:
-#         "scripts/estimate_seq_error.R {input} {output}"
+rule merge_sequencing_error_files:
+    input:
+        lambda wildcards: [os.path.join(
+            "output", "estimate_sequencing_error", x + ".csv")
+            for x in GENOTYPE_SAMPLE[wildcards.genotype]]
+    output:
+        "output/merge_sequencing_error_files/{genotype}.csv"
+    run:
+        basenames = [os.path.basename(x) for x in input]
+        samples = [x for x in basenames if x.startswith(wildcards.genotype)]
+        samples = ["output/estimate_sequencing_error/" + x for x in samples]
+        if samples:
+            shell("scripts/merge_sequencing_error_files.R --output "
+                  + "output/merge_sequencing_error_files/" + wildcards.genotype
+                  + ".csv " + ' '.join(samples))
 
-#rule merge_sequencing_error_files:
-#    input:
-#        lambda wildcards: os.path.join(
-#            "output", "estimate_sequencing_error",
-#            GENOTYPE_SAMPLE[wildcards.genotype] + ".csv")
-#    output:
-#        "output/merge_sequencing_error_files/{genotype}.csv"
-#    run:
-#        basenames = [os.path.basename(x) for x in input]
-#        samples = [x for x in basenames if x.startswith(genotype)]
-#        samples = ["output/estimate_sequencing_error/" + x for x in samples]
-#        if samples:
-#            shell("scripts/merge_sequencing_error_files.R --output "
-#                  + "output/merge_sequencing_error_files/" + genotype
-#                  + ".csv " + ' '.join(samples))
-#
-# rule produce_spliced_pileups:
-#     input:
-#         og_bam = "output/remove_singletons/{sample}.og.bam",
-#         rot_bam = "output/remove_singletons/{sample}.rot.bam"
-#     output:
-#         "output/produce_spliced_pileups/{sample}.csv"
-#     shell:
-#         "scripts/produce_spliced_pileups.R --output {output} {input.og_bam} "
-#         "{input.rot_bam}"
-#
-# rule call_variants:
-#     input:
-#         pile = expand("output/produce_spliced_pileups/{sample}.csv",
-#                       sample=SAMPLE)
+rule produce_spliced_pileups:
+    input:
+        og_bam = "output/remove_singletons/{sample}.og.bam",
+        rot_bam = "output/remove_singletons/{sample}.rot.bam"
+    output:
+        "output/produce_spliced_pileups/{sample}.csv"
+    params:
+        bp = get_nbases
+    shell:
+        "scripts/produce_spliced_pileups.R --bp {params.bp} --output "
+        "{output} {input.og_bam} {input.rot_bam}"
+
+rule call_variants:
+    input:
+        pile = lambda wildcards: [os.path.join(
+            "output", "produce_spliced_pileups", x + ".csv")
+            for x in GENOTYPE_SAMPLE[wildcards.genotype]],
+        seqerr = "output/merge_sequencing_error_files/{genotype}.csv"
+    output:
+        "output/call_variants/mut_cov_matrices/{genotype}.Rds",
+        "output/call_variants/test_tables/{genotype}.csv",
+        "output/call_variants/consensus_seqs/{genotype}.fasta"
+    shell:
+        "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
+        "output/call_variants {input.pile}"
 
 
 rule multiqc:
@@ -385,5 +399,4 @@ rule multiqc:
         report = 'output/multiqc/multiqc.html',
         data = "output/multiqc/multiqc_data"
     shell:
-        'multiqc -d -n {output.report} .'
-
+        'rm -rf {output.data}; multiqc -d -n {output.report} .'
