@@ -4,7 +4,7 @@
 \alias{construct_spliced_pileup}
 \title{Splice the original and rotated BAM files into a single allele count table}
 \usage{
-construct_spliced_pileup(og_bam, rot_bam, min_base_quality = 30,
+construct_spliced_pileup(og_bam, rot_bam, bp, min_base_quality = 30,
   distinguish_strands = FALSE)
 }
 \arguments{
@@ -13,6 +13,8 @@ sequences}
 
 \item{rot_bam}{.bam files from alignment to the rotated reference
 sequences}
+
+\item{bp}{Number of base pairs in the mitochondrial reference sequence.}
 
 \item{min_base_quality}{Numeric; minimum Phred base quality for base to be
 included in table}

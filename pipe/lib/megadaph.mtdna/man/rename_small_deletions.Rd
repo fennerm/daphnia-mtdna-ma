@@ -3,15 +3,15 @@
 \name{rename_small_deletions}
 \alias{rename_small_deletions}
 \title{RSamtools pileup labels indels with "-". This function updates deletion.
-fields in var_table with VCF formatting. This allows easy export to .vcf.
+fields in test_table with VCF formatting. This allows easy export to .vcf.
 This function assumes all indels are small. Call merge_significant_indels
 first to handle multinucleotide indels. Unfortunately Rsamtools doesn't
 specify inserted bases so these have to be renamed manually.}
 \usage{
-rename_small_deletions(var_table)
+rename_small_deletions(test_table)
 }
 \arguments{
-\item{var_table}{data.frame; A table of variant information, rows are genome
+\item{test_table}{data.frame; A table of variant information, rows are genome
 positions}
 }
 \value{
@@ -19,7 +19,7 @@ data.frame
 }
 \description{
 RSamtools pileup labels indels with "-". This function updates deletion.
-fields in var_table with VCF formatting. This allows easy export to .vcf.
+fields in test_table with VCF formatting. This allows easy export to .vcf.
 This function assumes all indels are small. Call merge_significant_indels
 first to handle multinucleotide indels. Unfortunately Rsamtools doesn't
 specify inserted bases so these have to be renamed manually.

@@ -6,14 +6,14 @@
 Deletions are renamed to correct VCF style format, but insertions will need
 to be renamed manually.}
 \usage{
-merge_significant_indels(var_table)
+merge_significant_indels(test_table)
 }
 \arguments{
-\item{var_table}{data.frame; A table of variant information, rows are genome
+\item{test_table}{data.frame; A table of variant information, rows are genome
 positions}
 }
 \value{
-data.frame; var_table with indels merged
+data.frame; test_table with indels merged
 }
 \description{
 Merge multinucleotide indels (p < 0.05) into single indel events

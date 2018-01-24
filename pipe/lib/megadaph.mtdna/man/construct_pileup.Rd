@@ -4,11 +4,13 @@
 \alias{construct_pileup}
 \title{Create an allele count pileup with RSamtools}
 \usage{
-construct_pileup(bam, min_base_quality = 30, distinguish_strands = FALSE,
-  min_nucleotide_depth = 1)
+construct_pileup(bam, bp, min_base_quality = 30,
+  distinguish_strands = FALSE, min_nucleotide_depth = 0)
 }
 \arguments{
 \item{bam}{Path to a .bam file}
+
+\item{bp}{Number of base pairs in the mitochondrial reference sequence.}
 
 \item{min_base_quality}{All read positions with phred score <
 min_base_quality will be excluded}
