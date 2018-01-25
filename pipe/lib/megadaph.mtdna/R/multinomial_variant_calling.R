@@ -39,6 +39,7 @@ create_mutant_consensus <- function(piles, consensus) {
   # Create table of minor allele frequencies for each sample.
   mafs <- lapply(piles, get_minor_allele_frequencies, consensus = consensus)
   mutant_consensus <- ulapply(1:bp, function(i) {
+                                print(i)
                                 v <- ulapply(mafs, "[", i)
                                 vnames <- lapply(mafs, names)
                                 vnames[[which.max(v)]][i]
@@ -321,6 +322,7 @@ get_minor_allele_frequencies <- function(pile, consensus) {
   minor_alleles <- get_minor_alleles(pile, consensus)
   mafs <- ulapply(1:bp, function(i) {
                     compute_allele_frequency(pile[i, ], minor_alleles[i])})
+  mafs[is.nan(mafs)] <- 0
   mafs
 }
 
@@ -479,6 +481,7 @@ merge_indel <- function(test_table, indel_idx) {
     alt <- pre_ref
   } else if (in_or_del == "+") {
     class <- "insertion"
+    ref <- pre_ref
     alt <- paste0(pre_ref, "+", collapse = "")
   } else {
     stop("These indices don't correspond to an indel.")
