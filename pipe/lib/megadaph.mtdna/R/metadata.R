@@ -18,7 +18,11 @@ get_isolate <- function(filepath) {
 #' Get genotype ID from filename or vector of paths.
 #' @export
 get_genotype <- function(filepath) {
-    sub("^([[:alpha:]]*).*", "\\1", get_sample(filepath))
+  genotype <- sub("^([[:alpha:]]*).*", "\\1", get_sample(filepath))
+  # Make sure that EC and SC files are not assigned the wrong genotype
+  genotype <- ifelse(get_species(filepath) == "magna", substr(genotype, 1, 2),
+                     genotype)
+  genotype
 }
 
 #' Get Daphnia species from filename or vector of paths.

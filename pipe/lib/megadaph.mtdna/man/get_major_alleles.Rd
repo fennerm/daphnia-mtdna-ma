@@ -8,7 +8,7 @@ WARNING: Returns the first value if tied}
 get_major_alleles(pile)
 }
 \arguments{
-\item{pile}{data.table; allele counts at each genome position}
+\item{pile}{matrix; allele counts at each genome position}
 }
 \value{
 Character; Vector of major alleles, each allele one of

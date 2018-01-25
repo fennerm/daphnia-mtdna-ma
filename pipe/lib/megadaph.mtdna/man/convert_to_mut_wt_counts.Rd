@@ -7,7 +7,7 @@
 convert_to_mut_wt_counts(pile, mutant_consensus)
 }
 \arguments{
-\item{pile}{A data.table; allele counts at each genome position}
+\item{pile}{A matrix; allele counts at each genome position}
 
 \item{mutant_consensus;}{An alternate allele consensus sequence produced by
 create_mutant_consensus}

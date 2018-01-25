@@ -7,7 +7,7 @@
 get_minor_alleles(pile, consensus)
 }
 \arguments{
-\item{pile}{data.table; allele counts at each genome position}
+\item{pile}{matrix; allele counts at each genome position}
 
 \item{consensus}{The consensus sequence for the samples}
 }

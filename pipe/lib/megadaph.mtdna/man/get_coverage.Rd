@@ -7,7 +7,7 @@
 get_coverage(pile)
 }
 \arguments{
-\item{pile}{A data.table; allele counts at each genome position}
+\item{pile}{matrix; allele counts at each genome position}
 }
 \value{
 A numeric vector

@@ -8,7 +8,7 @@ position among multiple samples.}
 create_mutant_consensus(piles, consensus)
 }
 \arguments{
-\item{piles}{List of data.table; Each list item contains allele counts at
+\item{piles}{List of matrices; Each list item contains allele counts at
 each genome position for a single sample.}
 
 \item{consensus}{character; The consensus sequence for the samples}

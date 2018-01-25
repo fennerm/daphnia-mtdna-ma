@@ -7,7 +7,7 @@
 get_allele_counts(pile, alleles)
 }
 \arguments{
-\item{pile}{A data.table; allele counts at each genome position}
+\item{pile}{A matrix; allele counts at each genome position}
 
 \item{alleles}{Character vector}
 }

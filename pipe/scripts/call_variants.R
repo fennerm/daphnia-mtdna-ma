@@ -71,9 +71,14 @@ write_consensus <- function(consensus, outdir, genotype) {
 ## Read the sequencing error file and convert to a numeric vector
 parse_seq_err_csv <- function(seq_err_file) {
   seq_err <- read.csv(seq_err_file, stringsAsFactors = FALSE)
-  seq_err <- seq_err$sequencing_error
+  seq_err <- as.numeric(seq_err$sequencing_error)
   seq_err
 }
+
+#pileup_files <- list.files("../../../../devpipe/output/produce_spliced_pileups",
+#                           full.names = TRUE, pattern = "IB.*")
+#seq_err_file <- "../../../../devpipe/output/merge_sequencing_error_files/IB.csv"
+#outdir <- "../../../../devpipe/output/call_variants"
 
 main <- function(pileup_files, seq_err_file, outdir) {
   nsamples <- length(pileup_files)
@@ -88,7 +93,7 @@ main <- function(pileup_files, seq_err_file, outdir) {
   cat("Reading pileups \n")
   stranded_piles <- lapply(pileup_files, read.csv, stringsAsFactors = FALSE,
                            check.names = FALSE)
-  stranded_piles <- lapply(stranded_piles, data.table::setDT)
+  stranded_piles <- lapply(stranded_piles, as.matrix)
   piles <- lapply(stranded_piles, destrand)
 
   cat("Reading sequencing error file \n")
@@ -117,6 +122,7 @@ main <- function(pileup_files, seq_err_file, outdir) {
 
   cat("Calculating mutant allele frequency \n")
   mut_afs <- mapply("/", mutant_counts, coverage)
+  mut_afs[is.nan(mut_afs)] <- 0
 
   cat("Determining maximum mutant allele frequency per site\n")
   mutant_samples <- apply(mut_afs, 1, which.max)

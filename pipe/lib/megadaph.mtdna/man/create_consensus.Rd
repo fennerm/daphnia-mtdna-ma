@@ -7,7 +7,7 @@
 create_consensus(piles)
 }
 \arguments{
-\item{piles}{List of data.table; Each list item contains allele counts at
+\item{piles}{List of matrices; Each list item contains allele counts at
 each genome position for a single sample.}
 }
 \value{

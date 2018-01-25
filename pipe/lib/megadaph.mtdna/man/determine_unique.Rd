@@ -7,7 +7,7 @@
 determine_unique(mut_cov_counts, seq_error_rates)
 }
 \arguments{
-\item{mut_cov_counts}{List of data.frames; Each data.frame has two columns,
+\item{mut_cov_counts}{List of matrices; Each matrix has two columns,
 first column is mutant allele counts, second column is
 total sequencing coverage. Rows are genome positions}
 

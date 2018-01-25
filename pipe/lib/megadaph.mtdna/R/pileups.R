@@ -92,8 +92,8 @@ destrand <- function(pile) {
   idx1 <- seq(1, 11, by = 2)
   idx2 <- idx1 + 1
 
-  destranded <- pile[idx1] + pile[idx2]
-  names(destranded) <- c("A", "C", "G", "T", "-", "+")
+  destranded <- pile[, idx1] + pile[, idx2]
+  colnames(destranded) <- c("A", "C", "G", "T", "-", "+")
   destranded
 }
 

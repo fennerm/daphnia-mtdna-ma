@@ -47,6 +47,4 @@ check_compute_split_indices <- function(og_seq, rot_seq) {
 
 test_that("compute_reference_split_indices output is correct", {
             mapply(check_compute_split_indices, og_seqs, rot_seqs)
-}
-)
-
+})

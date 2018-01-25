@@ -3,7 +3,7 @@
 # ==============================================================================
 
 #' Create a consensus sequence from a set of nucleotide count pileups
-#' @param piles List of data.table; Each list item contains allele counts at
+#' @param piles List of matrices; Each list item contains allele counts at
 #'        each genome position for a single sample.
 #' @return Character vector; The multisample consensus sequence as a string
 #' @importFrom fen.R.util mode
@@ -27,7 +27,7 @@ create_consensus <- function(piles) {
 #' The alternate allele is the non-consensus base with the highest frequency at
 #' a locus within a single sample. These alternate alleles may be true mutants
 #' or might just be sequencing error.
-#' @param piles List of data.table; Each list item contains allele counts at
+#' @param piles List of matrices; Each list item contains allele counts at
 #'        each genome position for a single sample.
 #' @param consensus character; The consensus sequence for the samples
 #' @return character; The alternate consensus sequence
@@ -47,7 +47,7 @@ create_mutant_consensus <- function(piles, consensus) {
 }
 
 #' Calculate mutant allele frequency at each genome position for a sample
-#' @param pile A data.table; allele counts at each genome position
+#' @param pile matrix; allele counts at each genome position
 #' @param mutant_consensus; An alternate allele consensus sequence produced by
 #'        create_mutant_consensus
 #' @return Numeric vector
@@ -56,13 +56,12 @@ create_mutant_consensus <- function(piles, consensus) {
 compute_mutant_allele_frequencies <- function(pile, mutant_consensus) {
   bp <- nrow(pile)
   ulapply(1:bp, function(i) {
-            counts <- unlist(pile[i, ])
-            compute_allele_frequency(counts, mutant_consensus[i])
-                       })
+            compute_allele_frequency(pile[i, ], mutant_consensus[i])
+          })
 }
 
 #' Calculate strand bias for each genome position using fisher tests
-#' @param stranded_piles data.table; Allele count pileups separated by strand
+#' @param stranded_piles matrix; Allele count pileups separated by strand
 #' @param consensus character; The consensus sequence for the samples
 #' @param mutant_consensus character; An alternate allele consensus sequence
 #'        produced by create_mutant_consensus
@@ -83,7 +82,7 @@ compute_all_strand_bias <- function(stranded_piles, consensus, mutant_consensus,
 }
 
 #' Convert an allele count pileup to a table of mutant vs. wild-type counts
-#' @param pile A data.table; allele counts at each genome position
+#' @param pile A matrix; allele counts at each genome position
 #' @param mutant_consensus; An alternate allele consensus sequence produced by
 #'        create_mutant_consensus
 #' @return An nx2 matrix, where columns are mutant and wild-type allele counts,
@@ -92,12 +91,12 @@ compute_all_strand_bias <- function(stranded_piles, consensus, mutant_consensus,
 convert_to_mut_wt_counts <- function(pile, mutant_consensus) {
   mut_counts <- get_allele_counts(pile, mutant_consensus)
   cov <- get_coverage(pile)
-  wt_count <- cov - mut_counts
-  cbind(mut_counts, non_mut_counts)
+  wt_counts <- cov - mut_counts
+  cbind(mut_counts, wt_counts)
 }
 
 #' Get the allele counts for a set alleles
-#' @param pile A data.table; allele counts at each genome position
+#' @param pile A matrix; allele counts at each genome position
 #' @param alleles Character vector
 #' @return Numeric vector
 #' @importFrom fen.R.util ulapply
@@ -105,7 +104,7 @@ convert_to_mut_wt_counts <- function(pile, mutant_consensus) {
 get_allele_counts <- function(pile, alleles) {
   bp <- nrow(pile)
   counts <- ulapply(1:bp, function(i) {
-                      pile[i, alleles[i], with = FALSE]
+                      pile[i, alleles[i]]
                                     })
   counts
 
@@ -113,7 +112,7 @@ get_allele_counts <- function(pile, alleles) {
 
 #' Get the major allele at each genome position for a single sample
 #' WARNING: Returns the first value if tied
-#' @param pile data.table; allele counts at each genome position
+#' @param pile matrix; allele counts at each genome position
 #' @return Character; Vector of major alleles, each allele one of
 #'         {A, C, G, T, +, -}
 #' @export
@@ -122,7 +121,7 @@ get_major_alleles <- function(pile) {
 }
 
 #' Get the alleles with the second highest frequency at each position
-#' @param pile data.table; allele counts at each genome position
+#' @param pile matrix; allele counts at each genome position
 #' @param consensus The consensus sequence for the samples
 #' @return Character; Vector of minor alleles, each allele one of
 #'         {A, C, G, T, +, -}
@@ -131,22 +130,21 @@ get_major_alleles <- function(pile) {
 get_minor_alleles <- function(pile, consensus) {
   bp <- nrow(pile)
   ulapply(1:bp, function(i) {
-            get_minor_allele(unlist(pile[i, ]),
-                             consensus[i])
+            get_minor_allele(pile[i, ], consensus[i])
   })
 }
 
 #' Get sequencing coverage for each genome position
-#' @param pile A data.table; allele counts at each genome position
+#' @param pile matrix; allele counts at each genome position
 #' @return A numeric vector
 #' @export
 get_coverage <- function(pile) {
   # Function for getting coverage of a single sample.
   get_sample_coverage <- function(p) {
-    unlist(apply(pile, 1, sum))
+    apply(pile, 1, sum)
   }
 
-  # If list of data.tables, apply to each.
+  # If list of matrices, apply to each.
   if (is.null(ncol(pile))) {
     lapply(pile, get_sample_coverage)
   } else {
@@ -155,7 +153,7 @@ get_coverage <- function(pile) {
 }
 
 #' Convert an allele count pileup to a table of mutant vs. coverage
-#' @param pile A data.table; allele counts at each genome position
+#' @param pile matrix; allele counts at each genome position
 #' @param mutant_consensus; An alternate allele consensus sequence produced by
 #'        `create_mutant_consensus`
 #' @return An nx2 matrix, where cols are mutant allele counts, and coverage, and
@@ -168,7 +166,7 @@ convert_to_mut_cov_counts <- function(pile, mutant_consensus) {
 }
 
 #' Determine which sites are potientially mutant in only one sample
-#' @param mut_cov_counts List of data.frames; Each data.frame has two columns,
+#' @param mut_cov_counts List of matrices; Each matrix has two columns,
 #'                       first column is mutant allele counts, second column is
 #'                       total sequencing coverage. Rows are genome positions
 #' @param seq_error_rates Numeric vector; Sequencing error rate estimates for
@@ -221,7 +219,7 @@ by_position <- function(x) {
 }
 
 #' Assign a p-value to a variant
-#' @param mut_cov_matrix Numeric matrix; Rows are genome samples, column 1 is
+#' @param mut_cov_matrix matrix; Rows are genome samples, column 1 is
 #'                       mutant allele count. Column 2 is sequencing coverage.
 #' @return A p-value
 #' @importFrom pmultinom pmultinom
@@ -232,7 +230,9 @@ call_variant <- function(mut_cov_matrix) {
   # chance of observing a mutant allele is determined by sequencing coverage
   # only.
 
-  max_mut_af <- max(mut_cov_matrix[, 1] / mut_cov_matrix[, 2])
+  mut_af <- mut_cov_matrix[, 1] / mut_cov_matrix[, 2]
+  mut_af[is.na(mut_af)] <- 0
+  max_mut_af <- max(mut_af)
 
   # Set quantile cutoff equal to the observed mutant allele frequency
   q <- ceiling(mut_cov_matrix[, 2] * max_mut_af) - 1
@@ -292,6 +292,11 @@ rename_small_deletions <- function(test_table) {
       prev_idx <- nrow[test_table]
     } else {
       prev_idx <- j - 1
+      # If the first base is a small deletion, the new position is the very
+      # last base
+      if (prev_idx < 1) {
+        prev_idx <- max(test_table$pos)
+      }
     }
     new_t[j, "pos"] <- test_table[prev_idx, "pos"]
     new_t[j, "ref"] <- paste0(test_table[prev_idx, "ref"], test_table[j, "ref"])
@@ -307,7 +312,7 @@ rename_small_deletions <- function(test_table) {
 
 #' Generate a table of minor allele frequencies for each genome position in a
 #' sample
-#' @param pile data.table; allele counts at each genome position
+#' @param pile matrix; allele counts at each genome position
 #' @param consensus The consensus sequence for the samples
 #' @return Numeric vector of allele frequencies, named by allele.
 #' @importFrom fen.R.util ulapply
@@ -315,8 +320,7 @@ get_minor_allele_frequencies <- function(pile, consensus) {
   bp <- nrow(pile)
   minor_alleles <- get_minor_alleles(pile, consensus)
   mafs <- ulapply(1:bp, function(i) {
-                    compute_allele_frequency(unlist(pile[i, ]),
-                                             minor_alleles[i])})
+                    compute_allele_frequency(pile[i, ], minor_alleles[i])})
   mafs
 }
 
@@ -371,7 +375,6 @@ compute_strand_bias <- function(counts, wild_type_allele,
   cnames <- names(counts)
   mut_idx <- which(grepl(paste0(mutant_allele, "_"), cnames, fixed = TRUE))
   wt_idx <- which(grepl(paste0(wild_type_allele, "_"), cnames, fixed = TRUE))
-  print(mut_idx)
   fisher_matrix <- matrix(c(counts[mut_idx], counts[wt_idx]),
                           byrow = TRUE, ncol = 2)
   p <- fisher.test(fisher_matrix, workspace = 2e8)$p.value

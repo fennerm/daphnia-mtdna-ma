@@ -7,7 +7,7 @@
 call_variant(mut_cov_matrix)
 }
 \arguments{
-\item{mut_cov_matrix}{Numeric matrix; Rows are genome samples, column 1 is
+\item{mut_cov_matrix}{matrix; Rows are genome samples, column 1 is
 mutant allele count. Column 2 is sequencing coverage.}
 }
 \value{

@@ -8,7 +8,7 @@ compute_all_strand_bias(stranded_piles, consensus, mutant_consensus,
   mutant_samples)
 }
 \arguments{
-\item{stranded_piles}{data.table; Allele count pileups separated by strand}
+\item{stranded_piles}{matrix; Allele count pileups separated by strand}
 
 \item{consensus}{character; The consensus sequence for the samples}
 
