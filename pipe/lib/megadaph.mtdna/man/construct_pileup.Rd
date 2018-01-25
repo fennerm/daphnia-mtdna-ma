@@ -5,7 +5,7 @@
 \title{Create an allele count pileup with RSamtools}
 \usage{
 construct_pileup(bam, bp, min_base_quality = 30,
-  distinguish_strands = FALSE, min_nucleotide_depth = 0)
+  distinguish_strands = FALSE)
 }
 \arguments{
 \item{bam}{Path to a .bam file}
@@ -17,8 +17,6 @@ min_base_quality will be excluded}
 
 \item{distinguish_strands;}{If TRUE, base counts on the +/- strands are
 counted separately}
-
-\item{min_nucleotide_depth;}{Minimum allele count to be included in pileup}
 }
 \value{
 A data.table

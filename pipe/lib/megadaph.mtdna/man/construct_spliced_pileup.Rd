@@ -23,7 +23,7 @@ included in table}
 counted separately}
 }
 \value{
-A data.frame
+A data.table
 }
 \description{
 Splice the original and rotated BAM files into a single allele count table
