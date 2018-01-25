@@ -75,11 +75,6 @@ parse_seq_err_csv <- function(seq_err_file) {
   seq_err
 }
 
-pileup_files <- list.files("../../devpipe/output/produce_spliced_pileups",
-                           full.names = TRUE, pattern = "IB.*")
-seq_err_file <- "../../devpipe/output/merge_sequencing_error_files/IB.csv"
-outdir <- "../../devpipe/output/call_variants"
-
 main <- function(pileup_files, seq_err_file, outdir) {
   nsamples <- length(pileup_files)
   samples <- get_sample(pileup_files)
