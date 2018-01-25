@@ -160,5 +160,7 @@ main <- function(pileup_files, seq_err_file, outdir) {
 
 if (!interactive()) {
   opts <- docopt::docopt(doc)
-  main(opts["PILEUP"], opts["seqerr"], opts["output_dir"])
+  main(unlist(opts["PILEUP"]),
+       unlist(opts["seqerr"]),
+       unlist(opts["output_dir"]))
 }

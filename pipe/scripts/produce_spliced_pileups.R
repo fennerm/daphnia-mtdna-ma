@@ -22,7 +22,8 @@ main <- function(og, rot, bp) {
 
 if (!interactive()) {
   opts <- docopt::docopt(doc)
+  print(opts)
   bp <- as.numeric(opts["bp"])
-  pile <- main(opts["OGBAM"], opts["ROTBAM"], bp)
-  write.csv(pile, out, quote = FALSE, row.names = FALSE)
+  pile <- main(unlist(opts["OGBAM"]), unlist(opts["ROTBAM"]), bp)
+  write.csv(pile, unlist(opts["output"]), quote = FALSE, row.names = FALSE)
 }
