@@ -26,6 +26,7 @@ main <- function(bam) {
     pile <- data.table::dcast(pile, seqnames + pos ~ nucleotide,
                               value.var="count", fill = 0L)
     pile <- pile[, 3:length(pile)]
+    pile <- as.matrix(pile)
 
     consensus <- megadaph.mtdna::get_major_alleles(pile)
     minor_alleles <- megadaph.mtdna::get_minor_alleles(pile, consensus)
@@ -37,7 +38,8 @@ main <- function(bam) {
     # Homozygous positions
     # 0.2 chosen as cutoff since pbinom is approx 0.001 for depth of 20.
     cutoff <- 0.2 * sum_counts
-    homo <- which((minor_allele_counts < cutoff) & (sum_counts > 39))
+    homo <- which((minor_allele_counts < cutoff) & (sum_counts > 39) &
+                  (sum_counts < 200))
 
     if (length(homo) > 0) {
       # Sequencing error estimate
