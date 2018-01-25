@@ -102,7 +102,7 @@ destrand <- function(counts) {
 #' @param rot_pile Pileup from alignment to the 'rotated' reference sequence
 #' @return A spliced pileup containing the middle halves of both the 'rotated'
 #' and 'original' pileups
-#' @importFrom data.table rbindlist
+#' @importFrom data.table rbindlist setDT
 splice_pileups <- function(og_pile, rot_pile, rot_ref) {
   bp <- nrow(og_pile)
   splx <- compute_split_indices(bp)
@@ -116,7 +116,7 @@ splice_pileups <- function(og_pile, rot_pile, rot_ref) {
     spliced <- rbindlist(list(rot_pile[splx[[1]], ], og_pile[splx[[2]], ],
                               rot_pile[splx[[3]], ]), fill=TRUE)
     spliced[is.na(spliced)] <- 0
-    spliced <- data.table(spliced)
+    spliced <- setDT(spliced)
   } else if (data_type %in% c("numeric", "integer")) {
     spliced <- c(rot_pile[splx[[1]]], og_pile[splx[[2]]], rot_pile[splx[[3]]])
   }
