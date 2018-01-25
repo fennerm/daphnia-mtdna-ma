@@ -8,10 +8,10 @@
 #'        included in table
 #' @param distinguish_strands; If TRUE base counts on the +/- strands are
 #'        counted separately
-#' @return A data.frame
+#' @return A data.table
 #' @export
-construct_spliced_pileup <- function(og_bam, rot_bam, bp, min_base_quality=30,
-                                     distinguish_strands=FALSE) {
+construct_spliced_pileup <- function(og_bam, rot_bam, bp, min_base_quality = 30,
+                                     distinguish_strands = FALSE) {
   # Create individual pileups
   og_pile <- construct_pileup(og_bam, bp, min_base_quality, distinguish_strands)
   rot_pile <- construct_pileup(rot_bam, bp, min_base_quality,
@@ -29,28 +29,32 @@ construct_spliced_pileup <- function(og_bam, rot_bam, bp, min_base_quality=30,
 #'        min_base_quality will be excluded
 #' @param distinguish_strands; If TRUE, base counts on the +/- strands are
 #'        counted separately
-#' @param min_nucleotide_depth; Minimum allele count to be included in pileup
 #' @return A data.table
 #' @importFrom Rsamtools PileupParam pileup
 #' @importFrom data.table setDT
 #' @importFrom reshape2 dcast
 #' @export
 construct_pileup <- function(bam, bp, min_base_quality = 30,
-                             distinguish_strands = FALSE,
-                             min_nucleotide_depth = 0) {
+                             distinguish_strands = FALSE) {
   pileup_param <- PileupParam(max_depth = 1000000,
                               distinguish_strands = distinguish_strands,
                               distinguish_nucleotides = TRUE,
-                              ignore_query_Ns = TRUE,
-                              min_nucleotide_depth = min_nucleotide_depth,
+                              min_nucleotide_depth = 1,
                               include_deletions = TRUE,
                               include_insertions = TRUE,
                               min_base_quality = min_base_quality)
 
   pile <- pileup(bam, pileupParam = pileup_param)
+  seqname <- unique(pile$seqnames)
 
   # Add missing rows to the pileup
-  pile <- merge(data.frame(pos = 1:bp), pile, all.x = TRUE)
+  tmp_pile <- data.frame(pos = setdiff(1:bp, pile$pos))
+  # Remove NA values
+  pile <- merge(pile, tmp_pile, all = TRUE)
+  pile$seqnames[is.na(pile$seqnames)] <- seqname
+  pile$strand[is.na(pile$strand)] <- "+"
+  pile$nucleotide[is.na(pile$nucleotide)] <- "A"
+  pile$count[is.na(pile$count)] <- 0
 
   # Cast the table to wide format
   if (distinguish_strands) {
@@ -112,6 +116,7 @@ splice_pileups <- function(og_pile, rot_pile, rot_ref) {
     spliced <- rbindlist(list(rot_pile[splx[[1]], ], og_pile[splx[[2]], ],
                               rot_pile[splx[[3]], ]), fill=TRUE)
     spliced[is.na(spliced)] <- 0
+    spliced <- data.table(spliced)
   } else if (data_type %in% c("numeric", "integer")) {
     spliced <- c(rot_pile[splx[[1]]], og_pile[splx[[2]]], rot_pile[splx[[3]]])
   }
