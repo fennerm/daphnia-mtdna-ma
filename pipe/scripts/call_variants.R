@@ -61,7 +61,7 @@ create_output_directories <- function(outdir) {
 
 ## Write the consensus sequence to file
 write_consensus <- function(consensus, outdir, genotype) {
-  filename <- file.path(outdir, CONSENSUS_DIR, paste0(genotype, ".fa"))
+  filename <- file.path(outdir, CONSENSUS_DIR, paste0(genotype, ".fasta"))
   consensus_string <- paste0(consensus, collapse = "")
   fileconn <- file(filename)
   writeLines(c(paste0(">", genotype), consensus_string), fileconn)
@@ -75,10 +75,10 @@ parse_seq_err_csv <- function(seq_err_file) {
   seq_err
 }
 
-#pileup_files <- list.files("../../../../devpipe/output/produce_spliced_pileups",
-#                           full.names = TRUE, pattern = "IB.*")
-#seq_err_file <- "../../../../devpipe/output/merge_sequencing_error_files/IB.csv"
-#outdir <- "../../../../devpipe/output/call_variants"
+pileup_files <- list.files("../../devpipe/output/produce_spliced_pileups",
+                           full.names = TRUE, pattern = "IB.*")
+seq_err_file <- "../../devpipe/output/merge_sequencing_error_files/IB.csv"
+outdir <- "../../devpipe/output/call_variants"
 
 main <- function(pileup_files, seq_err_file, outdir) {
   nsamples <- length(pileup_files)
