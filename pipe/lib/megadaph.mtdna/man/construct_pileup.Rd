@@ -19,7 +19,7 @@ min_base_quality will be excluded}
 counted separately}
 }
 \value{
-A data.table
+A matrix
 }
 \description{
 Create an allele count pileup with RSamtools

@@ -4,14 +4,14 @@
 \alias{destrand}
 \title{Consolidate strand counts in a strand-split allele count table}
 \usage{
-destrand(counts)
+destrand(pile)
 }
 \arguments{
-\item{counts}{data.table; Table with nucleotide and indel counts for each
+\item{pile}{matrix; Table with nucleotide and indel pile for each
 genome position split by strand}
 }
 \value{
-data.table; A allele count table with the stranded counts summed
+Matrix; A allele count table with the stranded pile summed
 }
 \description{
 Consolidate strand counts in a strand-split allele count table
