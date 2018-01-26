@@ -7,8 +7,9 @@
 *.vcf
 *.pyc
 *.swp
+*.bam
 slurm*
-.snakemake
+.snakemake*
 .\#*
 \#*
 output

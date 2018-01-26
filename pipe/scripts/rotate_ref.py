@@ -37,7 +37,7 @@ def main(fname, rotname = None):
 
     # We convert to 1 based indexing
     header = ''.join([
-        '>', str(midpoint + 1), ":", str(bp), "_rot_to_start", '_',
+        '>', str(midpoint + 1), "-", str(bp), "_rot_to_start", '_',
         old_header])
 
     # Write out file

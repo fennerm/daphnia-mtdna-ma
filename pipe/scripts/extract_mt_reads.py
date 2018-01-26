@@ -4,32 +4,26 @@ alignments"""
 import os
 from tempfile import NamedTemporaryFile as tmp
 
-from Bio.SeqIO import parse
+from plumbum.cmd import list_nonempty_csomes
 from snakemake import shell
 
 
-def next_seq_id(fasta_iterator):
-    """Get the next sequence ID from a seqIO fasta iterator object"""
-    return str(next(fasta_iterator).id)
-
-
-def get_mitochondrial_csome_names(combined_reference):
+def get_mitochondrial_csome_names(bam):
     """Get the names of the mtdna contigs from the combined reference"""
-    seq_iter = parse(combined_reference, "fasta")
-    faids = [next_seq_id(seq_iter), next_seq_id(seq_iter)]
-    # The names need to be quoted to avoid bash expansion
-    faids = ["'" + faid + "'" for faid in faids]
-    faid_str = ' '.join(faids)
-    return faid_str
+    faids = list_nonempty_csomes(bam).split("\n")
+    faids = ['"' + faid + '"' for faid in faids]
+    mt_faids = ' '.join(faids[0:2])
+    return mt_faids
 
-csomes = get_mitochondrial_csome_names(snakemake.input.ref)
+csomes = get_mitochondrial_csome_names(snakemake.input[0])
 
 # Names for .bam intermediary files
 bam = tmp(suffix='.bam').name
 bai = bam + '.bai'
 
 # Extract mitochondrial aligned reads
-shell("samtools view -bh {snakemake.input.bam} " + csomes + " > " + bam)
+shell("extract_csome {snakemake.input[0]} " + csomes +
+      " | samtools sort - > " + bam)
 shell("samtools index " + bam)
 
 # Convert to .fastq
