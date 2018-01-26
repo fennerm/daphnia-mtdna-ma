@@ -1430,3 +1430,28 @@ January 16th, 2018
 ================================================================================
 - Realized that I hadn't transferred quality score conversion step of the old
   pipeline to the new one. Added it and restarted.
+
+================================================================================
+January 17th, 2018
+================================================================================
+- Merged the fmscripts and fmbiopy repos to allow more integration between
+  library code and scripts. Also refactored fmbiopy a bit, removing mypy typing
+  to add python2 compatibility.
+- Got the SLURM submission script to work with the --immediate-submit flag,
+  which should make it much faster. Wrote a scheduler script and put it in its
+  own repo ('fennerm/snakemake_sbatch_scheduler').
+
+================================================================================
+January 18th, 2018
+================================================================================
+- Wrote a few scripts for subsampling the nuclear alignments before estimating
+sequencing error. This should speed this step up substantially which is good
+because it takes forever, and is not particularly important.
+
+================================================================================
+January 23rd, 2018
+================================================================================
+- Due to a mistake in the naming of the rotated reference sequence, had to
+  restart competitive alignment. This SLURM run should complete all steps up
+  until variant calling. I should be able to get the rest of the pipeline
+  finished by the time it completes.

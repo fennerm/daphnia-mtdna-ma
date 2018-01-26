@@ -2,18 +2,14 @@
 % Please edit documentation in R/variant_annotation.R
 \name{run_snp_eff}
 \alias{run_snp_eff}
-\title{Wrapper around snpEff
-Assumes snpEff is stored in ~/src. If}
+\title{Wrapper around snpEff}
 \usage{
-run_snp_eff(vcf_file, species, jar = "~/src/snpEff/snpEff.jar",
-  config = "inst/config/snpEff.config")
+run_snp_eff(vcf_filename, species, snpeff_config)
 }
 \arguments{
-\item{vcf_file}{VCF file input}
+\item{vcf_filename}{VCF file input}
 
 \item{species}{Species corresponding to vcf_file}
-
-\item{jar}{Location of snpEff jar file}
 
 \item{config}{Location of snpEff config file}
 }
@@ -22,5 +18,4 @@ Path to the annotated snpEFF VCF file
 }
 \description{
 Wrapper around snpEff
-Assumes snpEff is stored in ~/src. If
 }

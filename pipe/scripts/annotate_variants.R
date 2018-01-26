@@ -1,5 +1,11 @@
 #!/usr/bin/env Rscript
-## Annotate variants stored in a .csv with predicted effects and ts/tv
+#!/usr/bin/env rscript
+"Annotate variants with predicted effects and ts/tv
+
+Usage:
+  annotate_variants.r VAR_TABLE
+" -> doc
+
 
 main <- function(var_table) {
   # Convert to .vcf file intermediate
@@ -15,7 +21,8 @@ main <- function(var_table) {
   annot_var_table
 }
 
+
 if (!interactive()) {
-
-
+  opts <- docopt::docopt(doc)
+  main(unlist(opts["VAR_TABLE"]))
 }

@@ -9,7 +9,7 @@ convert_to_vcf_format(var_table, species)
 \arguments{
 \item{var_table}{Variant table}
 
-\item{species}{The Daphnia species ("magna", "pulex")}
+\item{species}{The Daphnia species ('magna', 'pulex')}
 }
 \value{
 A data.frame in VCF format

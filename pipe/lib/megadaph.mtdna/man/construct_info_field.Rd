@@ -6,6 +6,12 @@
 \usage{
 construct_info_field(var_table_row)
 }
+\arguments{
+\item{var_table_row}{A row from a variant table}
+}
+\value{
+Character; A .vcf formatted info field
+}
 \description{
 Construct the info field of a VCF from a row of the variant table
 }

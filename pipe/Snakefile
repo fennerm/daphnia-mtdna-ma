@@ -113,8 +113,7 @@ rule all:
                genotype=GENOTYPE),
         expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
                rotation=ROTATION),
-        expand("output/call_variants/mut_cov_matrices/{genotype}.Rds",
-               genotype=GENOTYPE)
+        expand("output/filter_variants/{genotype}.csv", genotype=GENOTYPE)
 
 rule rotate_reference:
     input:
@@ -387,6 +386,30 @@ rule call_variants:
         "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
         "output/call_variants {input.pile}"
 
+
+rule correct_for_multiple_comparisons:
+    input:
+        piles = expand("output/produce_spliced_pileups/{genotype}.csv", 
+                       genotype = GENOTYPE)
+    output:
+        expand("output/correct_for_multiple_comparisons/{genotype}.csv", 
+               genotype = GENOTYPE)
+    params:
+        fdr_level = "0.05"
+    shell:
+        "scripts/correct_for_multiple_comparisons.R --fdr {params.fdr_level} "
+        "--outdir output/correct_for_multiple_comparisons {input.piles}"
+
+rule filter_variants:
+    input:
+        "output/correct_for_multiple_comparisons/{genotype}.csv"
+    output:
+        "output/filter_variants/{genotype}.csv"
+    params:
+        max_strand_bias = "60"
+    shell:
+        "scripts/filter_variants.R --max_strand_bias {params.max_strand_bias} "
+        "--output {output} {input}"
 
 rule multiqc:
     input:
