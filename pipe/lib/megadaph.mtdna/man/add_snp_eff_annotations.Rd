@@ -2,18 +2,20 @@
 % Please edit documentation in R/variant_annotation.R
 \name{add_snp_eff_annotations}
 \alias{add_snp_eff_annotations}
-\title{Add snpEff annotations to variant table}
+\title{Add snpEff annotations to the variant table}
 \usage{
-add_snp_eff_annotations(snp_eff_vcfs, var_table)
+add_snp_eff_annotations(var_table, snpeff_config)
 }
 \arguments{
-\item{snp_eff_vcfs}{list of paths to snpEff annotated VCF files}
+\item{vcf_filename}{VCF file input}
 
-\item{var_table}{Variant table}
+\item{species}{Species corresponding to vcf_file}
+
+\item{config}{Location of snpEff config file}
 }
 \value{
-A variant table with snpEff annotations added
+Path to the annotated snpEFF VCF file
 }
 \description{
-Add snpEff annotations to variant table
+Add snpEff annotations to the variant table
 }

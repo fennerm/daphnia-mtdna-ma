@@ -1,12 +1,56 @@
+#' Annotate a variant table with snpEff and ts/tv info
+#' @param var_table A variant table
+#' @param snpeff_config Path to the snpeff config file
+#' @export
+annotate_variant_table <- function(var_table, snpeff_config) {
+  annot_var_table <- add_snp_eff_annotations(var_table, snpeff_config)
+  annot_var_table <- add_ts_tv_info(annot_var_table)
+  annot_var_table
+}
+
+#' Add snpEff annotations to the variant table
+#' @param vcf_filename VCF file input
+#' @param species Species corresponding to vcf_file
+#' @param config Location of snpEff config file
+#' @importFrom fen.R.util read_vcf ulapply
+#' @importFrom dplyr mutate
+#' @return Path to the annotated snpEFF VCF file
+add_snp_eff_annotations <- function(var_table, snpeff_config) {
+  species <- unique(var_table$species)
+
+  # Convert var_table to .vcf
+  vcf_filename <- variant_table_to_vcf(var_table)
+
+  # Annotate the .vcf
+  snpeff_vcf <- gsub("vcf", "annot.vcf", vcf_filename)
+  system(paste("snpEff", "-c", snpeff_config, paste0("d.", species), 
+               vcf_filename, ">", snpeff_vcf))
+
+  # Read the .vcf data back into R
+  vcfdat <- read_vcf(snpeff_vcf)
+  file.remove(snpeff_vcf)
+  
+  # Parse the annotations
+  annotation_field <- vcfdat[, "INFO"]
+  annotations <- strsplit(annotation_field, split = "|", fixed = TRUE)
+
+  # Add the annotations to the variant table
+  annot_var_table <- mutate(var_table,
+                            effect = ulapply(annotations, "[", 2),
+                            severity = ulapply(annotations, "[", 3),
+                            gene = ulapply(annotations, "[", 4),
+                            feature = ulapply(annotations, "[", 6),
+                            coding = ulapply(annotations, "[", 8))
+  annot_var_table
+}
+
 #' Convert a variant table into VCF files split by sample
 #'
 #' VCF files are output in a folder named 'VCF/'. Headers are in 'inst/headers/'
 #' @param var_table A variant table
 #' @importFrom fen.R.util write_table_with_header
-#' @export
-var_table_to_vcf <- function(var_table) {
+variant_table_to_vcf <- function(var_table) {
   species <- unique(var_table$species)
-  
   genotype <- unique(var_table$genotype)
 
   vcf_table <- convert_to_vcf_format(var_table, species)
@@ -45,62 +89,14 @@ convert_to_vcf_format <- function(var_table, species) {
   vcf_table
 }
 
-
-
-#' Wrapper around snpEff
-#' @param vcf_filename VCF file input
-#' @param species Species corresponding to vcf_file
-#' @param config Location of snpEff config file
-#' @return Path to the annotated snpEFF VCF file
-#' @export
-run_snp_eff <- function(vcf_filename, species, snpeff_config) {
-  output_filename <- gsub("vcf", "annot.vcf", vcf_filename)
-  system(paste("snpEff", "-c", snpeff_config, paste0("d.", species), 
-               vcf_file, ">", output_filename))
-  out_file
-}
-
-#' Add snpEff annotations to variant table
-#' @param snp_eff_vcfs list of paths to snpEff annotated VCF files
-#' @param var_table Variant table
-#' @return A variant table with snpEff annotations added
-#' @export
-add_snp_eff_annotations <- function(snp_eff_vcfs, var_table) {
-  
-  # Read each VCF and merge them into a single matrix
-  merged_vcf_data <- lapply(snp_eff_vcfs, read_vcf)
-  merged_vcf_data <- lapply(merged_vcf_data, function(x) {
-    matrix(unlist(x), ncol = 8)
-  })
-  merged_vcf_data <- do.call(rbind, merged_vcf_data)
-  
-  # Parse the annotations
-  annotation_field <- merged_vcf_data[, 8]
-  annots <- lapply(annotation_field, function(x) {
-    unlist(strsplit(x, split = "|", fixed = TRUE))
-  })
-  effect <- sapply(annots, "[", 2)
-  severity <- sapply(annots, "[", 3)
-  gene <- sapply(annots, "[", 4)
-  feature <- sapply(annots, "[", 6)
-  coding <- sapply(annots, "[", 8)
-  
-  # Add the annotations to the variant table
-  annot_var_table <- cbind(var_table, effect, severity, gene, feature, 
-    coding)
-  
-  annot_var_table
-}
-
 #' Add transition/transversion annotation to variant table
 #' @param var_table A variant table
 #' @return A variant table with ts_tv column appended
-#' @export
 add_ts_tv_info <- function(var_table) {
   ts_tv <- apply(var_table, 1, function(row) {
     if (row["class"] == "snv") {
-      if (all(c(row["ref"], row["alt"]) %in% c("A", "G")) || all(c(row["ref"], 
-        row["alt"]) %in% c("C", "T"))) {
+      if (all(c(row["ref"], row["alt"]) %in% c("A", "G")) || 
+          all(c(row["ref"], row["alt"]) %in% c("C", "T"))) {
         "transition"
       } else {
         "transversion"
