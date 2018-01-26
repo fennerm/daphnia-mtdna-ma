@@ -109,8 +109,6 @@ rule all:
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
-        expand("output/merge_sequencing_error_files/{genotype}.csv",
-               genotype=GENOTYPE),
         expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
                rotation=ROTATION),
         expand("output/filter_variants/{genotype}.csv", genotype=GENOTYPE)
@@ -389,7 +387,7 @@ rule call_variants:
 
 rule correct_for_multiple_comparisons:
     input:
-        piles = expand("output/produce_spliced_pileups/{genotype}.csv", 
+        piles = expand("output/call_variants/test_tables/{genotype}.csv", 
                        genotype = GENOTYPE)
     output:
         expand("output/correct_for_multiple_comparisons/{genotype}.csv", 
