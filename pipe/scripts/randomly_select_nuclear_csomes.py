@@ -17,7 +17,6 @@ def partition_by_species(samples):
     return pulex, magna
 
 
-import pdb; pdb.set_trace()
 samples = [local.path(sample) for sample in snakemake.input]
 species = ("pulex", "magna")
 species_split = partition_by_species(samples)
