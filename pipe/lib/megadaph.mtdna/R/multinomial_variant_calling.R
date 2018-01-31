@@ -392,7 +392,7 @@ compute_strand_bias <- function(counts, wild_type_allele,
 }
 
 #' Carry out a 1-sided binomial test at each genome position for a sample
-#' @param mut_cov_counts Data.frame with two columns, first column is mutant
+#' @param mut_cov_counts Matrix with two columns, first column is mutant
 #'                       allele counts, second column is total sequencing
 #'                       coverage. Rows are genome positions
 #' @param seq_error_rate Numeric; Sequencing error rate estimate
@@ -491,10 +491,10 @@ merge_indel <- function(test_table, indel_idx) {
   new_row <- list(
                   # species
                   unique(as.character(indel_row$species)),
-                  # genotype
-                  unique(as.character(indel_row$genotype)),
                   # isolate
                   unique(as.character(indel_row$isolate)),
+                  # genotype
+                  unique(as.character(indel_row$genotype)),
                   # mutant sample
                   unique(as.character(indel_row$sample))[1],
                   # position
