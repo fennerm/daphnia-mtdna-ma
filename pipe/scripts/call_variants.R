@@ -147,7 +147,7 @@ main <- function(pileup_files, seq_err_file, outdir) {
     mutation_class, max_mut_afs, diff_afs, strand_bias, unique_sites, 
     coverage_proportion, p, stringsAsFactors = FALSE)
   colnames(test_table) <- c(
-    "species", "isolate", "genotype", "isolate", "sample", "pos", "coverage", 
+    "species", "isolate", "genotype", "sample", "pos", "coverage", 
     "ref", "alt", "class", "af", "af_diff", "strand_bias", "unique",
     "coverage_proportion", "p_value")
 
