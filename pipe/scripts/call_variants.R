@@ -141,16 +141,15 @@ main <- function(pileup_files, seq_err_file, outdir) {
   p <- ulapply(mut_cov_matrices, call_variant)
 
   cat("Tabulating data \n")
-  test_table <- cbind(as.data.frame(species, stringsAsFactors = FALSE),
-                      genotype, isolate, mutant_sample_ids, 1:bp, mean_coverage,
-                      consensus,
-                      mutant_consensus, mutation_class, max_mut_afs, diff_afs,
-                      strand_bias, unique_sites, coverage_proportion, p,
-                      stringsAsFactors = FALSE)
-  colnames(test_table) <- c("species", "genotype", "isolate", "sample", "pos",
-                           "coverage", "ref", "alt", "class", "af", "af_diff",
-                           "strand_bias", "unique", "coverage_proportion",
-                           "p_value")
+  test_table <- cbind(
+    as.data.frame(species, stringsAsFactors = FALSE), isolate, genotype,
+    mutant_sample_ids, 1:bp, mean_coverage, consensus, mutant_consensus, 
+    mutation_class, max_mut_afs, diff_afs, strand_bias, unique_sites, 
+    coverage_proportion, p, stringsAsFactors = FALSE)
+  colnames(test_table) <- c(
+    "species", "isolate", "genotype", "isolate", "sample", "pos", "coverage", 
+    "ref", "alt", "class", "af", "af_diff", "strand_bias", "unique",
+    "coverage_proportion", "p_value")
 
   cat("Merging multinucleotide indels \n")
   test_table <- merge_significant_indels(test_table)

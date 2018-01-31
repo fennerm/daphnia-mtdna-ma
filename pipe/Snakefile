@@ -22,13 +22,22 @@ MAGNA = [x for x in SAMPLE if x.startswith(('F', 'G', 'I'))]
 SPECIES = ['pulex', 'magna']
 GENOME = ['nuc', 'all', 'mt.og', 'mt.rot']
 GENOTYPE = ['FA', 'FB', 'FC', 'GA', 'GB', 'GC', 'IA', 'IB', 'IC', 'L', 'TCO']
-
-# Assign each sample to a genotype
-GENOTYPE_SAMPLE = {}
-for genotype in GENOTYPE:
-    GENOTYPE_SAMPLE[genotype] = [x for x in SAMPLE if x.startswith(genotype)]
-
 ROTATION = ['og', 'rot']
+
+# Get all non-control sample IDs
+NONCONTROL = [x for x in SAMPLE if not ('SC' in x) and not ('EC' in x)]
+# Assign each non-control sample to a genotype
+GENOTYPE_EXP = {}
+for genotype in GENOTYPE:
+    GENOTYPE_EXP[genotype] = [x for x in NONCONTROL if x.startswith(genotype)]
+
+print("GROUPS")
+print("------")
+print("Samples: " + SAMPLE)
+print("Pulex: " + PULEX)
+print("Magna: " + MAGNA)
+print("Noncontrol: " + NONCONTROL)
+print("Genotype Samples: " + GENOTYPE_EXP)
 
 # ==============================================================================
 # Helper functions
@@ -358,7 +367,7 @@ rule merge_sequencing_error_files:
     input:
         lambda wildcards: [os.path.join(
             "output", "estimate_sequencing_error", x + ".csv")
-            for x in GENOTYPE_SAMPLE[wildcards.genotype]]
+            for x in GENOTYPE_EXP[wildcards.genotype]]
     output:
         "output/merge_sequencing_error_files/{genotype}.csv"
     resources:
@@ -390,7 +399,7 @@ rule call_variants:
     input:
         pile = lambda wildcards: [os.path.join(
             "output", "produce_spliced_pileups", x + ".csv")
-            for x in GENOTYPE_SAMPLE[wildcards.genotype]],
+            for x in GENOTYPE_EXP[wildcards.genotype]],
         seqerr = "output/merge_sequencing_error_files/{genotype}.csv"
     output:
         "output/call_variants/mut_cov_matrices/{genotype}.Rds",
