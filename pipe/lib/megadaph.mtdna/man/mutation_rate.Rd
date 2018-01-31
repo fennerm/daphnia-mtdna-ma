@@ -2,7 +2,7 @@
 % Please edit documentation in R/mutation_rate.R
 \name{mutation_rate}
 \alias{mutation_rate}
-\title{Calculate the mutation rate}
+\title{Calculate the haploid mutation rate}
 \usage{
 mutation_rate(muts, gen, nuc)
 }
@@ -17,5 +17,5 @@ mutation_rate(muts, gen, nuc)
 The mutation rate
 }
 \description{
-Calculate the mutation rate
+Calculate the haploid mutation rate
 }
