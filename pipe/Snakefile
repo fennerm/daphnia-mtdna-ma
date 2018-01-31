@@ -109,8 +109,8 @@ rule all:
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
-        expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
-               rotation=ROTATION),
+        expand("output/qualimap/{sample}_{rotation}/genome_results.txt", 
+               sample=SAMPLE, rotation=ROTATION),
         expand("output/filter_variants/{genotype}.csv", genotype=GENOTYPE)
 
 rule rotate_reference:
@@ -246,6 +246,8 @@ rule align_to_mt_rotation:
     output:
         bam = "output/align_to_mt_rotation/{sample}.{rotation}.bam",
         bai = "output/align_to_mt_rotation/{sample}.{rotation}.bam.bai"
+    resources:
+        mem_mb = 2000
     params:
         max_insert_size = 16000
     log:
@@ -267,6 +269,8 @@ rule remove_duplicates:
         "output/remove_duplicates/{sample}.{rotation}.bam"
     log:
         "output/remove_duplicates/log/{sample}.{rotation}.log"
+    resources:
+        mem_mb = 2000
     shell:
         "picard MarkDuplicates I={input} O={output} REMOVE_DUPLICATES=True "
         "METRICS_FILE={log} CREATE_INDEX=True"
@@ -283,6 +287,8 @@ rule local_realignment:
         max_cons_reads = '300',
         max_realignment_reads = '1000000',
         max_cons = '100'
+    resources:
+        mem_mb = 2000
     log:
         "output/local_realignment/log/{sample}.{rotation}.log"
     script:
@@ -294,6 +300,8 @@ rule remove_singletons:
     output:
         bam = "output/remove_singletons/{sample}.{rotation}.bam",
         bai = "output/remove_singletons/{sample}.{rotation}.bam.bai"
+    resources:
+        mem_mb = 2000
     shell:
         "bamtools filter -isMateMapped true -in {input} -out {output.bam} && "
         "samtools index {output.bam}"
@@ -302,7 +310,9 @@ rule qualimap:
     input:
         "output/remove_singletons/{sample}.{rotation}.bam"
     output:
-        "output/qualimap/{sample}_{rotation}/"
+        "output/qualimap/{sample}_{rotation}/genome_results.txt"
+    resources:
+        mem_mb = 2000
     shell:
         "qualimap bamqc -bam {input} -outdir {output}"
 
@@ -339,6 +349,8 @@ rule estimate_sequencing_error:
         "output/subsample_nuclear_alignments/{sample}.bam"
     output:
         "output/estimate_sequencing_error/{sample}.csv"
+    resources:
+        mem_mb = 15000
     shell:
         "scripts/estimate_seq_error.R {input} {output}"
 
@@ -349,6 +361,8 @@ rule merge_sequencing_error_files:
             for x in GENOTYPE_SAMPLE[wildcards.genotype]]
     output:
         "output/merge_sequencing_error_files/{genotype}.csv"
+    resources:
+        mem_mb = 500
     run:
         basenames = [os.path.basename(x) for x in input]
         samples = [x for x in basenames if x.startswith(wildcards.genotype)]
@@ -366,6 +380,8 @@ rule produce_spliced_pileups:
         "output/produce_spliced_pileups/{sample}.csv"
     params:
         bp = get_nbases
+    resources:
+        mem_mb = 500
     shell:
         "scripts/produce_spliced_pileups.R --bp {params.bp} --output "
         "{output} {input.og_bam} {input.rot_bam}"
@@ -380,6 +396,8 @@ rule call_variants:
         "output/call_variants/mut_cov_matrices/{genotype}.Rds",
         "output/call_variants/test_tables/{genotype}.csv",
         "output/call_variants/consensus_seqs/{genotype}.fasta"
+    resources:
+        mem_mb = 500
     shell:
         "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
         "output/call_variants {input.pile}"
@@ -414,7 +432,7 @@ rule multiqc:
         expand(['output/clean_fastqc/{sample}.{pair}_fastqc.html',
                'output/raw_fastqc/{sample}.{pair}_fastqc.html'],
                sample=SAMPLE, pair=PAIR),
-        expand("output/qualimap/{sample}_{rotation}/",
+        expand("output/qualimap/{sample}_{rotation}/genome_results.txt",
                sample=SAMPLE, rotation=ROTATION)
     output:
         report = 'output/multiqc/multiqc.html',
