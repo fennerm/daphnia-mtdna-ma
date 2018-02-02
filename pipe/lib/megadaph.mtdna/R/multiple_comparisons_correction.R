@@ -6,7 +6,7 @@
 #' @importFrom qvalue qvalue
 mult_comparisons_correct <- function(test_tables, fdr_level=0.05) {
   # Merge into a single table
-  merged_table <- do.call(rbind, test_tables)
+  merged_table <- do.call("rbind", test_tables)
 
   # Calculate q values
   fdr <- qvalue(merged_table$p_value, fdr.level = fdr_level)

@@ -1,3 +1,7 @@
+variant_table <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/data/mutations/magna.mt.annot.csv", stringsAsFactors = FALSE)
+line_info <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/input/metadata/line_info.csv", stringsAsFactors = FALSE)
+by <- "isolate"
+
 #' Calculate the haploid mutation rate
 #' @param muts numeric; mutant allele frequencies
 #' @param gen numeric; Mean generation number
@@ -97,14 +101,27 @@ compare_all_mutation_rates <- function(
 #' @param af list of numeric; mutant allele frequencies split by sample
 #' @param gen list of numeric; mean generation number split by sample
 #' @param nuc list of integer; bases surveyed split by sample
-#' @return Numeric vector; First item is the bootstrapped mutation rate. The
+#' @return Numeric vector; First item is the mutation rate. The
 #'         other five are the 2.5%, 25%, 50%, 75%, and 97.5% quantiles.
 #' @export
 bootstrap_mutation_rate_quantiles <- function(af, gen, nuc, reps=1e5) {
   mu <- mutation_rate(unlist(af), mean(gen), sum(nuc))
   boot <- bootstrap_mutation_rate(af, gen, nuc, reps)
-  quantiles <- quantile(boot, probs=c(0.025, 0.25, 0.5, 0.75, 0.975))
+  quantiles <- quantile(boot, probs = c(0.025, 0.25, 0.5, 0.75, 0.975))
   c(mu, quantiles)
+}
+
+#' @importFrom fen.R.util select_groups
+bootstrap_mutation_rate_quantiles_from_tables <- function(
+  variant_table, line_info, by = NULL) {
+  by_levels <- unique(line_info[, by])
+  bootstrapped_quantiles <- sapply(by_levels, function(lev) {
+    variant_table_subset <- select_groups(variant_table, by, lev)
+    line_info_subset <- select_groups(line_info, by, lev)
+    af <- lapply(line_info_subset[, "sample"], get_afs_by_sample,
+      variant_table_subset)
+    bootstrap_mutation_rate_quantiles_from_tables(af, gen, nuc, reps)
+  })
 }
 
 #' Bootstrap the haploid mutation rate statistic across samples
@@ -125,13 +142,9 @@ bootstrap_mutation_rate <- function(af, gen, nuc, reps = 1e5) {
   unlist(bt)
 }
 
-
-# ==============================================================================
-# Helper functions
-# ==============================================================================
-
 #' Calculate the mutation rate from variant and line info tables
 #' @import dplyr
+#' @export
 calc_mutation_rate_from_tables <- function(variant_table, line_info) {
   mean_gen <- line_info %>% summarize(mean(generations))
   sum_bp <- line_info %>% summarize(sum(bp))
@@ -139,7 +152,12 @@ calc_mutation_rate_from_tables <- function(variant_table, line_info) {
   unlist(mu)
 }
 
-#' Split mutant_allele frequencies by sample
+# ==============================================================================
+# Helper functions
+# ==============================================================================
+
+
+#' Get mutant_allele frequencies for a sample
 #' @import dplyr
 get_afs_by_sample <- function(sample, variant_table) {
   unlist(filter(variant_table, sample == sample) %>% select(af))
