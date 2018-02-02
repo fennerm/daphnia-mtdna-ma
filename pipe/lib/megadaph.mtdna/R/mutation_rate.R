@@ -1,6 +1,6 @@
-variant_table <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/data/mutations/magna.mt.annot.csv", stringsAsFactors = FALSE)
-line_info <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/input/metadata/line_info.csv", stringsAsFactors = FALSE)
-by <- "isolate"
+#variant_table <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/data/mutations/magna.mt.annot.csv", stringsAsFactors = FALSE)
+#line_info <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/input/metadata/line_info.csv", stringsAsFactors = FALSE)
+#by <- "isolate"
 
 #' Calculate the haploid mutation rate
 #' @param muts numeric; mutant allele frequencies
