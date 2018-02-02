@@ -14,7 +14,10 @@ Options:
 
 
 main <- function(input_file, output_file, max_strand_bias) {
-  fdr_table <- read.csv(input_file, stringsAsFactors = FALSE)
+  fdr_table <- read.csv(input_file, stringsAsFactors = FALSE, colClasses = c(
+      "character", "character", "character", "character", "numeric", "numeric",
+      "character", "character", "character", "numeric", "numeric", "numeric", 
+      "logical", "numeric", "numeric", "numeric", "logical"))
   var_table <- megadaph.mtdna::filter_variants(fdr_table, max_strand_bias)
   invisible(write.csv(var_table, output_file, row.names = FALSE, quote = FALSE))
 }

@@ -16,9 +16,14 @@ write_output <- function(table, output_name, outdir) {
 }
 
 main <- function(input_files, fdr_level, outdir) {
-  output_names <- lapply(input_files, basename)
+  input_files <- sort(input_files)
+  output_names <- unlist(lapply(input_files, basename))
   # Read input files
-  test_tables <- lapply(input_files, read.csv, stringsAsFactors = FALSE)
+  test_tables <- lapply(
+    input_files, read.csv, stringsAsFactors = FALSE, colClasses=c(
+      "character", "character", "character", "character", "numeric", "numeric",
+      "character", "character", "character", "numeric", "numeric", "numeric",
+      "logical", "numeric"))
   # Add q-values to the tables
   fdr_tables <- megadaph.mtdna::mult_comparisons_correct(test_tables, fdr_level)
   # Write output files
