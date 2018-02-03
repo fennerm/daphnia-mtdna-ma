@@ -14,7 +14,7 @@ bootstrap_mutation_rate_quantiles(af, gen, nuc, reps = 1e+05)
 \item{nuc}{list of integer; bases surveyed split by sample}
 }
 \value{
-Numeric vector; First item is the bootstrapped mutation rate. The
+Numeric vector; First item is the mutation rate. The
         other five are the 2.5%, 25%, 50%, 75%, and 97.5% quantiles.
 }
 \description{

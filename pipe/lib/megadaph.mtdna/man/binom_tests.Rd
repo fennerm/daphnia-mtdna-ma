@@ -7,7 +7,7 @@
 binom_tests(mut_cov_counts, seq_error_rate)
 }
 \arguments{
-\item{mut_cov_counts}{Data.frame with two columns, first column is mutant
+\item{mut_cov_counts}{Matrix with two columns, first column is mutant
 allele counts, second column is total sequencing
 coverage. Rows are genome positions}
 

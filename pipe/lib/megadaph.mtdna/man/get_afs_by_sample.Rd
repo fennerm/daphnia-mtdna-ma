@@ -2,10 +2,10 @@
 % Please edit documentation in R/mutation_rate.R
 \name{get_afs_by_sample}
 \alias{get_afs_by_sample}
-\title{Split mutant_allele frequencies by sample}
+\title{Get mutant_allele frequencies for a sample}
 \usage{
 get_afs_by_sample(sample, variant_table)
 }
 \description{
-Split mutant_allele frequencies by sample
+Get mutant_allele frequencies for a sample
 }
