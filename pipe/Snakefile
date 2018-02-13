@@ -33,11 +33,12 @@ for genotype in GENOTYPE:
 
 print("GROUPS")
 print("------")
-print("Samples: " + SAMPLE)
-print("Pulex: " + PULEX)
-print("Magna: " + MAGNA)
-print("Noncontrol: " + NONCONTROL)
-print("Genotype Samples: " + GENOTYPE_EXP)
+print("Samples: " + ', '.join(SAMPLE))
+print("Pulex: " + ', '.join(PULEX))
+print("Magna: " + ', '.join(MAGNA))
+print("Noncontrol: " + ', '.join(NONCONTROL))
+print("Genotype Samples:")
+print(GENOTYPE_EXP)
 
 # ==============================================================================
 # Helper functions
@@ -113,14 +114,12 @@ def bowtie2_idx_root(idx):
 rule all:
     input:
         "output/multiqc/multiqc.html",
-#        expand("output/qualimap/{sample}_{rotation}/", sample=SAMPLE,
-#               rotation=ROTATION),
+        "output/merge_variants/variants.csv",
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
         expand("output/qualimap/{sample}_{rotation}/genome_results.txt", 
-               sample=SAMPLE, rotation=ROTATION),
-        expand("output/filter_variants/{genotype}.csv", genotype=GENOTYPE)
+               sample=SAMPLE, rotation=ROTATION)
 
 rule rotate_reference:
     input:
@@ -303,9 +302,21 @@ rule local_realignment:
     script:
         "scripts/local_realign.py"
 
-rule remove_singletons:
+rule mismatch_filter:
     input:
         "output/local_realignment/{sample}.{rotation}.bam"
+    output:
+        bam = "output/mismatch_filter/{sample}.{rotation}.bam",
+        bai = "output/mismatch_filter/{sample}.{rotation}.bam.bai"
+    resources:
+        mem_mb = 2000
+    shell:
+        "bamtools filter -tag 'NM:<10' -in {input} -out {output.bam} && "
+        "samtools index {output.bam}"
+        
+rule remove_singletons:
+    input:
+        "output/mismatch_filter/{sample}.{rotation}.bam"
     output:
         bam = "output/remove_singletons/{sample}.{rotation}.bam",
         bai = "output/remove_singletons/{sample}.{rotation}.bam.bai"
@@ -435,6 +446,16 @@ rule filter_variants:
     shell:
         "scripts/filter_variants.R --max_strand_bias {params.max_strand_bias} "
         "--output {output} {input}"
+
+rule merge_variants:
+    input:
+        expand("output/filter_variants/{genotype}.csv", genotype = GENOTYPE)
+    output:
+        "output/merge_variants/variants.csv"
+    resources:
+        mem_mb = 1000
+    shell:
+        "csvcat {input} > {output}"
 
 rule multiqc:
     input:

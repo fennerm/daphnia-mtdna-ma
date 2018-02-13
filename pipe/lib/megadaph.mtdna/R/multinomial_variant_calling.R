@@ -247,6 +247,7 @@ call_variant <- function(mut_cov_matrix) {
     prob <- mut_cov_matrix[, 2] / sum(mut_cov_matrix[, 2])
     prob[is.nan(prob)] <- 0
     p <- pmultinom(q, n, prob, lower.tail = FALSE)
+
     if (p < 0) {
       p <- 0
     } else if (p > 1) {
