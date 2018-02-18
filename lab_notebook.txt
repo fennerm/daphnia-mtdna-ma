@@ -1,3 +1,4 @@
+===============================================================================
 Fenner Macrae Megadaph - Mitochondrial Analysis Lab Notebook
 ===============================================================================
 
@@ -1455,3 +1456,21 @@ January 23rd, 2018
   restart competitive alignment. This SLURM run should complete all steps up
   until variant calling. I should be able to get the rest of the pipeline
   finished by the time it completes.
+
+================================================================================
+January 25th, 2018
+================================================================================
+- Added variant calling, multiple comparisons correction and variant filtering
+  to the pipeline.
+- Built fresh snpEff databases in pipe/config/data for variant annotation.
+
+================================================================================
+January 31st, 2018
+================================================================================
+- Ironed out a bunch of miscellaneous bugs. Variant calling is now complete. The
+  results look fairly similar to the previous results but we did find ~20 more
+  variants total. Next step is to calculate mutation rates.
+- Peter McIlroy will be working on amplifying and sequencing a subset of these
+  variants this Semester. He'll be starting off on a few homoplasmic variants to
+  get the hang of things.
+
