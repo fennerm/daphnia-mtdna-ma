@@ -78,7 +78,7 @@ parse_seq_err_csv <- function(seq_err_file) {
 main <- function(pileup_files, seq_err_file, outdir) {
   nsamples <- length(pileup_files)
   samples <- get_sample(pileup_files)
-  isolate <- unique(get_isolate(pileup_files))
+  population <- unique(get_population(pileup_files))
   genotype <- unique(get_genotype(pileup_files))
   species <- unique(get_species(pileup_files))
 
@@ -142,12 +142,12 @@ main <- function(pileup_files, seq_err_file, outdir) {
 
   cat("Tabulating data \n")
   test_table <- cbind(
-    as.data.frame(species, stringsAsFactors = FALSE), isolate, genotype,
+    as.data.frame(species, stringsAsFactors = FALSE), population, genotype,
     mutant_sample_ids, 1:bp, mean_coverage, consensus, mutant_consensus, 
     mutation_class, max_mut_afs, diff_afs, strand_bias, unique_sites, 
     coverage_proportion, p, stringsAsFactors = FALSE)
   colnames(test_table) <- c(
-    "species", "isolate", "genotype", "sample", "pos", "coverage", 
+    "species", "population", "genotype", "sample", "pos", "coverage", 
     "ref", "alt", "class", "af", "af_diff", "strand_bias", "unique",
     "coverage_proportion", "p_value")
 

@@ -497,8 +497,8 @@ merge_indel <- function(test_table, indel_idx) {
   new_row <- list(
                   # species
                   unique(as.character(indel_row$species)),
-                  # isolate
-                  unique(as.character(indel_row$isolate)),
+                  # population
+                  unique(as.character(indel_row$population)),
                   # genotype
                   unique(as.character(indel_row$genotype)),
                   # mutant sample

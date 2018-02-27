@@ -1,4 +1,3 @@
-
 #' @export
 gg_color_hue <- function(n) {
     hues = seq(15, 375, length = n + 1)
@@ -93,35 +92,6 @@ snv_barplot <- function(var_table) {
 #     rep(base_surv[i], isonum)
 # }))
 
-#' @export
-#' @import ggplot2
-custom_boxplot <- function(bootstrap_data, xlab, ylab, xval,
-                           yscale="unscaled", fill=NULL) {
-    # fill <- "#538cc6"
-    p <- ggplot(bootstrap_data, ggplot2::aes(group))
-    if (is.null(fill)) {
-        p <- p + geom_boxplot(
-            aes(x=group, ymin=ci1, lower=q25, middle=q50,
-                         upper=q75, ymax=ci2), stat="identity", size=0.6)
-    } else {
-        p <- p + geom_boxplot(aes(x=group, ymin=ci1,
-                                                    lower=q25, middle=q50,
-                                                    upper=q75, ymax=ci2,
-                                                    fill=fill),
-                              stat="identity", size=0.6)
-        p <- p + scale_fill_discrete("")
-    }
-
-    p <- p + scale_x_discrete(labels=xval)
-    p <- p + xlab("")
-    if (yscale=="log10") {
-        p <- p + scale_y_log10()
-    }
-
-    p <- p + theme_shared()
-    p <- p + labs(x = xlab, y = ylab)
-    p
-}
 
 
 #' @export
