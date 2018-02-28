@@ -22,7 +22,7 @@ calc_mutation_rate <- function(variant_table, line_info) {
 #' @param by Column name in variant_table in which groups can be found
 #' @param reps integer; Number of bootstrap replicates
 #' @importFrom fen.R.util select_groups
-#' @importFrom dplyr summarize
+#' @importFrom dplyr filter summarize
 #' @return A p-value
 #' @export
 bootstrap_allele_frequency_test <- function(
@@ -30,17 +30,23 @@ bootstrap_allele_frequency_test <- function(
   groups <- c(group1, group2)
   line_info_subset <- select_groups(line_info, by, groups)
   variant_table_subset <- select_groups(variant_table, by, groups)
-  
+
   # Calculate the overall mean allele frequency across both groups
   combined_mean_af <- mean(variant_table_subset$af)
   observed_mean_afs <- calc_mean_af_by_group(
     variant_table = variant_table_subset, line_info = line_info_subset, by = by)
-  
-  # Produce null distributions
-  bootstrapped_null_dists <- lapply(
-    groups, bootstrap_mean_af_by, by = by,
-    variant_table = variant_table_subset, line_info = line_info_subset,
-    combined_mean_af = combined_mean_af, reps = reps)
+
+  # Construct bootstrapped mutation rate sample for each group
+  bootstrapped_null_dists <- lapply(groups, function(group) {
+      variant_table_subset <- select_groups(variant_table, by, group)
+      line_info_subset <- select_groups(line_info, by, group)
+      bootstrap_centered_null(
+        variant_table = variant_table_subset,
+        line_info = line_info_subset,
+        statistic = indexed_mean,
+        center = combined_mu,
+        reps = reps)
+  })
 
   # Calculate p-value
   p <- calculate_bootstrap_diff_p(observed_mean_afs, bootstrapped_null_dists)
@@ -58,19 +64,18 @@ bootstrap_allele_frequency_test <- function(
 #' @param group1,group2 Character; Group IDs in variant_table
 #' @param by Column name in variant_table in which groups can be found
 #' @param reps integer; Number of bootstrap replicates
-#' @importFrom fen.R.util select_groups
+#' @importFrom fen.R.util filter select_groups
 #' @importFrom dplyr summarize
 #' @return A p-value
 #' @export
 bootstrap_mutation_rate_test <- function(
   variant_table, line_info, by, group1, group2, reps = 1e5) {
   groups <- c(group1, group2)
-  line_info_subset <- select_groups(line_info, by, groups)
-  variant_table_subset <- select_groups(variant_table, by, groups)
+  line_info <- select_groups(line_info, by, groups)
+  variant_table <- select_groups(variant_table, by, groups)
 
   # Calculate the overall mutation rate across both groups
-  combined_mu <- calc_mutation_rate(
-    variant_table_subset, line_info_subset)
+  combined_mu <- calc_mutation_rate(variant_table_subset, line_info_subset)
 
   observed_mu <- mapply(
     calc_mutation_rate,
@@ -78,10 +83,18 @@ bootstrap_mutation_rate_test <- function(
     split_table(line_info, by))
 
   # Construct bootstrapped mutation rate sample for each group
-  bootstrapped_null_dists <- lapply(
-    groups, bootstrap_centered_null, by = by,
-    variant_table = variant_table_subset, line_info = line_info_subset,
-    combined_mu = combined_mu, reps = reps)
+  bootstrapped_null_dists <- lapply(groups, function(group) {
+      variant_table_subset <- select_groups(variant_table, by, group)
+      line_info_subset <- select_groups(line_info, by, group)
+      bootstrap_centered_null(
+        variant_table = variant_table_subset,
+        line_info = line_info_subset,
+        statistic = indexed_mutation_rate,
+        center = combined_mu,
+        gen = line_info_subset$generations,
+        nuc = line_info_subset$bp,
+        reps = reps)
+  })
   p <- calculate_bootstrap_diff_p(observed_mu, bootstrapped_null_dists)
   p
 }
@@ -177,46 +190,41 @@ center_distribution <- function(d, target) {
 }
 
 #' Bootstrap the null distribution for a statistic centered at a given value
-#' 
+#'
 #' This function generates a distribution for the null hypothesis that two
 #' groups do not differ in some statistic. For example if we were interested in
-#' whether two samples had a different mean; this function would produce a 
-#' bootstrapped sample for one group centered at the actual mean across both 
-#' groups. This ensures that the bootstrapped distribution corresponds to the 
+#' whether two samples had a different mean; this function would produce a
+#' bootstrapped sample for one group centered at the actual mean across both
+#' groups. This ensures that the bootstrapped distribution corresponds to the
 #' actual null hypothesis. Explained better here:
 #' https://stats.stackexchange.com/questions/136661
 #' @importFrom fen.R.util select_groups
 #' @importFrom boot boot
 bootstrap_centered_null <- function(
-  group, by, variant_table, line_info, combined_mu, reps) {
-  # Extract group from variant_table and line_info_subset
-  group_variant_table <- select_groups(variant_table, by, group)
-  group_line_info <- select_groups(line_info, by, group)
+  variant_table, line_info, statistic, center, ..., reps = 1e5) {
 
   # Get mutation allele frequencies split by sample
-  af_by_sample <- lapply(group_line_info$sample, get_afs_by_sample,
-    variant_table = group_variant_table)
-
-  mu <- calc_mutation_rate(group_variant_table, group_line_info)
-  sample_mu <- mapply(
-    mutation_rate, af_by_sample, group_line_info$generations, group_line_info$bp)
+  af_by_sample <- lapply(
+    line_info$sample,
+    get_afs_by_sample,
+    variant_table = variant_table)
 
   # Bootstrap the mutation rate under the null
-  bootstrapped_mu <- boot(
-    data = af_by_sample, statistic = indexed_mutation_rate, R = reps,
-    gen = group_line_info$generations, nuc = group_line_info$bp)
+  boot_sample <- boot(
+    data = af_by_sample,
+    statistic = statistic,
+    R = reps, ...)
 
   # Center the bootstrap sample at the overall mutation rate to satisfy
   # the null hypothesis
-  centered_bootstrapped_mu <- center_distribution(
-    bootstrapped_mu$t[, 1], combined_mu)
-  centered_bootstrapped_mu
+  centered_boot <- center_distribution(boot_sample$t[, 1], center)
+  centered_boot
 }
 
 #' Calculate the p-value for the bootstrap difference test
-#' @param observations Numeric; Vector of length == 2 giving the observed value 
+#' @param observations Numeric; Vector of length == 2 giving the observed value
 #'                     of the statistic on each group
-#' @param bootstrapped_null list; List of length == 2 giving the centered 
+#' @param bootstrapped_null list; List of length == 2 giving the centered
 #'                          bootstrapped null distributions for each group
 #' @return Numeric; A p-value
 calculate_bootstrap_diff_p <- function(observations, bootstrapped_null) {
@@ -246,10 +254,10 @@ mutation_rate <- function(muts, gen, nuc) {
 }
 
 #' Calculate the mean allele frequency for each group in by
-#' @importFrom fen.R.util select_groups
+#' @importFrom fen.R.util select_groups ulapply
 calc_mean_af_by_group <- function(variant_table, line_info, by) {
   levels <- unique(line_info[, by])
-  mean_afs <- lapply(levels, function(level) {
+  mean_afs <- ulapply(levels, function(level) {
     variant_table_subset <- select_groups(variant_table, by, level)
     mean(variant_table_subset$af)})
   mean_afs

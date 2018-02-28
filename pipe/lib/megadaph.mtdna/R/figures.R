@@ -147,14 +147,6 @@ gg_pie <- function(d) {
                        legend.position="bottom")
 }
 
-#' @export
-#' @import ggplot2
-theme_shared <- function() {
-    theme_bw(18) +
-        theme(
-            panel.grid.major.x = element_blank()
-        )
-}
 
 #' @export
 #' @import ggplot2

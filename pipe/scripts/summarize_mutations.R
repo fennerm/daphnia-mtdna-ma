@@ -14,10 +14,10 @@ Options:
 import::from(docopt, docopt)
 import::from(tools, file_ext)
 import::from(Hmisc, capitalize)
-import::from(fen.R.util, save_results, select_groups, split_table, write_table)
 import::from(ggplot2, ggsave)
 import::from(dplyr, filter)
 library(megadaph.mtdna)
+import::from(fen.R.util, save_results, select_groups, split_table, write_table)
 
 variant_table <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/output/merge_variants/variants.csv", stringsAsFactors = FALSE)
 line_info <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/input/metadata/line_info.csv", stringsAsFactors = FALSE)
@@ -28,18 +28,45 @@ library(boot)
 library(ggplot2)
 outdir <- "output/summarize_mutations/population"
 
-##Main
+## Main
 main <- function(variant_table, line_info, outdir) {
   levels <- c(
     "genotype", "population", "species", "ts_tv", "severity", "gene", "effect")
 
+
   lapply(levels, function(level) {
-    #' Initialize the analysis targets
-    analyze_mutation_rates(variant_table, line_info, level, outdir)
-    analyze_mutation_rate_variance(variant_table, line_info, level, outdir)
-    analyze_allele_frequencies(variant_table, line_info, outdir)
+    level_outdir <- file.path("output", "summarize_mutations", level)
+
+    if (level == "genotype") {
+      within <- "population"
+    } else if (level == "population") {
+      within <- "species"
+    } else {
+      within <- NULL
+    }
+
+    analyze_mutation_rates(
+      variant_table = variant_table,
+      line_info = line_info,
+      by = level,
+      outdir = level_outdir)
+
+    analyze_mutation_rate_variance(
+      variant_table = variant_table,
+      line_info = line_info,
+      by = level,
+      within = within,
+      outdir = level_outdir)
+
+    analyze_allele_frequencies(
+      variant_table = variant_table,
+      line_info = line_info,
+      by = level,
+      within = within,
+      outdir = level_outdir)
   })
 }
+
 save_table <- function(table, outdir, filename) {
   dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
   output_filepath <- file.path(outdir, filename)
@@ -58,67 +85,86 @@ save_plot <- function(plot, outdir, filename) {
 }
 
 #' Compare mutation rates using bootstrapping
-analyze_mutation_rates <- function(variant_table, line_info, level, outdir) {
+analyze_mutation_rates <- function(variant_table, line_info, by, outdir) {
   mutation_rates <- boot_mu_with_quantiles(
     variant_table = variant_table,
     line_info = line_info,
-    by = level)
+    by = by)
 
   mutation_rates_filename <- "mutation_rates.tsv"
   save_table(mutation_rates, outdir, mutation_rates_filename)
 
-  plots <- lapply(c("magna", "pulex"), function(species) {
-    species_data <- mutation_rates[which(mutation_rates$species == species),]
+  if (by == "species") {
     lapply(c("log10", "unscaled"), function(yscale) {
       plot <- precomputed_boxplot(
-        species_data,
+        mutation_rates,
         xlab = "Mutation Rate",
-        ylab = capitalize(level),
+        ylab = capitalize(by),
         yscale = yscale,
-        xval = species_data$group,
-        fill = species_data$group,
-        legend = FALSE,
-        limits = c(1e-8, 3e-6)
+        xval = mutation_rates$group,
+        fill = mutation_rates$group,
+        legend = FALSE
         )
-      plot_filename <- paste0("mutation_rates.", species, ".", yscale, ".jpg")
+      plot_filename <- paste0("mutation_rates.", yscale, ".jpg")
       save_plot(plot, outdir, plot_filename)
     })
-  })
-
+  } else {
+    plots <- lapply(c("magna", "pulex"), function(species) {
+      species_data <- filter(mutation_rates, species == species)
+      lapply(c("log10", "unscaled"), function(yscale) {
+        plot <- precomputed_boxplot(
+          species_data,
+          xlab = "Mutation Rate",
+          ylab = capitalize(by),
+          yscale = yscale,
+          xval = species_data$group,
+          fill = species_data$group,
+          legend = FALSE,
+          limits = c(1e-8, 3e-6)
+          )
+        plot_filename <- paste0("mutation_rates.", species, ".", yscale, ".jpg")
+        save_plot(plot, outdir, plot_filename)
+      })
+    })
+  }
   mutation_rates
 }
 
-analyze_mutation_rate_variance <- function(variant_table, line_info, level) {
-  if (level == "genotype") {
-    within <- "population"
-  } else if (level == "population") {
-    within <- "species"
-  } else {
-    within <- NULL
-  }
-
+analyze_mutation_rate_variance <- function(
+  variant_table,
+  line_info,
+  by,
+  within,
+  outdir) {
   mutation_rate_variance <- boot_compare_all(
     variant_table = variant_table,
     line_info = line_info,
     test = bootstrap_mutation_rate_test,
-    by = level,
+    by = by,
     within = within)
 
-  mutation_rates_filename <- "mutation_rate_variance.tsv"
-  save_table(mutation_rate_variance, outdir, mutation_rates_filename)
+  filename <- "mutation_rate_variance.tsv"
+  save_table(mutation_rate_variance, outdir, filename)
 
-  mutation_rate_differences
+  mutation_rate_variance
 }
 
-analyze_allele_frequencies <- function(variant_table, line_info, level) {
-  species <- unique(line_info$species)
-  lapply(species, function(spp) {
-    variant_table_subset <- select_groups(variant_table, "species", spp)
-    line_info_subset <- select_groups(line_info, "species", spp)
-
-    
-    })
-
+analyze_allele_frequencies <- function(
+  variant_table,
+  line_info,
+  by,
+  within,
+  outdir
+) {
+  allele_frequency_variance <- boot_compare_all(
+    variant_table = variant_table,
+    line_info = line_info,
+    test = bootstrap_allele_frequency_test,
+    by = by,
+    within = within)
+  filename <- "allele_frequency_variance.tsv"
+  save_table(allele_frequency_variance, outdir, filename)
+  allele_frequency_variance
 }
 
 #' @export

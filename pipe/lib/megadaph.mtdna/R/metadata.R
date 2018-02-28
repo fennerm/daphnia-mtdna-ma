@@ -6,13 +6,13 @@ get_sample <- function(filepath) {
         unlist(strsplit(basename(filepath), ".", fixed=TRUE))[1] })
 }
 
-#' Get isolate ID from filename or vector of paths.
+#' Get population ID from filename or vector of paths.
 #' @export
-get_isolate <- function(filepath) {
+get_population <- function(filepath) {
     filepath <- unlist(basename(filepath))
-    isolate <- substr(filepath, 1, 1)
-    isolate <- ifelse(isolate == "T", "TCO", isolate)
-    isolate
+    population <- substr(filepath, 1, 1)
+    population <- ifelse(population == "T", "TCO", population)
+    population
 }
 
 #' Get genotype ID from filename or vector of paths.
