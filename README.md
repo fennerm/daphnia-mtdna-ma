@@ -6,7 +6,6 @@ This repo contains the analysis pipeline for a mutation accumulation project in 
 Dependencies:
 
 -   https://github.com/fennerm/fmbiopy
--   https://github.com/fennerm/megadaph.mtdna
 -   https://github.com/fennerm/fen.R.util
 -   snakemake
 -   samtools
