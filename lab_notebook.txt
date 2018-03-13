@@ -1474,3 +1474,28 @@ January 31st, 2018
   variants this Semester. He'll be starting off on a few homoplasmic variants to
   get the hang of things.
 
+================================================================================
+February 26th, 2018
+================================================================================
+- My main priority has been the nuclear analysis recently but I have been slowly
+rewriting the mutation rate analysis module. The code is now a lot cleaner and 
+more reusable.
+
+================================================================================
+February 27th, 2018
+================================================================================
+- Spent some time researching indel variant callers which could be applied to 
+high-coverage mitochondrial data. I came back pretty empty handed. Generally 
+indel callers require either, (1) a fixed ploidy value, or (2) a normal-tumor
+pair. Delly2 looks promising but apparently it is not very sensitive to small
+indels (~<300 bp). 
+- GATK4's Mutect2 looks like it would actually work pretty well.
+- Ultimately decided that the extra analysis time that would be required to redo
+variant calling with another caller would be unfeasible.
+
+================================================================================
+March 12th, 2018
+================================================================================
+- Finished reimplementing the mutation rate analysis in megadaph.mtdna. All of 
+the bootstrapping functions were made much more general and migrated to
+fen.R.util. I should also be able to use these for the nuclear data now.
