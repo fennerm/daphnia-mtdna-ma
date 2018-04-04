@@ -118,7 +118,7 @@ rule all:
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
-        expand("output/qualimap/{sample}_{rotation}/genome_results.txt", 
+        expand("output/qualimap/{sample}_{rotation}/genome_results.txt",
                sample=SAMPLE, rotation=ROTATION)
 
 rule rotate_reference:
@@ -230,7 +230,7 @@ rule competitive_align:
         "output/competitive_align/log/{sample}.log"
     run:
         ref_idx = bowtie2_idx_root(input.bowtie2_idx)
-        shell("bowtie2 -1 {input.fwd_reads} -2 {input.rev_reads} -x " + 
+        shell("bowtie2 -1 {input.fwd_reads} -2 {input.rev_reads} -x " +
               ref_idx + " -p {threads} -X {params.max_insert_size} | "
               "samtools view -bh - | samtools sort - 2> {log} > {output.bam}")
         shell("samtools index {output.bam}")
@@ -262,7 +262,7 @@ rule align_to_mt_rotation:
         "output/align_to_mt_rotation/log/{sample}.{rotation}.log"
     run:
         ref_idx = bowtie2_idx_root(input.bowtie2_idx)
-        shell("bowtie2 -1 {input.fwd_reads} -2 {input.rev_reads} -x " + 
+        shell("bowtie2 -1 {input.fwd_reads} -2 {input.rev_reads} -x " +
               ref_idx + " -X {params.max_insert_size} --very-sensitive "
               "--rg-id={wildcards.sample} --rg=LIB:{wildcards.sample} "
               "--rg=PL:illumina --rg=SM:{wildcards.sample} | "
@@ -312,7 +312,7 @@ rule mismatch_filter:
     shell:
         "bamtools filter -tag 'NM:<10' -in {input} -out {output.bam} && "
         "samtools index {output.bam}"
-        
+
 rule remove_singletons:
     input:
         "output/mismatch_filter/{sample}.{rotation}.bam"
@@ -424,10 +424,10 @@ rule call_variants:
 
 rule correct_for_multiple_comparisons:
     input:
-        piles = expand("output/call_variants/test_tables/{genotype}.csv", 
+        piles = expand("output/call_variants/test_tables/{genotype}.csv",
                        genotype = GENOTYPE)
     output:
-        expand("output/correct_for_multiple_comparisons/{genotype}.csv", 
+        expand("output/correct_for_multiple_comparisons/{genotype}.csv",
                genotype = GENOTYPE)
     params:
         fdr_level = "0.05"
