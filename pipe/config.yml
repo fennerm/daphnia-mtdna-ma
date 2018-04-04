@@ -1,3 +1,4 @@
 ---
 adapters: input/adapters/adapters_illumina.fa
+snpeff_config: config/snpEff.config
 threadsmax: 10
