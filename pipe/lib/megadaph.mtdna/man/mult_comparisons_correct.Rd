@@ -4,7 +4,7 @@
 \alias{mult_comparisons_correct}
 \title{Add q-values to a list of test tables}
 \usage{
-mult_comparisons_correct(test_tables, fdr_level = 0.05)
+mult_comparisons_correct(test_tables, fdr_level = 0.005)
 }
 \arguments{
 \item{test_tables}{List of test tables}

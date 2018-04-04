@@ -4,14 +4,14 @@
 \alias{mutation_rate}
 \title{Calculate the haploid mutation rate}
 \usage{
-mutation_rate(muts, gen, nuc)
+mutation_rate(muts, gen, bp)
 }
 \arguments{
-\item{muts}{numeric; mutant allele frequencies}
+\item{muts}{numeric; mutant allele frequencies per sample}
 
-\item{gen}{numeric; Mean generation number}
+\item{gen}{numeric; generation number per sample}
 
-\item{nuc}{integer; Number of nucleotides surveyed}
+\item{bp}{integer; Number of nucleotides surveyed per sample}
 }
 \value{
 The mutation rate
