@@ -7,6 +7,7 @@ D. pulex and D. magna
 """
 import os
 
+from plumbum import local
 from plumbum.cmd import nbases
 
 # ==============================================================================
@@ -114,12 +115,12 @@ def bowtie2_idx_root(idx):
 rule all:
     input:
         "output/multiqc/multiqc.html",
-        "output/merge_variants/variants.csv",
+        'output/annotate_variants/variants.csv',
         expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
                "ref/{species}.{genome}.fa.fai"], species=SPECIES,
                genome=GENOME),
         expand("output/qualimap/{sample}_{rotation}/genome_results.txt",
-               sample=SAMPLE, rotation=ROTATION)
+               sample=SAMPLE, rotation=ROTATION),
 
 rule rotate_reference:
     input:
@@ -332,8 +333,9 @@ rule qualimap:
         "output/qualimap/{sample}_{rotation}/genome_results.txt"
     resources:
         mem_mb = 2000
-    shell:
-        "qualimap bamqc -bam {input} -outdir {output}"
+    run:
+        outdir = local.path(output).dirname
+        shell("qualimap bamqc -bam {input} -outdir " + outdir)
 
 rule randomly_select_nuclear_csomes:
     input:
@@ -454,7 +456,21 @@ rule merge_variants:
     resources:
         mem_mb = 1000
     shell:
-        "csvcat {input} > {output}"
+        'rm -rf output/inspected_variants && csvcat {input} > {output}'
+
+# Insertions in output/merge_variants have to be manually annotated first.
+rule annotate_variants:
+    input:
+        variants = 'output/inspected_variants/variants.csv',
+        prereq = 'output/merge_variants/variants.csv'
+    output:
+        'output/annotate_variants/variants.csv'
+    shell:
+        'scripts/annotate_variants.R '
+        '-o {output} '
+        '-c config[snpeff_config] '
+        '{input.variants}'
+
 
 rule multiqc:
     input:
