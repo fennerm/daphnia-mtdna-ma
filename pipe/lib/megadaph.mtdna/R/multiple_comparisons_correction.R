@@ -4,7 +4,7 @@
 #' @return List of test tables
 #' @export
 #' @importFrom qvalue qvalue
-mult_comparisons_correct <- function(test_tables, fdr_level=0.05) {
+mult_comparisons_correct <- function(test_tables, fdr_level=0.005) {
   # Merge into a single table
   merged_table <- do.call("rbind", test_tables)
 

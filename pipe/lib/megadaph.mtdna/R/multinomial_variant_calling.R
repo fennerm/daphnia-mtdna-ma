@@ -181,7 +181,7 @@ determine_unique <- function(mut_cov_counts, seq_error_rates) {
   p <- mapply(binom_tests, mut_cov_counts, seq_error_rates, SIMPLIFY = FALSE)
 
   # Convert list to multisample matrix
-  p_matrix <- matrix(unlist(p), ncol=nsamples)
+  p_matrix <- matrix(unlist(p), ncol = nsamples)
 
   unique <- apply(p_matrix, 1, is_unique)
   unique
@@ -406,7 +406,7 @@ compute_strand_bias <- function(counts, wild_type_allele,
 binom_tests <- function(mut_cov_counts, seq_error_rate) {
   apply(mut_cov_counts, 1, function(mc) {
           binom.test(mc, p = seq_error_rate, alternative = "greater")$p.value
-                          })
+  })
 }
 
 #' Return TRUE if only one of a list of p-values is < 0.05

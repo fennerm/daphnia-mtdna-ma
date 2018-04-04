@@ -11,68 +11,117 @@ Options:
                           samples
   -i --info=CSV           .csv file with MA line metadata
   -o --output_dir=OUTDIR  Output directory" <- doc
+# library(megadaph.mtdna)
+# import::from(fen.R.util, save_results, select_groups, precomputed_boxplot)
 import::from(docopt, docopt)
 import::from(tools, file_ext)
 import::from(Hmisc, capitalize)
-import::from(ggplot2, ggsave)
-import::from(dplyr, filter)
-library(megadaph.mtdna)
-import::from(fen.R.util, save_results, select_groups, split_table, write_table)
 
-variant_table <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/output/merge_variants/variants.csv", stringsAsFactors = FALSE)
-line_info <- read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/input/metadata/line_info.csv", stringsAsFactors = FALSE)
-level <- "population"
+library(tidyverse)
+
 nvim.srcdir("lib/megadaph.mtdna/R")
 nvim.srcdir("~/fmacrae/code/fen.R.util/R")
+variant_table <- as.tibble(read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/output/merge_variants/variants.csv", stringsAsFactors = FALSE))
+line_info <- as.tibble(read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/input/metadata/line_info.csv", stringsAsFactors = FALSE))
+level <- "population"
 library(boot)
-library(ggplot2)
-outdir <- "output/summarize_mutations/population"
+outdir <- "output/summarize_mutations"
+REPS <- 100
+
+#' Merge the variant and line info tables into a table
+merge_tables <- function(variant_table, line_info) {
+  variant_table <- variant_table %>%
+    select(-species, -population, -genotype) %>%
+    group_by(sample) %>%
+    summarize_all("list")
+  line_info <- line_info %>% rename(mean_coverage = coverage)
+  mutation_table <- left_join(line_info, variant_table, by = "sample")
+  mutation_table$af <- mutation_table$af %>% replace_null(0)
+  mutation_table
+}
+
+#' Get the unique values of a (possibly-nested) column in a tibble
+get_levels <- function(tbl, by) {
+  tibble(level = unique(unlist(tbl[, by])))
+}
+
+#' Merge line_info and variant_tables seperately for each level of a mutation
+#' type
+#'
+#' E.g If level = "species" and inner_level = "class". This function returns a 
+#' tibble with columns 1:2 =
+#' ["magna", "pulex"] x ["insertion", "deletion", "snv"] and column 3 the merged
+#' table for the combination.
+merge_tables_by_mutation_type <- function(
+    variant_table,
+    line_info,
+    level,
+    inner_level
+  ) {
+  merged_table <- get_levels(line_info, level) %>%
+    # Split the variant table by `level`
+    mutate(table = level %>%
+      map(~filter(variant_table, !!as.name(level) == .))) %>%
+    # Create a merged mutation table for each variant table separately
+    mutate(data = table %>% map(function(x) {
+      level_data <- as.tibble(unique(variant_table[, inner_level])) %>%
+        mutate(intermediate = !!as.name(inner_level) %>%
+          map(~filter(x, !!as.name(inner_level) == .))) %>%
+        mutate(data = intermediate %>%
+          map(~merge_tables(., line_info))) %>%
+        select(class, data)
+    })) %>%
+    # Remove the intermediate results
+    select(level, data) %>%
+    unnest
+  colnames(merged_table)[1] <- level
+  merged_table
+}
 
 ## Main
 main <- function(variant_table, line_info, outdir) {
-  levels <- c(
-    "genotype", "population", "species", "ts_tv", "severity", "gene", "effect")
+  combined_table <- merge_tables(variant_table, line_info)
+  # levels <- c(
+  #   "genotype", "population", "species", "ts_tv", "severity", "gene", "effect")
 
+  levels <- c("genotype", "population", "species")
+  inner_levels <- c("combined", "class")
 
-  lapply(levels, function(level) {
-    level_outdir <- file.path("output", "summarize_mutations", level)
-
-    if (level == "genotype") {
-      within <- "population"
-    } else if (level == "population") {
-      within <- "species"
-    } else {
-      within <- NULL
+  for (level in levels) {
+    print(level)
+    level_outdir <- file.path(outdir, level)
+    level_data <- combined_table %>% group_by(!!as.name(level)) %>% nest
+    for (inner_level in inner_levels) {
+      print(inner_level)
+      if (inner_level == "combined") {
+        inner_level_outdir <- level_outdir
+        inner_level_data <- level_data
+      } else {
+        inner_level_outdir <- file.path(outdir, level, inner_level)
+        inner_level_data <- merge_tables_by_mutation_type(
+          variant_table, line_info, level, inner_level)
+      }
+      analyze_mutation_rates(inner_level_data, inner_level_outdir)
     }
+    analyze_mutation_rate_variance(level_data, level_outdir)
+    analyze_allele_frequencies(level_data, level_outdir)
 
-    analyze_mutation_rates(
-      variant_table = variant_table,
-      line_info = line_info,
-      by = level,
-      outdir = level_outdir)
-
-    analyze_mutation_rate_variance(
-      variant_table = variant_table,
-      line_info = line_info,
-      by = level,
-      within = within,
-      outdir = level_outdir)
-
-    analyze_allele_frequencies(
-      variant_table = variant_table,
-      line_info = line_info,
-      by = level,
-      within = within,
-      outdir = level_outdir)
-  })
+    # analyze_mutation_types(
+    #   variant_table = variant_table,
+    #   line_info = line_info,
+    #   by = level,
+    #   outdir = level_outdir)
+  }
 }
 
+#' Save a table to file
 save_table <- function(table, outdir, filename) {
   dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
   output_filepath <- file.path(outdir, filename)
-  write_table(table, output_filepath, sep = "\t")
+  write_tsv(table, output_filepath)
 }
 
+#' Save a ggplot2 object to file
 save_plot <- function(plot, outdir, filename) {
   dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
   output_filepath <- file.path(outdir, filename)
@@ -84,64 +133,90 @@ save_plot <- function(plot, outdir, filename) {
     height = 12)
 }
 
-#' Compare mutation rates using bootstrapping
-analyze_mutation_rates <- function(variant_table, line_info, by, outdir) {
-  mutation_rates <- boot_mu_with_quantiles(
-    variant_table = variant_table,
-    line_info = line_info,
-    by = by)
+#' Assign a grouping level to its higher grouping level
+#'
+#' E.g assign_within_grouping("population") == "species"
+#'     assign_within_grouping("sample") == "genotype"
+assign_within_grouping <- function(grouping) {
+  hierarchy <- c("species", "population", "genotype", "sample")
+  grouping_index <- match(grouping, hierarchy)
+  if (grouping_index == 1) {
+    within_grouping <- NULL
+  } else {
+    within_grouping <- hierarchy[grouping_index - 1]
+  }
+  within_grouping
+}
+
+#' Assign a species to a vector of genotypes, populations or samples
+assign_species <- function(grouping) {
+  map_chr(unlist(grouping), function(x) {
+    if (substr(x, 1, 1) %in% c("F", "G", "I")) {
+      species <- "magna"
+    } else {
+      species <- "pulex"
+    }
+    species})
+}
+
+plot_mutation_rates <- function(mutation_rates, outdir, prefix = NULL) {
+  grouping <- colnames(mutation_rates)[1]
+  c("log10", "unscaled") %>% map(function(yscale) {
+    plot <- precomputed_boxplot(
+      mutation_rates,
+      xlab = "Mutation Rate",
+      ylab = capitalize(grouping),
+      yscale = yscale,
+      xval = mutation_rates[, grouping],
+      fill = mutation_rates[, grouping],
+      legend = FALSE
+    )
+    plot_filename <- paste0("mutation_rates.", yscale, ".jpg")
+    if (!is.null(prefix)) {
+      plot_filename <- paste0(prefix, plot_filename)
+    }
+    save_plot(plot, outdir, plot_filename)})
+}
+
+#' Calculate mutation rates and produce boxplots
+analyze_mutation_rates <- function(mutation_table, outdir) {
+  grouping <- colnames(mutation_table)[1]
+  mutation_rates <- boot_quantiles(
+    mutation_table, indexed_mutation_rate, reps = REPS)
 
   mutation_rates_filename <- "mutation_rates.tsv"
   save_table(mutation_rates, outdir, mutation_rates_filename)
 
-  if (by == "species") {
-    lapply(c("log10", "unscaled"), function(yscale) {
-      plot <- precomputed_boxplot(
-        mutation_rates,
-        xlab = "Mutation Rate",
-        ylab = capitalize(by),
-        yscale = yscale,
-        xval = mutation_rates$group,
-        fill = mutation_rates$group,
-        legend = FALSE
-        )
-      plot_filename <- paste0("mutation_rates.", yscale, ".jpg")
-      save_plot(plot, outdir, plot_filename)
-    })
+  if (grouping == "species") {
+    plot_mutation_rates(mutation_rates, outdir)
   } else {
-    plots <- lapply(c("magna", "pulex"), function(species) {
-      species_data <- filter(mutation_rates, species == species)
-      lapply(c("log10", "unscaled"), function(yscale) {
-        plot <- precomputed_boxplot(
-          species_data,
-          xlab = "Mutation Rate",
-          ylab = capitalize(by),
-          yscale = yscale,
-          xval = species_data$group,
-          fill = species_data$group,
-          legend = FALSE,
-          limits = c(1e-8, 3e-6)
-          )
-        plot_filename <- paste0("mutation_rates.", species, ".", yscale, ".jpg")
-        save_plot(plot, outdir, plot_filename)
-      })
-    })
+    # Plot each species separately
+    plot_tibble <- mutation_rates %>%
+      mutate(species = assign_species(!!as.name(grouping))) %>%
+      group_by(species) %>%
+      nest
+
+    for (i in 1:nrow(plot_tibble)) {
+      print(i)
+      plot_mutation_rates(
+        plot_tibble[i, "data"][[1]][[1]],
+        outdir = outdir,
+        prefix = paste0(plot_tibble[i, "species"][[1]][[1]], "."))
+    }
   }
   mutation_rates
 }
 
-analyze_mutation_rate_variance <- function(
-  variant_table,
-  line_info,
-  by,
-  within,
-  outdir) {
+#' Compare mutation rates by bootstrap
+analyze_mutation_rate_variance <- function(mutation_table, outdir) {
+  grouping <- colnames(mutation_table)[1]
+  within_grouping <- assign_within_grouping(grouping)
   mutation_rate_variance <- boot_compare_all(
-    variant_table = variant_table,
-    line_info = line_info,
-    test = bootstrap_mutation_rate_test,
-    by = by,
-    within = within)
+    mutation_table,
+    within = within_grouping,
+    statistic = indexed_mutation_rate,
+    reps = REPS
+  )
 
   filename <- "mutation_rate_variance.tsv"
   save_table(mutation_rate_variance, outdir, filename)
@@ -149,53 +224,20 @@ analyze_mutation_rate_variance <- function(
   mutation_rate_variance
 }
 
-analyze_allele_frequencies <- function(
-  variant_table,
-  line_info,
-  by,
-  within,
-  outdir
-) {
+#' Compare mean allele frequency by bootstrap
+analyze_allele_frequencies <- function(mutation_table, outdir) {
+  grouping <- colnames(mutation_table)[1]
+  within_grouping <- assign_within_grouping(grouping)
   allele_frequency_variance <- boot_compare_all(
-    variant_table = variant_table,
-    line_info = line_info,
-    test = bootstrap_allele_frequency_test,
-    by = by,
-    within = within)
+    mutation_table,
+    within = within_grouping,
+    statistic = indexed_mean_af,
+    reps = REPS
+  )
   filename <- "allele_frequency_variance.tsv"
   save_table(allele_frequency_variance, outdir, filename)
   allele_frequency_variance
 }
-
-#' @export
-het_vs_hom <- function(variant_table, line_info) {
-  var_by_spp <- split(variant_table, variant_table$species)
-  li_by_spp <- split(line_info, line_info$species)
-
-  by_spp <- lapply(1:(length(li_by_spp)), function(i) {
-    hom <- dplyr::filter(var_by_spp[[i]], af > 0.99)
-    het <- dplyr::filter(var_by_spp[[i]], af <= 0.99)
-    prop_hom <- nrow(hom)/nrow(het)
-    hom_af <- lapply(li_by_spp[[i]]$sample, function(x) {
-      hom[which(hom$sample == x), "af"]})
-    het_af <- lapply(li_by_spp[[i]]$sample, function(x) {
-      het[which(het$sample == x), "af"]})
-    hom_mutation_rate <- quantile_mutation_rate(hom_af, li_by_spp[[i]]$generations,
-      sum(li_by_spp[[i]]$bp))
-    het_mutation_rate <- quantile_mutation_rate(het_af, li_by_spp[[i]]$generations,
-      sum(li_by_spp[[i]]$bp))
-    list(prop_hom=prop_hom, hom_u = hom_mutation_rate, het_u = het_mutation_rate)
-    })
-  fill <- c("Homoplasmic", "Heteroplasmic", "Homoplasmic", "Heteroplasmic")
-  dat <- as.data.frame(rbind(by_spp[[1]]$hom_u, by_spp[[1]]$het_u,
-      by_spp[[2]]$hom_u, by_spp[[2]]$het_u))
-  group <- c("D. magna", "D. magna", "D. pulex", "D. pulex")
-  dat <- cbind(group, dat)
-  colnames(dat) <- c("group", "V1", "ci1", "q25", "q50", "q75", "ci2")
-  custom_boxplot(dat, "Species", "Mutation Rate", expression(italic("D. magna"), italic("D. pulex")),
-    fill=fill)
-}
-
 
 if (!interactive) {
   opts <- docopt(doc)
@@ -205,193 +247,6 @@ if (!interactive) {
     variant_table, line_info_table, unlist(opts["output_dir"]))
 }
 
-
-# CANT DO PERMUTATION TESTS WITH UNEQUAL SAMPLE SIZES
-
-#' @export
-sample_mu <- function(line_info, variant_table) {
-  sample_mutation_rates <- sapply(line_info$sample, function(sample) {
-    sample_afs <- variant_table[which(variant_table$sample == sample), "af"]
-    sample_gen <- line_info[which(line_info$sample == sample),
-      "generations"]
-    sample_nuc <- line_info[which(line_info$sample == sample),
-      "bp"]
-    mutation_rate(sample_afs, sample_gen, sample_nuc)
-      })
-  barplot(sample_mutation_rates, col=as.factor(line_info$genotype))
-  sample_mutation_rates
-}
-
-#' @export
-#' @importFrom dplyr filter
-confounding_factors <- function(line_info, sample_mutation_rates, merged_table) {
-  leveneTest(sample_mutation_rates~as.factor(line_info$genotype))
-  leveneTest(sample_mutation_rates~as.factor(line_info$population))
-
-  pulex_table <- filter(merged_table, species=="pulex")
-  magna_table <- filter(merged_table, species=="magna")
-  plot(pulex_table$pos~log(pulex_table$af), xlim=c(-8, -2))
-  plot(magna_table$pos~log(magna_table$af), xlim=c(-8, -2))
-  plot(density(pulex_table$af, n=10000, from=0, to=1), xlim=c(0, 0.02), ylim=c(0, 50))
-  lines(density(magna_table$af, n=10000, from=0, to=1), col="red")
-  plot(density(pulex_table$af, n=10000, from=0, to=1), xlim=c(0.01, 0.05), ylim=c(0, 2))
-  lines(density(magna_table$af, n=10000, from=0, to=1), col="red")
-  nmat <- sapply(sort(unique(merged_table$af)), function(n) {
-    c(length(which(pulex_table$af==n)), length(which(magna_table$af==n)))
-      })
-  nmat <- apply(nmat, 1, function(r) r/sum(r))
-  colnames(nmat) <- ""
-  plot(nmat[,1]-nmat[,2], type="l", ylim=c(-0.2, 0.2))
-  plot(log(nmat[1:16,1])-log(nmat[1:16,2]), type="l", xlim=c(0, 16))
-
-  arg_mat <- readRDS("../consensus_calling/arg_mat.rds")
-  nsamples <- lapply(arg_mat[1,], length)
-  ntables <- c(rep(14948, 9), rep(15333, 2))
-
-
-  ctabs <- lapply(1:ncol(arg_mat), function(i) {
-    simulate_contingency_tables(ntables[i], nsamples[[i]], unlist(arg_mat[3,i]),
-      c(1000, 1000))
-      })
-  pulex_ctabs <- unlist(ctabs[10:11], recursive=FALSE)
-  magna_ctabs <- unlist(ctabs[1:9], recursive=FALSE)
-  mut_wt <- readRDS("../tables/mut_wt_matrices.sub.Rds")
-  pulex_mut_wt <- mut_wt[(length(mut_wt)-(15333*2)+1):length(mut_wt)]
-  magna_mut_wt <- mut_wt[1:(length(mut_wt)-(15333*2))]
-  equals1000 <- function(ctab) {
-    all(rowSums(ctab)==1000)
-  }
-  pulex_inc_mat <- which(sapply(pulex_mut_wt, equals1000))
-  magna_inc_mat <- which(sapply(magna_mut_wt, equals1000))
-  pulex_mut_wt <- pulex_mut_wt[pulex_inc_mat]
-  pulex_ctabs <- pulex_ctabs[pulex_inc_mat]
-  magna_mut_wt <- magna_mut_wt[magna_inc_mat]
-  magna_ctabs <- magna_ctabs[magna_inc_mat]
-  pulex_afs <- unlist(lapply(pulex_mut_wt, function(x) x[,1]/(x[,1]+ x[,2])))
-  magna_afs <- unlist(lapply(magna_mut_wt, function(x) x[,1]/(x[,1]+ x[,2])))
-  sim_pulex_afs <- unlist(lapply(pulex_ctabs, function(x) x[,1]/(x[,1]+ x[,2])))
-  sim_magna_afs <- unlist(lapply(magna_ctabs, function(x) x[,1]/(x[,1]+ x[,2])))
-  plot(density(pulex_afs-mean(sim_pulex_afs)), xlim=c(0,1), ylim=c(0, 0.05))
-  lines(density(magna_afs-mean(sim_magna_afs)), col="red")
-  nmat <- sapply(sort(unique(c(magna_afs, pulex_afs))), function(n) {
-    c(length(which(pulex_afs==n)), length(which(magna_afs==n)))
-      })
-  nmat <- t(apply(nmat, 1, function(r) r/sum(r)))
-  plot(nmat[1,], xlim=c(0, 40), ylim=c(0, 0.001))
-  lines(nmat[1,])
-  points(nmat[2,], col="red")
-  lines(nmat[2,], col="red")
-
-  line_info <- cbind(line_info, sample_mutation_rates)
-  plot(density(line_info$sample_mutation_rates))
-  shapiro.test(sample_mutation_rates)
-  cor.test(line_info$generations,
-    line_info$sample_mutation_rates,
-    method="spearman")
-  ## Non-significant after removal of pulex
-  cor.test(line_info$generations[which(line_info$species=="magna")],
-    line_info$sample_mutation_rates[which(line_info$species=="magna")],
-    method="spearman")
-  non_zero <- line_info[which(line_info$sample_mutation_rates != 0),]
-  plot(log(non_zero$generations), log(non_zero$sample_mutation_rates),
-    xlim=c(-1, 6), ylim=c(-20, -10))
-  abline(lm(log(non_zero$sample_mutation_rates)~log(non_zero$generations)), col="red")
-  tab <- cbind(as.data.frame(log(sample_mutation_rates)),
-    log(line_info$generations),
-    line_info$genotype)
-  tab <- tab[which(!is.infinite(tab[,1])),]
-  require(car)
-  scatterplot(tab[,1]~tab[,2] | tab[,3], smoother=FALSE,
-    xlab="log(generations)", ylab="log(Mutation Rate)")
-  cor.test(line_info$sequencing_error,
-    line_info$sample_mutation_rates,
-    method="spearman")
-  cor.test(line_info$coverage,
-    line_info$sample_mutation_rates,
-    method="spearman")
-}
-
-#' @export
-by_population <- function(variant_table, line_info) {
-  # BY POPULATION
-  population_mutation_rates <- mutation_rate_by(variant_table, line_info, "population")
-  custom_boxplot(population_mutation_rates, "Isolate", "Mutation Rate",
-    unique(line_info$population))
-
-  population_diffs <- boot_mutation_rate_diff_within(variant_table, line_info, "population", "genotype")
-}
-
-#' @export
-by_population <- function(line_info, variant_table) {
-  population_mutation_rates <- mutation_rate_by(variant_table, line_info, "genotype")
-  custom_boxplot(population_mutation_rates, "Genotype", "Mutation Rate",
-    unique(line_info$genotype))
-  population_diffs <- boot_mutation_rate_diff_within(variant_table, line_info, "genotype",
-    "species")
-}
-
-#' @export
-by_species <- function(variant_table, line_info) {
-  species_mutation_rates <- mutation_rate_by(variant_table, line_info, "species")
-  species_diffs <- boot_mutation_rate_diff_within(variant_table, line_info, "species")
-  custom_boxplot(species_mutation_rates, "Species", "Mutation Rate",
-    c("D. magna", "D. pulex"))
-}
-
-#' @export
-by_reproduction <- function(variant_table, line_info) {
-  repro_mutation_rates <- mutation_rate_by(variant_table, line_info, "reproduction")
-  custom_boxplot(repro_mutation_rates, "Reproduction", "Mutation Rate",
-    c("Asexual", "Cyclical Parthenogenetic"))
-  repro_diffs <- boot_mutation_rate_diff_within(variant_table, line_info, "reproduction")
-  repro_diffs
-}
-
-#' @export
-diff_p_value <- function(boot_diff) {
-  boot_diff <- unlist(boot_diff)
-  avg <- mean(boot_diff)
-  if (avg > 0) {
-    p <- (length(which(unlist(boot_diff) <= 0)) + 1) / (length(boot_diff) + 1)
-  } else {
-    p <- (length(which(unlist(boot_diff) >= 0)) + 1) / (length(boot_diff) + 1)
-  }
-  p
-}
-
-ci <- function(x) {
-  error <- qnorm(0.975)*sd(x)/sqrt(length(x))
-  ci1 <- mean(x)-error
-  ci2 <- mean(x)+error
-  c(ci1, ci2)
-}
-
-#' @export
-by_indel_snv <- function(line_info, variant_table) {
-  indel_variant_table <- variant_table[which(variant_table$class %in%
-    c("insertion", "deletion")),]
-  snv_variant_table <- variant_table[which(variant_table$class == "snv"),]
-  snv_mu_by_species <- mutation_rate_by(snv_variant_table, line_info, "species")
-  indel_mu_by_species <- mutation_rate_by(indel_variant_table, line_info, "species")
-  mut_class_df <- rbind(snv_mu_by_species, indel_mu_by_species)
-  fill <- c("SNV", "SNV", "Indel", "Indel")
-  snv_boot_diff <- boot_mutation_rate_diff_within(snv_variant_table, line_info, "species")
-  snv_p <- diff_p_value(snv_boot_diff)
-  indel_boot_diff <- boot_mutation_rate_diff_within(indel_variant_table, line_info, "species")
-  indel_p <- diff_p_value(indel_boot_diff)
-  custom_boxplot(mut_class_df, "Mutation Class", "Mutation Rate",
-    c("D. magna", "D. pulex"), fill=fill)
-  ninsertions <- length(which(indel_variant_table$class == "insertion"))
-  ndeletions <- length(which(indel_variant_table$class == "deletion"))
-  fisher.test(matrix(c(ndeletions, ninsertions, ninsertions, ndeletions), ncol=2))
-  ins_lengths <- nchar(filter(indel_variant_table, class=="insertion")$alt) - 1
-  del_lengths <- nchar(filter(indel_variant_table, class=="deletion")$ref) - 1
-  wilcox.test(ins_lengths, del_lengths)
-  indel_afs <- variant_table[which(variant_table$class
-    %in% c("insertion", "deletion")),"af_diff"]
-  snv_afs <- variant_table[which(variant_table$class=="snv"),"af_diff"]
-  wilcox.test(indel_afs, snv_afs)
-}
 
 #' @export
 by_effect <- function(variant_table, by) {
@@ -448,7 +303,6 @@ locations <- function(variant_table, n) {
         pos <= ((i+1)*(15333/n))))
     })
 }
-
 
 #' @export
 read_tables <- function() {
