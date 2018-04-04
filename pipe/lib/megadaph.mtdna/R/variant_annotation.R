@@ -23,13 +23,13 @@ add_snp_eff_annotations <- function(var_table, snpeff_config) {
 
   # Annotate the .vcf
   snpeff_vcf <- gsub("vcf", "annot.vcf", vcf_filename)
-  system(paste("snpEff", "-c", snpeff_config, paste0("d.", species), 
+  system(paste("snpEff", "-c", snpeff_config, paste0("d.", species),
                vcf_filename, ">", snpeff_vcf))
 
   # Read the .vcf data back into R
   vcfdat <- read_vcf(snpeff_vcf)
   file.remove(snpeff_vcf)
-  
+
   # Parse the annotations
   annotation_field <- vcfdat[, "INFO"]
   annotations <- strsplit(annotation_field, split = "|", fixed = TRUE)
@@ -51,20 +51,19 @@ add_snp_eff_annotations <- function(var_table, snpeff_config) {
 #' @importFrom fen.R.util write_table_with_header
 variant_table_to_vcf <- function(var_table) {
   species <- unique(var_table$species)
-  genotype <- unique(var_table$genotype)
 
   vcf_table <- convert_to_vcf_format(var_table, species)
 
   header_path <- file.path("headers", paste0(species, "_header.txt"))
-  
+
   # Get VCF header
   header_file <- system.file(header_path, package = "megadaph.mtdna")
   header_text <- readChar(header_file, file.info(header_file)$size)
   header_text <- trimws(header_text)
-  
+
   # Write output
-  vcf_filename <- file.path("/tmp", paste0(genotype, ".vcf"))
-  write_table_with_header(vcf_table, vcf_filename, header_text, sep = "\t", 
+  vcf_filename <- file.path("/tmp", paste0(species, ".vcf"))
+  write_table_with_header(vcf_table, vcf_filename, header_text, sep = "\t",
                           quote = FALSE, row.names = FALSE, col.names = FALSE)
   vcf_filename
 }
@@ -74,6 +73,7 @@ variant_table_to_vcf <- function(var_table) {
 #' @param var_table Variant table
 #' @param species The Daphnia species ('magna', 'pulex')
 #' @return A data.frame in VCF format
+#' @importFrom fen.R.util p_to_q
 convert_to_vcf_format <- function(var_table, species) {
   if (tolower(species) == "pulex") {
     contig <- "NC_000844"
@@ -81,10 +81,10 @@ convert_to_vcf_format <- function(var_table, species) {
     contig <- "NC_026914"
   }
   info <- apply(var_table, 1, construct_info_field)
-  
+
   nvars <- nrow(var_table)
-  vcf_table <- cbind(rep(contig, nvars), var_table$pos, rep(".", nvars), 
-                     var_table$ref, var_table$alt, p_to_q(var_table$p_value), 
+  vcf_table <- cbind(rep(contig, nvars), var_table$pos, rep(".", nvars),
+                     var_table$ref, var_table$alt, p_to_q(var_table$p_value),
                      rep("PASS", nvars), info)
   vcf_table
 }
@@ -95,7 +95,7 @@ convert_to_vcf_format <- function(var_table, species) {
 add_ts_tv_info <- function(var_table) {
   ts_tv <- apply(var_table, 1, function(row) {
     if (row["class"] == "snv") {
-      if (all(c(row["ref"], row["alt"]) %in% c("A", "G")) || 
+      if (all(c(row["ref"], row["alt"]) %in% c("A", "G")) ||
           all(c(row["ref"], row["alt"]) %in% c("C", "T"))) {
         "transition"
       } else {
