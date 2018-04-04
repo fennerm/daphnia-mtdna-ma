@@ -3,6 +3,7 @@
 .cs_workspaces
 *.RData
 *.Ruserdata
+tags*
 .coverage
 .cache
 *.vcf
