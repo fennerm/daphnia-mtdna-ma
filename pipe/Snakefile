@@ -116,11 +116,9 @@ rule all:
     input:
         "output/multiqc/multiqc.html",
         'output/annotate_variants/variants.csv',
-        expand(["ref/{species}.{genome}.1.bt2", "ref/{species}.{genome}.dict",
-               "ref/{species}.{genome}.fa.fai"], species=SPECIES,
-               genome=GENOME),
         expand("output/qualimap/{sample}_{rotation}/genome_results.txt",
                sample=SAMPLE, rotation=ROTATION),
+        'output/calculate_mean_seq_depth/seq_depth.csv'
 
 rule rotate_reference:
     input:
@@ -471,6 +469,15 @@ rule annotate_variants:
         '-c config[snpeff_config] '
         '{input.variants}'
 
+
+rule calculate_mean_seq_depth:
+    input:
+        expand('output/call_variants/test_tables/{genotype}/csv',
+               genotype=GENOTYPE)
+    output:
+        'output/calculate_mean_seq_depth/seq_depth.csv'
+    shell:
+        'scripts/calc_mean_seq_depth.R -o {output} {input}'
 
 rule multiqc:
     input:
