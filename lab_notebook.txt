@@ -1507,5 +1507,3 @@ April 4th, 2018
   adjustments to the mutation rate analyses, and writing the methods section of
   the manuscript.
 - Added the variant annotation step back to the pipeline.
-
-
