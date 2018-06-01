@@ -1,7 +1,3 @@
-# ==============================================================================
-# EXPORTS
-# ==============================================================================
-
 #' Create a consensus sequence from a set of nucleotide count pileups
 #' @param piles List of matrices; Each list item contains allele counts at
 #'        each genome position for a single sample.
@@ -20,6 +16,7 @@ create_consensus <- function(piles) {
   consensus <- apply(major_alleles, 1, mode)
   consensus
 }
+
 
 #' Create a sequence of the consensus alternate (mutant) alleles at each genome
 #' position among multiple samples.
@@ -47,6 +44,7 @@ create_mutant_consensus <- function(piles, consensus) {
   mutant_consensus
 }
 
+
 #' Calculate mutant allele frequency at each genome position for a sample
 #' @param pile matrix; allele counts at each genome position
 #' @param mutant_consensus; An alternate allele consensus sequence produced by
@@ -60,6 +58,7 @@ compute_mutant_allele_frequencies <- function(pile, mutant_consensus) {
             compute_allele_frequency(pile[i, ], mutant_consensus[i])
           })
 }
+
 
 #' Calculate strand bias for each genome position using fisher tests
 #' @param stranded_piles matrix; Allele count pileups separated by strand
@@ -82,6 +81,7 @@ compute_all_strand_bias <- function(stranded_piles, consensus, mutant_consensus,
   strand_bias
 }
 
+
 #' Convert an allele count pileup to a table of mutant vs. wild-type counts
 #' @param pile A matrix; allele counts at each genome position
 #' @param mutant_consensus; An alternate allele consensus sequence produced by
@@ -95,6 +95,7 @@ convert_to_mut_wt_counts <- function(pile, mutant_consensus) {
   wt_counts <- cov - mut_counts
   cbind(mut_counts, wt_counts)
 }
+
 
 #' Get the allele counts for a set alleles
 #' @param pile A matrix; allele counts at each genome position
@@ -111,6 +112,7 @@ get_allele_counts <- function(pile, alleles) {
 
 }
 
+
 #' Get the major allele at each genome position for a single sample
 #' WARNING: Returns the first value if tied
 #' @param pile matrix; allele counts at each genome position
@@ -120,6 +122,7 @@ get_allele_counts <- function(pile, alleles) {
 get_major_alleles <- function(pile) {
   apply(pile, 1, get_highest_frequency_allele)
 }
+
 
 #' Get the alleles with the second highest frequency at each position
 #' @param pile matrix; allele counts at each genome position
@@ -134,6 +137,7 @@ get_minor_alleles <- function(pile, consensus) {
             get_minor_allele(pile[i, ], consensus[i])
   })
 }
+
 
 #' Get sequencing coverage for each genome position
 #' @param pile matrix; allele counts at each genome position
@@ -153,6 +157,7 @@ get_coverage <- function(pile) {
   }
 }
 
+
 #' Convert an allele count pileup to a table of mutant vs. coverage
 #' @param pile matrix; allele counts at each genome position
 #' @param mutant_consensus; An alternate allele consensus sequence produced by
@@ -165,6 +170,7 @@ convert_to_mut_cov_counts <- function(pile, mutant_consensus) {
   depths <- get_coverage(pile)
   cbind(mut_counts, depths)
 }
+
 
 #' Determine which sites are potientially mutant in only one sample
 #' @param mut_cov_counts List of matrices; Each matrix has two columns,
@@ -187,6 +193,7 @@ determine_unique <- function(mut_cov_counts, seq_error_rates) {
   unique
 }
 
+
 #' Get the type of mutation
 #' @param allele Character; Vector of alleles, {A, C, G, T, +, -}
 #' @return Character; Vector of {snv, insertion, deletion}
@@ -195,6 +202,7 @@ get_mutation_class <- function(mutant_allele) {
   ifelse(mutant_allele == "-", "deletion",
          ifelse(mutant_allele == "+", "insertion", "snv"))
 }
+
 
 #' Convert a list of tables separated by sample to a list of tables separated by
 #' genome position
@@ -218,6 +226,7 @@ by_position <- function(x) {
   }
   y
 }
+
 
 #' Assign a p-value to a variant
 #' @param mut_cov_matrix matrix; Rows are genome samples, column 1 is
@@ -257,6 +266,7 @@ call_variant <- function(mut_cov_matrix) {
   p
 }
 
+
 #' Merge multinucleotide indels (p < 0.05) into single indel events
 #' Deletions are renamed to correct VCF style format, but insertions will need
 #' to be renamed manually.
@@ -276,6 +286,7 @@ merge_significant_indels <- function(test_table) {
     test_table
   }
 }
+
 
 #' RSamtools pileup labels indels with "-". This function updates deletion.
 #' fields in test_table with VCF formatting. This allows easy export to .vcf.
@@ -313,9 +324,6 @@ rename_small_deletions <- function(test_table) {
   new_t
 }
 
-# ==============================================================================
-# END EXPORTS
-# ==============================================================================
 
 #' Generate a table of minor allele frequencies for each genome position in a
 #' sample
@@ -331,6 +339,7 @@ get_minor_allele_frequencies <- function(pile, consensus) {
   mafs[is.nan(mafs)] <- 0
   mafs
 }
+
 
 #' Get the highest frequency allele in a vector of allele counts
 #' WARNING: Returns the first value if tied
@@ -349,6 +358,7 @@ get_highest_frequency_allele <- function(counts) {
   allele
 }
 
+
 #' Get the allele with the second highest frequency for a single sample
 #' WARNING: Returns the first value if tied
 #' @param counts Numeric vector; Allele counts for a single genome position and
@@ -362,6 +372,7 @@ get_minor_allele <- function(counts, major_allele) {
   get_highest_frequency_allele(non_consensus_alleles)
 }
 
+
 #' Calculate an allele's frequency from a vector of allele counts
 #' @param counts Numeric vector; Allele counts for a single genome position and
 #'        sample
@@ -370,6 +381,7 @@ get_minor_allele <- function(counts, major_allele) {
 compute_allele_frequency <- function(counts, allele) {
   counts[allele] / sum(counts)
 }
+
 
 #' Calculate strand bias for a single genome position using fisher exact test
 #' @param counts Numeric vector; Allele counts for a single genome position and
@@ -397,6 +409,7 @@ compute_strand_bias <- function(counts, wild_type_allele,
   phred
 }
 
+
 #' Carry out a 1-sided binomial test at each genome position for a sample
 #' @param mut_cov_counts Matrix with two columns, first column is mutant
 #'                       allele counts, second column is total sequencing
@@ -415,13 +428,16 @@ is_unique <- function(ps) {
   (sorted[1] < 0.05) && (sorted[2] > 0.05)
 }
 
+
 #' Split a vector by its runs of consecutive values
 #' E.g partition_by_runs(c(1, 2, 4, 5)) == list(c(1, 2), c(4, 5))
 #' @param x Numeric vector
 #' @return List of numeric vectors
+#'
 partition_by_runs <- function(x) {
   split(x, cumsum(seq_along(x) %in% (which(diff(x) > 1) + 1)))
 }
+
 
 #' Find runs of consecutive values with length > 1
 #' @param x Numeric vector
@@ -433,6 +449,7 @@ find_runs <- function(x) {
   runs <- par[lengths(par) > 1]
   runs
 }
+
 
 #' Find a multinucleotide indel in a table of variants
 #' @param test_table data.frame; A table of variant information, rows are genome
@@ -468,6 +485,7 @@ find_indel <- function(test_table) {
   indel_idx
 }
 
+
 #' Merge rows of test_table given by indel_idx into a single row.
 #' @param test_table data.frame; A table of variant information, rows are genome
 #'                  positions
@@ -495,36 +513,36 @@ merge_indel <- function(test_table, indel_idx) {
 
   # The new merged row.
   new_row <- list(
-                  # species
-                  unique(as.character(indel_row$species)),
-                  # population
-                  unique(as.character(indel_row$population)),
-                  # genotype
-                  unique(as.character(indel_row$genotype)),
-                  # mutant sample
-                  unique(as.character(indel_row$sample))[1],
-                  # position
-                  pre_row$pos,
-                  # coverage
-                  mean(indel_row$coverage),
-                  # reference allele
-                  ref,
-                  # variant allele
-                  alt,
-                  # mutation class
-                  class,
-                  # mutant allele frequency
-                  mean(indel_row$af),
-                  # mutant sample allele frequency - mean allele frequency
-                  mean(indel_row$af_diff),
-                  # strand bias
-                  mean(indel_row$strand_bias),
-                  # is variant unique?
-                  all(indel_row$unique),
-                  # is variant low coverage?
-                  mean(indel_row$coverage_proportion),
-                  # p value
-                  mean(indel_row$p_value))
+      # species
+      unique(as.character(indel_row$species)),
+      # population
+      unique(as.character(indel_row$population)),
+      # genotype
+      unique(as.character(indel_row$genotype)),
+      # mutant sample
+      unique(as.character(indel_row$sample))[1],
+      # position
+      pre_row$pos,
+      # coverage
+      mean(indel_row$coverage),
+      # reference allele
+      ref,
+      # variant allele
+      alt,
+      # mutation class
+      class,
+      # mutant allele frequency
+      mean(indel_row$af),
+      # mutant sample allele frequency - mean allele frequency
+      mean(indel_row$af_diff),
+      # strand bias
+      mean(indel_row$strand_bias),
+      # is variant unique?
+      all(indel_row$unique),
+      # is variant low coverage?
+      mean(indel_row$coverage_proportion),
+      # p value
+      mean(indel_row$p_value))
   new_test_table <- replace_rows(test_table, indel_idx, new_row)
   new_test_table
 }
