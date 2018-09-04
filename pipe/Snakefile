@@ -472,8 +472,7 @@ rule annotate_variants:
 
 rule calculate_mean_seq_depth:
     input:
-        expand('output/call_variants/test_tables/{genotype}/csv',
-               genotype=GENOTYPE)
+        expand('output/produce_spliced_pileups/{sample}.csv', sample=SAMPLE)
     output:
         'output/calculate_mean_seq_depth/seq_depth.csv'
     shell:
