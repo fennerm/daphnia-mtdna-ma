@@ -488,7 +488,7 @@ rule merge_variants:
 # Insertions in output/merge_variants have to be manually annotated first.
 rule annotate_variants:
     input:
-        variants = 'output/inspected_variants/variants.{subsample}csv',
+        variants = 'output/inspected_variants/variants.{subsample}.csv',
         prereq = 'output/merge_variants/variants.{subsample}.csv'
     output:
         'output/annotate_variants/variants.{subsample}.csv'
