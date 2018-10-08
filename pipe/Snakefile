@@ -413,7 +413,7 @@ rule call_variants:
             os.path.join(
                 "output", 
                 "produce_spliced_pileups", 
-                ".".join([x, wildcards.subsample, "csv"])
+                ".".join([x, "csv"])
             )
             for x in GENOTYPE_EXP[wildcards.genotype]],
         seqerr = "output/merge_sequencing_error_files/{genotype}.csv"
@@ -433,7 +433,7 @@ rule call_variants_downsampled:
             os.path.join(
                 "output", 
                 "produce_spliced_pileups", 
-                ".".join([x, wildcards.subsample, "csv"])
+                ".".join([x, "csv"])
             )
             for x in GENOTYPE_EXP[wildcards.genotype]],
         seqerr = "output/merge_sequencing_error_files/{genotype}.csv"
