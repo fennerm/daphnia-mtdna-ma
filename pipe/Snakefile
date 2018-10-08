@@ -416,27 +416,39 @@ rule call_variants:
                 ".".join([x, wildcards.subsample, "csv"])
             )
             for x in GENOTYPE_EXP[wildcards.genotype]],
-        seqerr = "output/merge_sequencing_error_files/{genotype}.{subsample}.csv"
+        seqerr = "output/merge_sequencing_error_files/{genotype}.csv"
     output:
-        "output/call_variants/mut_cov_matrices/{genotype}.{subsample}.Rds",
-        "output/call_variants/test_tables/{genotype}.{subsample}.csv",
-        "output/call_variants/consensus_seqs/{genotype}.{subsample}.fasta"
+        "output/call_variants/mut_cov_matrices/{genotype}.full.Rds",
+        "output/call_variants/test_tables/{genotype}.full.csv",
+        "output/call_variants/consensus_seqs/{genotype}.full.fasta"
+    resources:
+        mem_mb = 500
+    shell:
+        "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
+        "output/call_variants {input.pile}"
+
+rule call_variants_downsampled:
+    input:
+        pile = lambda wildcards: [
+            os.path.join(
+                "output", 
+                "produce_spliced_pileups", 
+                ".".join([x, wildcards.subsample, "csv"])
+            )
+            for x in GENOTYPE_EXP[wildcards.genotype]],
+        seqerr = "output/merge_sequencing_error_files/{genotype}.csv"
+    output:
+        "output/call_variants/mut_cov_matrices/{genotype}.downsampled.Rds",
+        "output/call_variants/test_tables/{genotype}.downsampled.csv",
+        "output/call_variants/consensus_seqs/{genotype}.downsampled.fasta"
     params:
         downsample_depth = 500
     resources:
         mem_mb = 500
     run:
-        if wildcards.subsample != "full":
-            shell(
-                "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
-                "--downsample {params.downsample_depth} output/call_variants "
-                "{input.pile}"
-            )
-        else:
-            shell(
-                "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
-                "output/call_variants {input.pile}"
-            )
+        "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
+        "--downsample {params.downsample_depth} output/call_variants "
+        "{input.pile}"
 
 
 rule correct_for_multiple_comparisons:
