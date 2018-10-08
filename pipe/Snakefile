@@ -116,7 +116,8 @@ def bowtie2_idx_root(idx):
 rule all:
     input:
         "output/multiqc/multiqc.html",
-        'output/annotate_variants/variants.csv',
+        'output/annotate_variants/variants.full.csv',
+        'output/annotate_variants/variants.downsampled.csv',
         expand("output/qualimap/{sample}_{rotation}/genome_results.txt",
                sample=SAMPLE, rotation=ROTATION),
         'output/calculate_mean_seq_depth/seq_depth.csv'
