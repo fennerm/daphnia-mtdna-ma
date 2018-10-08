@@ -31,5 +31,5 @@ Imports: qvalue,
 Remotes: fennerm/fen.R.util,
          fennerm/pmultinom,
          roblanf/sangeranalyseR
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Suggests: testthat

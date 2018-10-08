@@ -25,11 +25,13 @@
 "Call variants from allele count pileup
 
 Usage:
-  call_variants.R --seqerr=SEQERR --output_dir=OUTDIR PILEUP ...
+  call_variants.R --seqerr=SEQERR --output_dir=OUTDIR [--downsample=N] PILEUP ...
 
 Options:
   -e --seqerr=SEQERR        .csv file with estimates of sequencing error for
                             each sample
+  -d --downsample=N         Downsample sequencing coverage to N before calling 
+                            variants.
   -o --output_dir=OUTDIR    Output directory
 " -> doc
 
@@ -75,7 +77,7 @@ parse_seq_err_csv <- function(seq_err_file) {
   seq_err
 }
 
-main <- function(pileup_files, seq_err_file, outdir) {
+main <- function(pileup_files, seq_err_file, outdir, downsample) {
   nsamples <- length(pileup_files)
   samples <- get_sample(pileup_files)
   population <- unique(get_population(pileup_files))
@@ -90,6 +92,10 @@ main <- function(pileup_files, seq_err_file, outdir) {
                            check.names = FALSE)
   stranded_piles <- lapply(stranded_piles, as.matrix)
   piles <- lapply(stranded_piles, destrand)
+
+  if (downsample) {
+    piles <- lapply(piles, function(x) downsample_pileup(x, downsample))
+  }
 
   cat("Reading sequencing error file \n")
   seq_err <- parse_seq_err_csv(seq_err_file)
@@ -141,15 +147,21 @@ main <- function(pileup_files, seq_err_file, outdir) {
   p <- ulapply(mut_cov_matrices, call_variant)
 
   cat("Tabulating data \n")
-  test_table <- cbind(
-    as.data.frame(species, stringsAsFactors = FALSE), population, genotype,
-    mutant_sample_ids, 1:bp, mean_coverage, consensus, mutant_consensus,
-    mutation_class, max_mut_afs, diff_afs, strand_bias, unique_sites,
-    coverage_proportion, p, stringsAsFactors = FALSE)
-  colnames(test_table) <- c(
-    "species", "population", "genotype", "sample", "pos", "coverage",
-    "ref", "alt", "class", "af", "af_diff", "strand_bias", "unique",
-    "coverage_proportion", "p_value")
+  test_table <- data.frame(
+    sample = mutant_sample_ids,
+    pos = 1:bp,
+    ref = consensus,
+    alt = mutant_consensus,
+    coverage = mean_coverage,
+    type = mutation_class,
+    af = max_mut_afs,
+    af_diff = diff_afs,
+    strand_bias = strand_bias,
+    unique = unique_sites,
+    coverage_proportion = coverage_proportion,
+    p_value = p,
+    stringsAsFactors = FALSE
+  )
 
   cat("Merging multinucleotide indels \n")
   test_table <- merge_significant_indels(test_table)
@@ -162,5 +174,6 @@ if (!interactive()) {
   opts <- docopt::docopt(doc)
   main(unlist(opts["PILEUP"]),
        unlist(opts["seqerr"]),
-       unlist(opts["output_dir"]))
+       unlist(opts["output_dir"]),
+       unlist(opts["downsample"]))
 }

@@ -122,3 +122,26 @@ compute_split_indices <- function(sequence_length) {
   rot2 <- og_to_rot(spl[4], sequence_length):og_to_rot(spl[5], sequence_length)
   list(rot1, og, rot2)
 }
+
+
+#' Downsample a pileup to an even and uniform sequencing depth.
+#'
+#' @export 
+downsample_pileup <- function(pileup, depth) {
+  t(apply(pileup, 1, function(x) downsample_vector(x, depth)))
+}
+
+
+#' Downsample a vector of allele counts to a target sequencing depth.
+#'
+#' @importFrom purrr map
+downsample_vector <- function(vec, depth) {
+  if (sum(vec) > depth) {
+    allele_pop <- unlist(map(list(vec[vec > 0]), ~rep(names(.), .)))
+    downsampled_pop <- sample(allele_pop, depth)
+    downsampled <- map_int(names(vec), ~sum(downsampled_pop == .))
+  } else {
+    downsampled <- vec
+  }
+  downsampled
+}

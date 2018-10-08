@@ -26,20 +26,13 @@ library(fen.R.util)
 library(megadaph.mtdna)
 
 REPS <- 1000
-variant_table <- as.tibble(read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/output/annotate_variants/variants.csv", stringsAsFactors = FALSE))
+mut_table <- as.tibble(read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/output/annotate_variants/variants.csv", stringsAsFactors = FALSE))
 line_info <- as.tibble(read.csv("~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/input/metadata/line_info.csv", stringsAsFactors = FALSE))
-
-#' Merge the variant and line info tables into a table
-merge_tables <- function(variant_table, line_info) {
-  variant_table <- variant_table %>%
-      select(-species, -population, -genotype) %>%
-      group_by(sample) %>%
-      summarize_all("list")
-  line_info <- line_info %>% rename(mean_coverage = coverage)
-  mutation_table <- left_join(line_info, variant_table, by = "sample")
-  mutation_table$af <- mutation_table$af %>% replace_null(0)
-  mutation_table
-}
+line_info <- line_info %>%
+  rename(mean_coverage = coverage, bp = bases_surveyed) %>%
+  select(sample, genotype, population, species)
+variant_table <- new_variant_table(mut_table, line_info, genome = "mitochondrial")
+outdir <- "~/fmacrae/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/output/summarize_mutations"
 
 #' Get the unique values of a (possibly-nested) column in a tibble
 get_levels <- function(tbl, by) {
@@ -233,6 +226,7 @@ analyze_mutation_types <- function(mutation_table, outdir) {
       map_int(count_occurences, "deletion"))
 
   save_table(sub_table, outdir, "mutation_counts.tsv")
+
   # nts <- length(which(variant_table$ts_tv=="transition"))
   # ntv <- length(which(variant_table$ts_tv=="transversions"))
   # prop.test(nts, nts+ntv, p=1/3)

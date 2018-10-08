@@ -7,6 +7,7 @@ D. pulex and D. magna
 """
 import os
 
+from pandas import read_csv
 from plumbum import local
 from plumbum.cmd import nbases
 
@@ -407,27 +408,42 @@ rule produce_spliced_pileups:
 
 rule call_variants:
     input:
-        pile = lambda wildcards: [os.path.join(
-            "output", "produce_spliced_pileups", x + ".csv")
+        pile = lambda wildcards: [
+            os.path.join(
+                "output", 
+                "produce_spliced_pileups", 
+                ".".join([x, wildcards.subsample, "csv"])
+            )
             for x in GENOTYPE_EXP[wildcards.genotype]],
-        seqerr = "output/merge_sequencing_error_files/{genotype}.csv"
+        seqerr = "output/merge_sequencing_error_files/{genotype}.{subsample}.csv"
     output:
-        "output/call_variants/mut_cov_matrices/{genotype}.Rds",
-        "output/call_variants/test_tables/{genotype}.csv",
-        "output/call_variants/consensus_seqs/{genotype}.fasta"
+        "output/call_variants/mut_cov_matrices/{genotype}.{subsample}.Rds",
+        "output/call_variants/test_tables/{genotype}.{subsample}.csv",
+        "output/call_variants/consensus_seqs/{genotype}.{subsample}.fasta"
+    params:
+        downsample_depth = 500
     resources:
         mem_mb = 500
-    shell:
-        "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
-        "output/call_variants {input.pile}"
+    run:
+        if wildcards.subsample != "full":
+            shell(
+                "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
+                "--downsample {params.downsample_depth} output/call_variants "
+                "{input.pile}"
+            )
+        else:
+            shell(
+                "scripts/call_variants.R --seqerr {input.seqerr} --output_dir "
+                "output/call_variants {input.pile}"
+            )
 
 
 rule correct_for_multiple_comparisons:
     input:
-        piles = expand("output/call_variants/test_tables/{genotype}.csv",
+        piles = expand("output/call_variants/test_tables/{genotype}.{{subsample}}.csv",
                        genotype = GENOTYPE)
     output:
-        expand("output/correct_for_multiple_comparisons/{genotype}.csv",
+        expand("output/correct_for_multiple_comparisons/{genotype}.{{subsample}}.csv",
                genotype = GENOTYPE)
     params:
         fdr_level = "0.05"
@@ -437,9 +453,9 @@ rule correct_for_multiple_comparisons:
 
 rule filter_variants:
     input:
-        "output/correct_for_multiple_comparisons/{genotype}.csv"
+        "output/correct_for_multiple_comparisons/{genotype}.{subsample}csv"
     output:
-        "output/filter_variants/{genotype}.csv"
+        "output/filter_variants/{genotype}.{subsample}.csv"
     params:
         max_strand_bias = "60"
     shell:
@@ -448,9 +464,9 @@ rule filter_variants:
 
 rule merge_variants:
     input:
-        expand("output/filter_variants/{genotype}.csv", genotype = GENOTYPE)
+        expand("output/filter_variants/{genotype}.{{subsample}}.csv", genotype = GENOTYPE)
     output:
-        "output/merge_variants/variants.csv"
+        "output/merge_variants/variants.{subsample}csv"
     resources:
         mem_mb = 1000
     shell:
@@ -459,22 +475,21 @@ rule merge_variants:
 # Insertions in output/merge_variants have to be manually annotated first.
 rule annotate_variants:
     input:
-        variants = 'output/inspected_variants/variants.csv',
-        prereq = 'output/merge_variants/variants.csv'
+        variants = 'output/inspected_variants/variants.{subsample}csv',
+        prereq = 'output/merge_variants/variants.{subsample}.csv'
     output:
-        'output/annotate_variants/variants.csv'
+        'output/annotate_variants/variants.{subsample}.csv'
     shell:
         'scripts/annotate_variants.R '
         '-o {output} '
         '-c config[snpeff_config] '
         '{input.variants}'
 
-
 rule calculate_mean_seq_depth:
     input:
         expand('output/produce_spliced_pileups/{sample}.csv', sample=SAMPLE)
     output:
-        'output/calculate_mean_seq_depth/seq_depth.csv'
+        'output/calculate_mean_seq_depth/seq_depth.{subsample}.csv'
     shell:
         'scripts/calc_mean_seq_depth.R -o {output} {input}'
 
