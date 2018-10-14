@@ -126,7 +126,7 @@ compute_split_indices <- function(sequence_length) {
 
 #' Downsample a pileup to an even and uniform sequencing depth.
 #'
-#' @export 
+#' @export
 downsample_pileup <- function(pileup, depth) {
   downsampled <- t(apply(pileup, 1, function(x) downsample_vector(x, depth)))
   colnames(downsampled) <- colnames(pileup)
@@ -136,7 +136,7 @@ downsample_pileup <- function(pileup, depth) {
 
 #' Downsample a vector of allele counts to a target sequencing depth.
 #'
-#' @importFrom purrr map
+#' @importFrom purrr map map_int
 downsample_vector <- function(vec, depth) {
   if (sum(vec) > depth) {
     allele_pop <- unlist(map(list(vec[vec > 0]), ~rep(names(.), .)))
