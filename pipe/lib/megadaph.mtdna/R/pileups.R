@@ -87,7 +87,6 @@ construct_pileup <- function(bam, bp, min_base_quality = 30,
 #'        genome position split by strand
 #' @return Matrix; A allele count table with the stranded pile summed
 #' @export
-#' @importFrom data.table setDT
 destrand <- function(pile) {
   idx1 <- seq(1, 11, by = 2)
   idx2 <- idx1 + 1
@@ -111,6 +110,7 @@ splice_pileups <- function(og_pile, rot_pile, rot_ref) {
 }
 
 #' Compute the indices for splicing the 'original' and 'rotated' pileups
+#'
 #' @param sequence_length Integer; The length of the reference sequence
 #' @return List, length=3; First and third list items are indices from 'rotated'
 #' pileup. Second item is indices into 'original' pileup.
@@ -128,7 +128,9 @@ compute_split_indices <- function(sequence_length) {
 #'
 #' @export 
 downsample_pileup <- function(pileup, depth) {
-  t(apply(pileup, 1, function(x) downsample_vector(x, depth)))
+  downsampled <- t(apply(pileup, 1, function(x) downsample_vector(x, depth)))
+  colnames(downsampled) <- colnames(pileup)
+  downsampled
 }
 
 

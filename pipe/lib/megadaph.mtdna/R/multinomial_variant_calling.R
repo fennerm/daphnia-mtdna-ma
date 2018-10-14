@@ -299,7 +299,7 @@ merge_significant_indels <- function(test_table) {
 #' @export
 rename_small_deletions <- function(test_table) {
   # Get indices of all deletions in table
-  del_idx <- which(test_table$class == "deletion")
+  del_idx <- which(test_table$type == "deletion")
   ndel <- length(del_idx)
   # Output table
   new_t <- test_table

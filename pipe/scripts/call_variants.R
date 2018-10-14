@@ -42,6 +42,7 @@ MUT_COV_MATRICES_DIR <- "mut_cov_matrices"
 TEST_TABLE_DIR <- "test_tables"
 CONSENSUS_DIR <- "consensus_seqs"
 
+
 ## Write data to an .Rds or .csv file
 write_output <- function(dat, dir, genotype, type) {
   if (toupper(type) == "RDS") {
@@ -76,6 +77,11 @@ parse_seq_err_csv <- function(seq_err_file) {
   seq_err <- as.numeric(seq_err$sequencing_error)
   seq_err
 }
+
+pileup_files = list.files("../output/produce_spliced_pileups", "FA.*csv", full.names=T)
+outdir = "tmp"
+downsample = 500
+seq_err_file = "../output/merge_sequencing_error_files/FA.csv"
 
 main <- function(pileup_files, seq_err_file, outdir, downsample) {
   nsamples <- length(pileup_files)
