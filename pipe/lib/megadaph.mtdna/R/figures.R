@@ -31,24 +31,6 @@ point_with_ci <- function(df) {
 }
 
 
-#' @export
-#' @import ggplot2
-#' @importFrom rworldmap getMap
-extraction_map <- function() {
-    newmap <- getMap(resolution = "low")
-    plot(newmap, xlim = c(-130, 40), ylim = c(30, 65), asp = 2,
-         lwd=1.55, col="white", bg="#96c1e1",border="#6C6C71")
-    box(lwd=10, col="black")
-    # germany_coords <- matrix(c(8.5, 10, 12,
-    #                          52, 50, 52), ncol=2)
-    # finland_coords <- matrix(c(26, 28, 28,
-    #                          63, 62, 64), ncol=2)
-    magna_coords <- matrix(c(10, 28, 34,
-                             50, 64, 31), ncol=2)
-    pulex_coords <- matrix(c(-80, -124, 43, 43), ncol=2)
-    points(magna_coords, col="red", pch=4, cex=2, lwd=5)
-    points(pulex_coords, col="blue", pch=5, cex=2, lwd=5)
-}
 
 #' @export
 #' @import RColorBrewer
