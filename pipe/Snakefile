@@ -116,11 +116,12 @@ def bowtie2_idx_root(idx):
 rule all:
     input:
         "output/multiqc/multiqc.html",
-        'output/annotate_variants/variants.full.csv',
-        'output/annotate_variants/variants.downsampled.csv',
+        "output/annotate_variants/variants.full.csv",
+        "output/annotate_variants/variants.downsampled.csv",
         expand("output/qualimap/{sample}_{rotation}/genome_results.txt",
                sample=SAMPLE, rotation=ROTATION),
-        'output/calculate_mean_seq_depth/seq_depth.csv'
+        "output/calculate_mean_seq_depth/seq_depth.csv",
+        "output/align_to_single_copy_genes/{sample}.bam"
 
 rule rotate_reference:
     input:
@@ -505,6 +506,33 @@ rule calculate_mean_seq_depth:
         'output/calculate_mean_seq_depth/seq_depth.{subsample}.csv'
     shell:
         'scripts/calc_mean_seq_depth.R -o {output} {input}'
+
+rule extract_single_copy_genes:
+    input:
+        nucref="ref/magna.nuc.fa",
+        gff="input/gff/magna2.4.gff3"
+    output:
+        "output/extract_single_copy_genes/magna_single_copy_genes.fasta"
+    shell:
+        'scripts/extract_single_copy_genes.sh {input.nucref} {input.gff}'
+
+
+rule align_to_single_copy_genes:
+    input:
+        genes="output/extract_single_copy_genes/magna_single_copy_genes.fasta",
+        fwd_reads = "output/quality_trim/{sample}.R1.fastq.gz",
+        rev_reads = "output/quality_trim/{sample}.R2.fastq.gz"
+    output:
+        "output/align_to_single_copy_genes/{sample}.bam"
+    shell:
+        shell("bowtie2-build {input.genes} magna_single_copy_genes")
+        shell("bowtie2 -1 {input.fwd_reads} -2 {input.rev_reads} -x "
+              "magna_single_copy_genes -X {params.max_insert_size} --very-sensitive "
+              "--rg-id={wildcards.sample} --rg=LIB:{wildcards.sample} "
+              "--rg=PL:illumina --rg=SM:{wildcards.sample} | "
+              "samtools view -bh - | samtools sort - > {output.bam} 2> {log}")
+        shell("samtools index {output.bam}")
+
 
 rule multiqc:
     input:
