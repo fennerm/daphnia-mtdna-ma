@@ -5,6 +5,9 @@
 #' @export
 #' @importFrom qvalue qvalue
 mult_comparisons_correct <- function(test_tables, fdr_level=0.005) {
+  for (i in c(1:length(test_tables))) {
+    test_tables[[i]][, "mult_comp_group"] <- i
+  }
   # Merge into a single table
   merged_table <- do.call("rbind", test_tables)
 
@@ -18,6 +21,9 @@ mult_comparisons_correct <- function(test_tables, fdr_level=0.005) {
   fdr_table <- data.frame(fdr_table, stringsAsFactors = FALSE)
 
   # Split the table back into genotypes
-  fdr_tables <- split(fdr_table, fdr_table$genotype)
+  fdr_tables <- split(fdr_table, fdr_table$mult_comp_group)
+  for (i in c(1:length(fdr_tables))) {
+    fdr_tables[[i]]$mult_comp_group <- NULL
+  }
   fdr_tables
 }
