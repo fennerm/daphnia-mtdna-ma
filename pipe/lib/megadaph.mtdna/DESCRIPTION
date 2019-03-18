@@ -26,7 +26,8 @@ Imports: qvalue,
     fen.R.util,
     pmultinom,
     sangeranalyseR,
-    sangerseqR
+    sangerseqR,
+    futile.logger
 Remotes: fennerm/fen.R.util,
          fennerm/pmultinom,
          roblanf/sangeranalyseR
