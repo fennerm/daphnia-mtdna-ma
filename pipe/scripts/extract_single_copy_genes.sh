@@ -12,6 +12,8 @@ get_coordinates_from_gff() {
     grep "$_gene_id" "$_gff_file" | awk '{print $1, $4, $5}' | awk '!seen[$0]++'
 }
 
+x=34
+
 extract_fasta_positions() {
     local _reference="$1"
     local _seq_id="$2"
