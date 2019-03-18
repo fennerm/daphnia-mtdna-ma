@@ -196,12 +196,6 @@ analyze_mutation_spectrum <- function(variant_table, outdir) {
   sub_table
 }
 
-
-mutation_file="/home/fen-arch/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/output/confirmed_variants/variants.tsv"
-line_info_file="/home/fen-arch/daphnia-mtdna-ma.private/daphnia-mtdna-ma/pipe/input/metadata/line_info.tsv"
-genome="mt"
-outdir="tmp"
-
 main <- function(mutation_file, line_info_file, genome, outdir) {
   table_of_mutations <- read_tsv(mutation_file)
   if (!("ts_tv" %in% colnames(table_of_mutations))) {
